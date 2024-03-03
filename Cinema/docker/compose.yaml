@@ -1,0 +1,106 @@
+version: '3.8'
+
+services:
+
+  mongo_1:
+    build: .
+    image: mongopascustom:6.0.2
+    container_name: mongodbnode1
+    hostname: mongodbnode1
+    volumes:
+      - mongo1_data:/data/db
+    networks:
+      - mongonet
+    ports:
+      - "27020:27020"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=adminpassword
+    command: --config /etc/mongod.conf --port 27020
+    healthcheck:
+      test: ["CMD", "mongosh", "--port", "27020", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 2s
+      retries: 5
+
+  mongo_2:
+    build: .
+    image: mongopascustom:6.0.2
+    container_name: mongodbnode2
+    hostname: mongodbnode2
+    volumes:
+      - mongo2_data:/data/db
+    networks:
+      - mongonet
+    ports:
+      - "27021:27021"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=adminpassword
+    command: --config /etc/mongod.conf --port 27021
+    healthcheck:
+      test: [ "CMD", "mongosh", "--port", "27021", "--eval", "db.adminCommand('ping')" ]
+      interval: 10s
+      timeout: 2s
+      retries: 5
+
+  mongo_3:
+    build: .
+    image: mongopascustom:6.0.2
+    container_name: mongodbnode3
+    hostname: mongodbnode3
+    volumes:
+      - mongo3_data:/data/db
+    networks:
+      - mongonet
+    ports:
+      - "27022:27022"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=adminpassword
+    command: --config /etc/mongod.conf --port 27022
+    healthcheck:
+      test: [ "CMD", "mongosh", "--port", "27022", "--eval", "db.adminCommand('ping')" ]
+      interval: 10s
+      timeout: 2s
+      retries: 5
+
+  mongoinit:
+    build: .
+    image: mongopascustom:6.0.2
+    hostname: mongodbinit
+    container_name: mongodbinit
+    networks:
+      - mongonet
+    depends_on:
+      mongo_1:
+        condition: service_healthy
+      mongo_2:
+        condition: service_healthy
+      mongo_3:
+        condition: service_healthy
+    command: >
+      mongosh --host mongodbnode1:27020 --username admin --password adminpassword --authenticationDatabase admin --eval
+      '
+      rs.initiate(
+        {
+          "_id": "pasReplicaSet",
+          "members": [
+            { _id: 0, host : "mongodbnode1:27020" },
+            { _id: 1, host : "mongodbnode2:27021" },
+            { _id: 2, host : "mongodbnode3:27022" }
+          ]
+        }
+      );
+      '
+
+volumes:
+  mongo1_data:
+    driver: local
+  mongo2_data:
+    driver: local
+  mongo3_data:
+    driver: local
+
+networks:
+  mongonet: {}
