@@ -4,30 +4,20 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>pl.tks.gr3</groupId>
+        <groupId>pl.tks.gr3.application_core</groupId>
         <artifactId>ApplicationCore</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>1.0.0</version>
     </parent>
 
+    <groupId>pl.tks.gr3.domain_model</groupId>
+    <name>DomainModel</name>
     <artifactId>DomainModel</artifactId>
 
     <dependencies>
         <dependency>
-            <groupId>jakarta.validation</groupId>
-            <artifactId>jakarta.validation-api</artifactId>
-            <version>${jakarta-validation.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.hibernate.validator</groupId>
-            <artifactId>hibernate-validator</artifactId>
-            <version>${hibernate-validator.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>pl.tks.cinema.utils</groupId>
+            <groupId>pl.tks.gr3.utils</groupId>
             <artifactId>Utils</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>1.0.0</version>
         </dependency>
     </dependencies>
 </project>

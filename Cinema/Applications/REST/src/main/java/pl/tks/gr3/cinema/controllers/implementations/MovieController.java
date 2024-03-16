@@ -11,13 +11,13 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import pl.tks.gr3.cinema.application_services.exceptions.GeneralServiceException;
 import pl.tks.gr3.cinema.application_services.exceptions.crud.movie.MovieServiceMovieNotFoundException;
-import pl.tks.gr3.cinema.application_services.services.MovieService;
 import pl.tks.gr3.cinema.domain_model.Movie;
 import pl.tks.gr3.cinema.domain_model.Ticket;
+import pl.tks.gr3.cinema.ports.userinterface.JWSServiceInterface;
+import pl.tks.gr3.cinema.ports.userinterface.MovieServiceInterface;
 import pl.tks.gr3.cinema.viewrest.input.MovieInputDTO;
 import pl.tks.gr3.cinema.viewrest.output.MovieDTO;
 import pl.tks.gr3.cinema.viewrest.output.TicketDTO;
-import pl.tks.gr3.cinema.application_services.services.JWSService;
 import pl.tks.gr3.cinema.controllers.interfaces.MovieControllerInterface;
 
 import java.net.URI;
@@ -32,11 +32,11 @@ public class MovieController implements MovieControllerInterface {
 
     private final static Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
 
-    private final MovieService movieService;
-    private final JWSService jwsService;
+    private final MovieServiceInterface movieService;
+    private final JWSServiceInterface jwsService;
 
     @Autowired
-    public MovieController(MovieService movieService, JWSService jwsService) {
+    public MovieController(MovieServiceInterface movieService, JWSServiceInterface jwsService) {
         this.movieService = movieService;
         this.jwsService = jwsService;
     }

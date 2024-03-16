@@ -11,14 +11,14 @@ import org.springframework.web.bind.annotation.*;
 import pl.tks.gr3.cinema.application_services.exceptions.GeneralServiceException;
 import pl.tks.gr3.cinema.application_services.exceptions.crud.client.ClientServiceReadException;
 import pl.tks.gr3.cinema.application_services.exceptions.crud.ticket.TicketServiceTicketNotFoundException;
-import pl.tks.gr3.cinema.application_services.services.ClientService;
-import pl.tks.gr3.cinema.application_services.services.TicketService;
 import pl.tks.gr3.cinema.domain_model.Ticket;
 import pl.tks.gr3.cinema.domain_model.users.Client;
+import pl.tks.gr3.cinema.ports.userinterface.JWSServiceInterface;
+import pl.tks.gr3.cinema.ports.userinterface.TicketServiceInterface;
+import pl.tks.gr3.cinema.ports.userinterface.UserServiceInterface;
 import pl.tks.gr3.cinema.viewrest.input.TicketInputDTO;
 import pl.tks.gr3.cinema.viewrest.input.TicketSelfInputDTO;
 import pl.tks.gr3.cinema.viewrest.output.TicketDTO;
-import pl.tks.gr3.cinema.application_services.services.JWSService;
 import pl.tks.gr3.cinema.controllers.interfaces.TicketControllerInterface;
 
 import java.net.URI;
@@ -33,12 +33,12 @@ public class TicketController implements TicketControllerInterface {
 
     private static final Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
 
-    private final TicketService ticketService;
-    private final ClientService clientService;
-    private final JWSService jwsService;
+    private final TicketServiceInterface ticketService;
+    private final UserServiceInterface<Client> clientService;
+    private final JWSServiceInterface jwsService;
 
     @Autowired
-    public TicketController(TicketService ticketService, ClientService clientService, JWSService jwsService) {
+    public TicketController(TicketServiceInterface ticketService, UserServiceInterface<Client> clientService, JWSServiceInterface jwsService) {
         this.ticketService = ticketService;
         this.clientService = clientService;
         this.jwsService = jwsService;

@@ -14,12 +14,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import pl.tks.gr3.cinema.application_services.exceptions.GeneralServiceException;
 import pl.tks.gr3.cinema.application_services.exceptions.crud.client.ClientServiceClientNotFoundException;
-import pl.tks.gr3.cinema.application_services.services.ClientService;
 import pl.tks.gr3.cinema.controllers.interfaces.UserControllerInterface;
 import pl.tks.gr3.cinema.domain_model.Ticket;
 import pl.tks.gr3.cinema.domain_model.users.Client;
 import pl.tks.gr3.cinema.domain_model.users.User;
-import pl.tks.gr3.cinema.application_services.services.JWSService;
+import pl.tks.gr3.cinema.ports.userinterface.JWSServiceInterface;
+import pl.tks.gr3.cinema.ports.userinterface.UserServiceInterface;
 import pl.tks.gr3.cinema.viewrest.output.UserOutputDTO;
 import pl.tks.gr3.cinema.viewrest.input.UserUpdateDTO;
 import pl.tks.gr3.cinema.viewrest.output.TicketDTO;
@@ -35,12 +35,12 @@ public class ClientController implements UserControllerInterface<Client> {
 
     private static final Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
 
-    private final ClientService clientService;
-    private final JWSService jwsService;
+    private final UserServiceInterface<Client> clientService;
+    private final JWSServiceInterface jwsService;
     private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public ClientController(ClientService clientService, JWSService jwsService, PasswordEncoder passwordEncoder) {
+    public ClientController(UserServiceInterface<Client> clientService, JWSServiceInterface jwsService, PasswordEncoder passwordEncoder) {
         this.clientService = clientService;
         this.jwsService = jwsService;
         this.passwordEncoder = passwordEncoder;

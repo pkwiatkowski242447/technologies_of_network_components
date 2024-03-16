@@ -12,6 +12,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import pl.tks.gr3.cinema.ports.userinterface.JWSServiceInterface;
 import pl.tks.gr3.cinema.viewrest.output.UserOutputDTO;
 import pl.tks.gr3.cinema.viewrest.input.UserUpdateDTO;
 import pl.tks.gr3.cinema.application_services.exceptions.GeneralServiceException;
@@ -20,7 +21,6 @@ import pl.tks.gr3.cinema.controllers.interfaces.UserControllerInterface;
 import pl.tks.gr3.cinema.domain_model.users.Admin;
 import pl.tks.gr3.cinema.domain_model.users.User;
 import pl.tks.gr3.cinema.ports.userinterface.UserServiceInterface;
-import pl.tks.gr3.cinema.application_services.services.JWSService;
 
 import java.util.*;
 
@@ -32,11 +32,11 @@ public class AdminController implements UserControllerInterface<Admin> {
     private final Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
 
     private final UserServiceInterface<Admin> adminService;
-    private final JWSService jwsService;
+    private final JWSServiceInterface jwsService;
     private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public AdminController(UserServiceInterface<Admin> adminService, JWSService jwsService, PasswordEncoder passwordEncoder) {
+    public AdminController(UserServiceInterface<Admin> adminService, JWSServiceInterface jwsService, PasswordEncoder passwordEncoder) {
         this.adminService = adminService;
         this.jwsService = jwsService;
         this.passwordEncoder = passwordEncoder;

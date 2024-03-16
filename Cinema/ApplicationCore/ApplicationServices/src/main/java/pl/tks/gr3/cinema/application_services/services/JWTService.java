@@ -12,6 +12,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import pl.tks.gr3.cinema.adapters.consts.model.UserEntConstants;
 import pl.tks.gr3.cinema.domain_model.users.User;
+import pl.tks.gr3.cinema.ports.userinterface.JWTServiceInterface;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -19,18 +20,19 @@ import java.util.*;
 
 
 @Service
-public class JWTService {
+public class JWTService implements JWTServiceInterface {
 
     @Value("${security.jwt.token.secret-key:secret-value}")
     private String SECRET_KEY;
 
+    @Override
     public String extractUsername(String jwtToken) {
         JWTVerifier jwtVerifier = JWT.require(Algorithm.HMAC256(getSignInKey())).build();
         DecodedJWT decodedJWT = jwtVerifier.verify(jwtToken);
         return decodedJWT.getSubject();
     }
 
-    public String generateJWTToken(UserDetails userDetails) {
+    private String generateJWTToken(UserDetails userDetails) {
         Algorithm algorithm = Algorithm.HMAC256(getSignInKey());
         List<String> listOfRoles = new ArrayList<>();
         for (GrantedAuthority grantedAuthority : userDetails.getAuthorities()) {
@@ -45,6 +47,7 @@ public class JWTService {
                 .sign(algorithm);
     }
 
+    @Override
     public String generateJWTToken(User user) {
         UserDetails userDetails = new org.springframework.security.core.userdetails.User(
                 user.getUserLogin(),
@@ -59,6 +62,7 @@ public class JWTService {
         return generateJWTToken(userDetails);
     }
 
+    @Override
     public boolean isTokenValid(String jwtToken, UserDetails userDetails) {
         try {
             JWTVerifier jwtVerifier = JWT.require(Algorithm.HMAC256(getSignInKey()))

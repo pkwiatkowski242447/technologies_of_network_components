@@ -14,13 +14,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import pl.tks.gr3.cinema.application_services.exceptions.GeneralServiceException;
 import pl.tks.gr3.cinema.application_services.exceptions.crud.staff.StaffServiceStaffNotFoundException;
-import pl.tks.gr3.cinema.application_services.services.StaffService;
 import pl.tks.gr3.cinema.controllers.interfaces.UserControllerInterface;
 import pl.tks.gr3.cinema.domain_model.users.Staff;
 import pl.tks.gr3.cinema.domain_model.users.User;
+import pl.tks.gr3.cinema.ports.userinterface.JWSServiceInterface;
+import pl.tks.gr3.cinema.ports.userinterface.UserServiceInterface;
 import pl.tks.gr3.cinema.viewrest.output.UserOutputDTO;
 import pl.tks.gr3.cinema.viewrest.input.UserUpdateDTO;
-import pl.tks.gr3.cinema.application_services.services.JWSService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,12 +33,12 @@ public class StaffController implements UserControllerInterface<Staff> {
 
     private final static Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
 
-    private final StaffService staffService;
-    private final JWSService jwsService;
+    private final UserServiceInterface<Staff> staffService;
+    private final JWSServiceInterface jwsService;
     private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public StaffController(StaffService staffService, JWSService jwsService, PasswordEncoder passwordEncoder) {
+    public StaffController(UserServiceInterface<Staff> staffService, JWSServiceInterface jwsService, PasswordEncoder passwordEncoder) {
         this.staffService = staffService;
         this.jwsService = jwsService;
         this.passwordEncoder = passwordEncoder;
