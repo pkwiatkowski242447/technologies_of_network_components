@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component;
 import pl.tks.gr3.cinema.adapters.converters.TicketConverter;
 import pl.tks.gr3.cinema.adapters.exceptions.TicketRepositoryException;
 import pl.tks.gr3.cinema.adapters.api.TicketRepositoryInterface;
-import pl.tks.gr3.cinema.domain_model.model.Ticket;
+import pl.tks.gr3.cinema.domain_model.Ticket;
 import pl.tks.gr3.cinema.ports.infrastructure.tickets.CreateTicketPort;
 import pl.tks.gr3.cinema.ports.infrastructure.tickets.DeleteTicketPort;
 import pl.tks.gr3.cinema.ports.infrastructure.tickets.ReadTicketPort;

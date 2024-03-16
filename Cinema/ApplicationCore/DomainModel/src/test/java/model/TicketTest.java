@@ -3,9 +3,9 @@ package model;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import pl.tks.gr3.cinema.domain_model.model.Movie;
-import pl.tks.gr3.cinema.domain_model.model.Ticket;
-import pl.tks.gr3.cinema.domain_model.model.users.Client;
+import pl.tks.gr3.cinema.domain_model.Movie;
+import pl.tks.gr3.cinema.domain_model.Ticket;
+import pl.tks.gr3.cinema.domain_model.users.Client;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;

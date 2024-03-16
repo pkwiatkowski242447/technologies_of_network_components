@@ -10,7 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.lang.NonNull;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
-import pl.tks.gr3.cinema.security.services.JWSService;
+import pl.tks.gr3.cinema.application_services.services.JWSService;
 
 import java.io.IOException;
 

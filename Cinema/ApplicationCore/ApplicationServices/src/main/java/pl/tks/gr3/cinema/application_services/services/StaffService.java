@@ -3,13 +3,13 @@ package pl.tks.gr3.cinema.application_services.services;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pl.tks.gr3.cinema.adapters.aggregates.UserRepositoryAdapter;
-import pl.tks.gr3.cinema.adapters.consts.model.UserConstants;
+import pl.tks.gr3.cinema.adapters.consts.model.UserEntConstants;
 import pl.tks.gr3.cinema.adapters.exceptions.UserRepositoryException;
 import pl.tks.gr3.cinema.adapters.exceptions.crud.user.UserRepositoryCreateUserDuplicateLoginException;
 import pl.tks.gr3.cinema.adapters.exceptions.crud.user.UserRepositoryStaffNotFoundException;
 import pl.tks.gr3.cinema.application_services.exceptions.crud.staff.*;
-import pl.tks.gr3.cinema.domain_model.model.Ticket;
-import pl.tks.gr3.cinema.domain_model.model.users.Staff;
+import pl.tks.gr3.cinema.domain_model.Ticket;
+import pl.tks.gr3.cinema.domain_model.users.Staff;
 import pl.tks.gr3.cinema.ports.userinterface.UserServiceInterface;
 
 
@@ -110,7 +110,7 @@ public class StaffService implements UserServiceInterface<Staff> {
     @Override
     public List<Ticket> getTicketsForUser(UUID staffID) throws StaffServiceReadException {
         try {
-            return this.userRepository.getListOfTickets(staffID, UserConstants.STAFF_DISCRIMINATOR);
+            return this.userRepository.getListOfTickets(staffID, UserEntConstants.STAFF_DISCRIMINATOR);
         } catch (UserRepositoryException exception) {
             throw new StaffServiceReadException(exception.getMessage(), exception);
         }
@@ -119,7 +119,7 @@ public class StaffService implements UserServiceInterface<Staff> {
     @Override
     public void delete(UUID userID) throws StaffServiceDeleteException {
         try {
-            this.userRepository.delete(userID, UserConstants.STAFF_DISCRIMINATOR);
+            this.userRepository.delete(userID, UserEntConstants.STAFF_DISCRIMINATOR);
         } catch (UserRepositoryException exception) {
             throw new StaffServiceDeleteException(exception.getMessage(), exception);
         }

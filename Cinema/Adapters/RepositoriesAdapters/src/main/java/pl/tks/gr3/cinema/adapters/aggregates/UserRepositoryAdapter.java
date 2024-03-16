@@ -2,22 +2,22 @@ package pl.tks.gr3.cinema.adapters.aggregates;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import pl.tks.gr3.cinema.adapters.consts.model.UserConstants;
+import pl.tks.gr3.cinema.adapters.consts.model.UserEntConstants;
 import pl.tks.gr3.cinema.adapters.converters.TicketConverter;
 import pl.tks.gr3.cinema.adapters.converters.UserConverter;
 import pl.tks.gr3.cinema.adapters.exceptions.UserRepositoryException;
 import pl.tks.gr3.cinema.adapters.exceptions.other.client.UserTypeNotFoundException;
-import pl.tks.gr3.cinema.adapters.messages.repositories.MongoRepositoryMessages;
+import pl.tks.gr3.cinema.adapters.messages.MongoRepositoryMessages;
 import pl.tks.gr3.cinema.adapters.model.users.AdminEnt;
 import pl.tks.gr3.cinema.adapters.model.users.ClientEnt;
 import pl.tks.gr3.cinema.adapters.model.users.StaffEnt;
 import pl.tks.gr3.cinema.adapters.model.users.UserEnt;
 import pl.tks.gr3.cinema.adapters.repositories.UserRepository;
-import pl.tks.gr3.cinema.domain_model.model.Ticket;
-import pl.tks.gr3.cinema.domain_model.model.users.Admin;
-import pl.tks.gr3.cinema.domain_model.model.users.Client;
-import pl.tks.gr3.cinema.domain_model.model.users.Staff;
-import pl.tks.gr3.cinema.domain_model.model.users.User;
+import pl.tks.gr3.cinema.domain_model.Ticket;
+import pl.tks.gr3.cinema.domain_model.users.Admin;
+import pl.tks.gr3.cinema.domain_model.users.Client;
+import pl.tks.gr3.cinema.domain_model.users.Staff;
+import pl.tks.gr3.cinema.domain_model.users.User;
 import pl.tks.gr3.cinema.ports.infrastructure.users.*;
 
 import java.util.List;
@@ -166,11 +166,11 @@ public class UserRepositoryAdapter implements CreateUserPort, ReadUserPort, Upda
     @Override
     public void activate(User user) throws UserRepositoryException {
         if (user.getClass().equals(Client.class)) {
-            userRepository.activate(UserConverter.convertToClientEnt(user), UserConstants.CLIENT_DISCRIMINATOR);
+            userRepository.activate(UserConverter.convertToClientEnt(user), UserEntConstants.CLIENT_DISCRIMINATOR);
         } else if (user.getClass().equals(Admin.class)) {
-            userRepository.activate(UserConverter.convertToAdminEnt(user), UserConstants.ADMIN_DISCRIMINATOR);
+            userRepository.activate(UserConverter.convertToAdminEnt(user), UserEntConstants.ADMIN_DISCRIMINATOR);
         } else if (user.getClass().equals(Staff.class)) {
-            userRepository.activate(UserConverter.convertToStaffEnt(user), UserConstants.STAFF_DISCRIMINATOR);
+            userRepository.activate(UserConverter.convertToStaffEnt(user), UserEntConstants.STAFF_DISCRIMINATOR);
         } else {
             throw new UserTypeNotFoundException(MongoRepositoryMessages.USER_TYPE_NOT_FOUND);
         }
@@ -181,11 +181,11 @@ public class UserRepositoryAdapter implements CreateUserPort, ReadUserPort, Upda
     @Override
     public void deactivate(User user) throws UserRepositoryException {
         if (user.getClass().equals(Client.class)) {
-            userRepository.deactivate(UserConverter.convertToClientEnt(user), UserConstants.CLIENT_DISCRIMINATOR);
+            userRepository.deactivate(UserConverter.convertToClientEnt(user), UserEntConstants.CLIENT_DISCRIMINATOR);
         } else if (user.getClass().equals(Admin.class)) {
-            userRepository.deactivate(UserConverter.convertToAdminEnt(user), UserConstants.ADMIN_DISCRIMINATOR);
+            userRepository.deactivate(UserConverter.convertToAdminEnt(user), UserEntConstants.ADMIN_DISCRIMINATOR);
         } else if (user.getClass().equals(Staff.class)) {
-            userRepository.deactivate(UserConverter.convertToStaffEnt(user), UserConstants.STAFF_DISCRIMINATOR);
+            userRepository.deactivate(UserConverter.convertToStaffEnt(user), UserEntConstants.STAFF_DISCRIMINATOR);
         } else {
             throw new UserTypeNotFoundException(MongoRepositoryMessages.USER_TYPE_NOT_FOUND);
         }

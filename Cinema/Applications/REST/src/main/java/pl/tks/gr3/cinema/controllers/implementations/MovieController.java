@@ -12,12 +12,12 @@ import org.springframework.web.bind.annotation.*;
 import pl.tks.gr3.cinema.application_services.exceptions.GeneralServiceException;
 import pl.tks.gr3.cinema.application_services.exceptions.crud.movie.MovieServiceMovieNotFoundException;
 import pl.tks.gr3.cinema.application_services.services.MovieService;
-import pl.tks.gr3.cinema.domain_model.model.Movie;
-import pl.tks.gr3.cinema.domain_model.model.Ticket;
-import pl.tks.gr3.cinema.dto.input.MovieInputDTO;
-import pl.tks.gr3.cinema.dto.output.MovieDTO;
-import pl.tks.gr3.cinema.dto.output.TicketDTO;
-import pl.tks.gr3.cinema.security.services.JWSService;
+import pl.tks.gr3.cinema.domain_model.Movie;
+import pl.tks.gr3.cinema.domain_model.Ticket;
+import pl.tks.gr3.cinema.viewrest.input.MovieInputDTO;
+import pl.tks.gr3.cinema.viewrest.output.MovieDTO;
+import pl.tks.gr3.cinema.viewrest.output.TicketDTO;
+import pl.tks.gr3.cinema.application_services.services.JWSService;
 import pl.tks.gr3.cinema.controllers.interfaces.MovieControllerInterface;
 
 import java.net.URI;
@@ -41,7 +41,7 @@ public class MovieController implements MovieControllerInterface {
         this.jwsService = jwsService;
     }
 
-    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).STAFF)")
+    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).STAFF)")
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Override
     public ResponseEntity<?> create(@RequestBody MovieInputDTO movieInputDTO) {
@@ -61,7 +61,7 @@ public class MovieController implements MovieControllerInterface {
         }
     }
 
-    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).STAFF) or hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).CLIENT)")
+    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).STAFF) or hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).CLIENT)")
     @GetMapping(value = "/all", produces = MediaType.APPLICATION_JSON_VALUE)
     @Override
     public ResponseEntity<?> findAll() {
@@ -82,7 +82,7 @@ public class MovieController implements MovieControllerInterface {
         }
     }
 
-    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).STAFF) or hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).CLIENT)")
+    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).STAFF) or hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).CLIENT)")
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Override
     public ResponseEntity<?> findByUUID(@PathVariable("id") UUID movieID) {
@@ -97,7 +97,7 @@ public class MovieController implements MovieControllerInterface {
         }
     }
 
-    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).STAFF)")
+    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).STAFF)")
     @GetMapping(value = "{id}/tickets", produces = MediaType.APPLICATION_JSON_VALUE)
     @Override
     public ResponseEntity<?> findAllTicketsForCertainMovie(@PathVariable("id") UUID movieID) {
@@ -114,7 +114,7 @@ public class MovieController implements MovieControllerInterface {
         }
     }
 
-    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).STAFF)")
+    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).STAFF)")
     @PutMapping(value = "/update", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> update(@RequestHeader(value = HttpHeaders.IF_MATCH) String ifMatch, @RequestBody MovieDTO movieDTO) {
         try {
@@ -137,7 +137,7 @@ public class MovieController implements MovieControllerInterface {
         }
     }
 
-    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).STAFF)")
+    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).STAFF)")
     @DeleteMapping(value = "/{id}/delete")
     @Override
     public ResponseEntity<?> delete(@PathVariable("id") UUID movieID) {

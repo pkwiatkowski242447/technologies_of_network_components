@@ -1,8 +1,8 @@
 package pl.tks.gr3.cinema.controllers.interfaces;
 
 import org.springframework.http.ResponseEntity;
-import pl.tks.gr3.cinema.domain_model.model.Ticket;
-import pl.tks.gr3.cinema.dto.input.TicketInputDTO;
+import pl.tks.gr3.cinema.domain_model.Ticket;
+import pl.tks.gr3.cinema.viewrest.input.TicketInputDTO;
 
 import java.util.UUID;
 

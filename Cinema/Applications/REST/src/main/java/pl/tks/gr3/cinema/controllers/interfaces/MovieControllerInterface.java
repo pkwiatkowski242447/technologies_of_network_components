@@ -1,8 +1,8 @@
 package pl.tks.gr3.cinema.controllers.interfaces;
 
 import org.springframework.http.ResponseEntity;
-import pl.tks.gr3.cinema.domain_model.model.Movie;
-import pl.tks.gr3.cinema.dto.input.MovieInputDTO;
+import pl.tks.gr3.cinema.domain_model.Movie;
+import pl.tks.gr3.cinema.viewrest.input.MovieInputDTO;
 
 import java.util.UUID;
 

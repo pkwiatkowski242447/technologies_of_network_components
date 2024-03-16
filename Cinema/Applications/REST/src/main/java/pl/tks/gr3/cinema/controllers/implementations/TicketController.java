@@ -13,12 +13,12 @@ import pl.tks.gr3.cinema.application_services.exceptions.crud.client.ClientServi
 import pl.tks.gr3.cinema.application_services.exceptions.crud.ticket.TicketServiceTicketNotFoundException;
 import pl.tks.gr3.cinema.application_services.services.ClientService;
 import pl.tks.gr3.cinema.application_services.services.TicketService;
-import pl.tks.gr3.cinema.domain_model.model.Ticket;
-import pl.tks.gr3.cinema.domain_model.model.users.Client;
-import pl.tks.gr3.cinema.dto.input.TicketInputDTO;
-import pl.tks.gr3.cinema.dto.input.TicketSelfInputDTO;
-import pl.tks.gr3.cinema.dto.output.TicketDTO;
-import pl.tks.gr3.cinema.security.services.JWSService;
+import pl.tks.gr3.cinema.domain_model.Ticket;
+import pl.tks.gr3.cinema.domain_model.users.Client;
+import pl.tks.gr3.cinema.viewrest.input.TicketInputDTO;
+import pl.tks.gr3.cinema.viewrest.input.TicketSelfInputDTO;
+import pl.tks.gr3.cinema.viewrest.output.TicketDTO;
+import pl.tks.gr3.cinema.application_services.services.JWSService;
 import pl.tks.gr3.cinema.controllers.interfaces.TicketControllerInterface;
 
 import java.net.URI;
@@ -44,7 +44,7 @@ public class TicketController implements TicketControllerInterface {
         this.jwsService = jwsService;
     }
 
-    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).STAFF)")
+    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).STAFF)")
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Override
     public ResponseEntity<?> create(@RequestBody TicketInputDTO ticketInputDTO) {
@@ -65,7 +65,7 @@ public class TicketController implements TicketControllerInterface {
         }
     }
 
-    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).CLIENT)")
+    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).CLIENT)")
     @PostMapping(value = "/self", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> create(@RequestBody TicketSelfInputDTO ticketSelfInputDTO) {
         try {
@@ -85,7 +85,7 @@ public class TicketController implements TicketControllerInterface {
         }
     }
 
-    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).STAFF) or hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).CLIENT)")
+    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).STAFF) or hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).CLIENT)")
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Override
     public ResponseEntity<?> findByUUID(@PathVariable("id") UUID ticketID) {
@@ -110,7 +110,7 @@ public class TicketController implements TicketControllerInterface {
         }
     }
 
-    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).STAFF)")
+    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).STAFF)")
     @GetMapping(value = "/all", produces = MediaType.APPLICATION_JSON_VALUE)
     @Override
     public ResponseEntity<?> findAll() {
@@ -131,7 +131,7 @@ public class TicketController implements TicketControllerInterface {
         }
     }
 
-    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).CLIENT)")
+    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).CLIENT)")
     @PutMapping(value = "/update", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> update(@RequestHeader(value = HttpHeaders.IF_MATCH) String ifMatch, @RequestBody TicketDTO ticketDTO) {
         try {
@@ -160,7 +160,7 @@ public class TicketController implements TicketControllerInterface {
         }
     }
 
-    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).CLIENT)")
+    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).CLIENT)")
     @DeleteMapping(value = "/{id}/delete")
     @Override
     public ResponseEntity<?> delete(@PathVariable("id") UUID ticketID) {

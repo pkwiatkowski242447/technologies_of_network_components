@@ -2,14 +2,14 @@ package pl.tks.gr3.cinema.application_services.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import pl.tks.gr3.cinema.adapters.consts.model.UserEntConstants;
 import pl.tks.gr3.cinema.application_services.exceptions.crud.admin.*;
 import pl.tks.gr3.cinema.adapters.aggregates.UserRepositoryAdapter;
-import pl.tks.gr3.cinema.adapters.consts.model.UserConstants;
 import pl.tks.gr3.cinema.adapters.exceptions.UserRepositoryException;
 import pl.tks.gr3.cinema.adapters.exceptions.crud.user.UserRepositoryAdminNotFoundException;
 import pl.tks.gr3.cinema.adapters.exceptions.crud.user.UserRepositoryCreateUserDuplicateLoginException;
-import pl.tks.gr3.cinema.domain_model.model.Ticket;
-import pl.tks.gr3.cinema.domain_model.model.users.Admin;
+import pl.tks.gr3.cinema.domain_model.Ticket;
+import pl.tks.gr3.cinema.domain_model.users.Admin;
 import pl.tks.gr3.cinema.ports.userinterface.UserServiceInterface;
 
 import java.util.List;
@@ -109,7 +109,7 @@ public class AdminService implements UserServiceInterface<Admin> {
     @Override
     public List<Ticket> getTicketsForUser(UUID adminID) throws AdminServiceReadException {
         try {
-            return this.userRepository.getListOfTickets(adminID, UserConstants.ADMIN_DISCRIMINATOR);
+            return this.userRepository.getListOfTickets(adminID, UserEntConstants.ADMIN_DISCRIMINATOR);
         } catch (UserRepositoryException exception) {
             throw new AdminServiceReadException(exception.getMessage(), exception);
         }
@@ -118,7 +118,7 @@ public class AdminService implements UserServiceInterface<Admin> {
     @Override
     public void delete(UUID userID) throws AdminServiceDeleteException {
         try {
-            this.userRepository.delete(userID, UserConstants.ADMIN_DISCRIMINATOR);
+            this.userRepository.delete(userID, UserEntConstants.ADMIN_DISCRIMINATOR);
         } catch (UserRepositoryException exception) {
             throw new AdminServiceDeleteException(exception.getMessage(), exception);
         }

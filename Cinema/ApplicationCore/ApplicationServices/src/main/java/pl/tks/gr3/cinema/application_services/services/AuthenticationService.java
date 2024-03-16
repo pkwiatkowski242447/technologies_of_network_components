@@ -13,9 +13,9 @@ import pl.tks.gr3.cinema.adapters.aggregates.UserRepositoryAdapter;
 import pl.tks.gr3.cinema.adapters.exceptions.UserRepositoryException;
 import pl.tks.gr3.cinema.adapters.exceptions.crud.user.UserRepositoryCreateUserDuplicateLoginException;
 import pl.tks.gr3.cinema.application_services.exceptions.crud.authentication.register.*;
-import pl.tks.gr3.cinema.domain_model.model.users.Admin;
-import pl.tks.gr3.cinema.domain_model.model.users.Client;
-import pl.tks.gr3.cinema.domain_model.model.users.Staff;
+import pl.tks.gr3.cinema.domain_model.users.Admin;
+import pl.tks.gr3.cinema.domain_model.users.Client;
+import pl.tks.gr3.cinema.domain_model.users.Staff;
 import pl.tks.gr3.cinema.ports.userinterface.AuthenticationServiceInterface;
 
 @Service

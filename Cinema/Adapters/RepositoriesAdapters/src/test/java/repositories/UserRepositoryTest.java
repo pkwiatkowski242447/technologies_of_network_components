@@ -1,7 +1,7 @@
 package repositories;
 
 import org.junit.jupiter.api.*;
-import pl.tks.gr3.cinema.adapters.consts.model.UserConstants;
+import pl.tks.gr3.cinema.adapters.consts.model.UserEntConstants;
 import pl.tks.gr3.cinema.adapters.exceptions.UserRepositoryException;
 import pl.tks.gr3.cinema.adapters.exceptions.crud.user.*;
 import pl.tks.gr3.cinema.adapters.exceptions.other.client.UserActivationException;
@@ -500,7 +500,7 @@ public class UserRepositoryTest {
         ClientEnt foundClient = userRepositoryForTests.findClientByUUID(clientNo1.getUserID());
         assertNotNull(foundClient);
         assertFalse(foundClient.isUserStatusActive());
-        userRepositoryForTests.activate(clientNo1, UserConstants.CLIENT_DISCRIMINATOR);
+        userRepositoryForTests.activate(clientNo1, UserEntConstants.CLIENT_DISCRIMINATOR);
         foundClient = userRepositoryForTests.findClientByUUID(clientNo1.getUserID());
         assertNotNull(foundClient);
         assertTrue(foundClient.isUserStatusActive());
@@ -513,7 +513,7 @@ public class UserRepositoryTest {
         AdminEnt foundAdmin = userRepositoryForTests.findAdminByUUID(adminNo1.getUserID());
         assertNotNull(foundAdmin);
         assertFalse(foundAdmin.isUserStatusActive());
-        userRepositoryForTests.activate(adminNo1, UserConstants.ADMIN_DISCRIMINATOR);
+        userRepositoryForTests.activate(adminNo1, UserEntConstants.ADMIN_DISCRIMINATOR);
         foundAdmin = userRepositoryForTests.findAdminByUUID(adminNo1.getUserID());
         assertNotNull(foundAdmin);
         assertTrue(foundAdmin.isUserStatusActive());
@@ -526,7 +526,7 @@ public class UserRepositoryTest {
         StaffEnt foundStaff = userRepositoryForTests.findStaffByUUID(staffNo1.getUserID());
         assertNotNull(foundStaff);
         assertFalse(foundStaff.isUserStatusActive());
-        userRepositoryForTests.activate(staffNo1, UserConstants.STAFF_DISCRIMINATOR);
+        userRepositoryForTests.activate(staffNo1, UserEntConstants.STAFF_DISCRIMINATOR);
         foundStaff = userRepositoryForTests.findStaffByUUID(staffNo1.getUserID());
         assertNotNull(foundStaff);
         assertTrue(foundStaff.isUserStatusActive());
@@ -537,19 +537,19 @@ public class UserRepositoryTest {
     @Test
     public void userRepositoryActivateClientThatIsNotInTheDatabaseTestNegative() {
         ClientEnt client = new ClientEnt(UUID.randomUUID(), "SomeLogin", "SomePassword");
-        assertThrows(UserActivationException.class, () -> userRepositoryForTests.activate(client, UserConstants.CLIENT_DISCRIMINATOR));
+        assertThrows(UserActivationException.class, () -> userRepositoryForTests.activate(client, UserEntConstants.CLIENT_DISCRIMINATOR));
     }
 
     @Test
     public void userRepositoryActivateAdminThatIsNotInTheDatabaseTestNegative() {
         AdminEnt admin = new AdminEnt(UUID.randomUUID(), "SomeLogin", "SomePassword");
-        assertThrows(UserActivationException.class, () -> userRepositoryForTests.activate(admin, UserConstants.ADMIN_DISCRIMINATOR));
+        assertThrows(UserActivationException.class, () -> userRepositoryForTests.activate(admin, UserEntConstants.ADMIN_DISCRIMINATOR));
     }
 
     @Test
     public void userRepositoryActivateStaffThatIsNotInTheDatabaseTestNegative() {
         StaffEnt staff = new StaffEnt(UUID.randomUUID(), "SomeLogin", "SomePassword");
-        assertThrows(UserActivationException.class, () -> userRepositoryForTests.activate(staff, UserConstants.STAFF_DISCRIMINATOR));
+        assertThrows(UserActivationException.class, () -> userRepositoryForTests.activate(staff, UserEntConstants.STAFF_DISCRIMINATOR));
     }
 
     // Deactivate users tests positive
@@ -559,7 +559,7 @@ public class UserRepositoryTest {
         ClientEnt foundClient = userRepositoryForTests.findClientByUUID(clientNo1.getUserID());
         assertNotNull(foundClient);
         assertTrue(foundClient.isUserStatusActive());
-        userRepositoryForTests.deactivate(clientNo1, UserConstants.CLIENT_DISCRIMINATOR);
+        userRepositoryForTests.deactivate(clientNo1, UserEntConstants.CLIENT_DISCRIMINATOR);
         foundClient = userRepositoryForTests.findClientByUUID(clientNo1.getUserID());
         assertNotNull(foundClient);
         assertFalse(foundClient.isUserStatusActive());
@@ -570,7 +570,7 @@ public class UserRepositoryTest {
         AdminEnt foundAdmin = userRepositoryForTests.findAdminByUUID(adminNo1.getUserID());
         assertNotNull(foundAdmin);
         assertTrue(foundAdmin.isUserStatusActive());
-        userRepositoryForTests.deactivate(adminNo1, UserConstants.ADMIN_DISCRIMINATOR);
+        userRepositoryForTests.deactivate(adminNo1, UserEntConstants.ADMIN_DISCRIMINATOR);
         foundAdmin = userRepositoryForTests.findAdminByUUID(adminNo1.getUserID());
         assertNotNull(foundAdmin);
         assertFalse(foundAdmin.isUserStatusActive());
@@ -581,7 +581,7 @@ public class UserRepositoryTest {
         StaffEnt foundStaff = userRepositoryForTests.findStaffByUUID(staffNo1.getUserID());
         assertNotNull(foundStaff);
         assertTrue(foundStaff.isUserStatusActive());
-        userRepositoryForTests.deactivate(staffNo1, UserConstants.STAFF_DISCRIMINATOR);
+        userRepositoryForTests.deactivate(staffNo1, UserEntConstants.STAFF_DISCRIMINATOR);
         foundStaff = userRepositoryForTests.findStaffByUUID(staffNo1.getUserID());
         assertNotNull(foundStaff);
         assertFalse(foundStaff.isUserStatusActive());
@@ -592,19 +592,19 @@ public class UserRepositoryTest {
     @Test
     public void userRepositoryDeactivateClientThatIsNotInTheDatabaseTestNegative() {
         ClientEnt client = new ClientEnt(UUID.randomUUID(), "SomeLogin", "SomePassword");
-        assertThrows(UserDeactivationException.class, () -> userRepositoryForTests.deactivate(client, UserConstants.CLIENT_DISCRIMINATOR));
+        assertThrows(UserDeactivationException.class, () -> userRepositoryForTests.deactivate(client, UserEntConstants.CLIENT_DISCRIMINATOR));
     }
 
     @Test
     public void userRepositoryDeactivateAdminThatIsNotInTheDatabaseTestNegative() {
         AdminEnt admin = new AdminEnt(UUID.randomUUID(), "SomeLogin", "SomePassword");
-        assertThrows(UserDeactivationException.class, () -> userRepositoryForTests.deactivate(admin, UserConstants.ADMIN_DISCRIMINATOR));
+        assertThrows(UserDeactivationException.class, () -> userRepositoryForTests.deactivate(admin, UserEntConstants.ADMIN_DISCRIMINATOR));
     }
 
     @Test
     public void userRepositoryDeactivateStaffThatIsNotInTheDatabaseTestNegative() {
         StaffEnt staff = new StaffEnt(UUID.randomUUID(), "SomeLogin", "SomePassword");
-        assertThrows(UserDeactivationException.class, () -> userRepositoryForTests.deactivate(staff, UserConstants.STAFF_DISCRIMINATOR));
+        assertThrows(UserDeactivationException.class, () -> userRepositoryForTests.deactivate(staff, UserEntConstants.STAFF_DISCRIMINATOR));
     }
 
     // Update client tests
@@ -880,7 +880,7 @@ public class UserRepositoryTest {
     public void userRepositoryDeleteClientTestPositive() throws UserRepositoryException {
         int numOfClientsBefore = userRepositoryForTests.findAllClients().size();
         UUID removedClientID = clientNo1.getUserID();
-        userRepositoryForTests.delete(clientNo1.getUserID(), UserConstants.CLIENT_DISCRIMINATOR);
+        userRepositoryForTests.delete(clientNo1.getUserID(), UserEntConstants.CLIENT_DISCRIMINATOR);
         int numOfClientsAfter = userRepositoryForTests.findAllClients().size();
         assertNotEquals(numOfClientsBefore, numOfClientsAfter);
         assertEquals(2, numOfClientsBefore);
@@ -891,7 +891,7 @@ public class UserRepositoryTest {
     @Test
     public void userRepositoryDeleteClientThatIsNotInTheDatabaseTestNegative() {
         ClientEnt client = new ClientEnt(UUID.randomUUID(), "SomeLogin", "SomePassword");
-        assertThrows(UserRepositoryDeleteException.class, () -> userRepositoryForTests.delete(client.getUserID(), UserConstants.CLIENT_DISCRIMINATOR));
+        assertThrows(UserRepositoryDeleteException.class, () -> userRepositoryForTests.delete(client.getUserID(), UserEntConstants.CLIENT_DISCRIMINATOR));
     }
 
     // Admin delete tests
@@ -900,7 +900,7 @@ public class UserRepositoryTest {
     public void userRepositoryDeleteAdminTestPositive() throws UserRepositoryException {
         int numOfAdminsBefore = userRepositoryForTests.findAllAdmins().size();
         UUID removedAdminID = adminNo1.getUserID();
-        userRepositoryForTests.delete(adminNo1.getUserID(), UserConstants.ADMIN_DISCRIMINATOR);
+        userRepositoryForTests.delete(adminNo1.getUserID(), UserEntConstants.ADMIN_DISCRIMINATOR);
         int numOfAdminsAfter = userRepositoryForTests.findAllAdmins().size();
         assertNotEquals(numOfAdminsBefore, numOfAdminsAfter);
         assertEquals(2, numOfAdminsBefore);
@@ -911,7 +911,7 @@ public class UserRepositoryTest {
     @Test
     public void userRepositoryDeleteAdminThatIsNotInTheDatabaseTestNegative() {
         AdminEnt admin = new AdminEnt(UUID.randomUUID(), "SomeLogin", "SomePassword");
-        assertThrows(UserRepositoryDeleteException.class, () -> userRepositoryForTests.delete(admin.getUserID(), UserConstants.ADMIN_DISCRIMINATOR));
+        assertThrows(UserRepositoryDeleteException.class, () -> userRepositoryForTests.delete(admin.getUserID(), UserEntConstants.ADMIN_DISCRIMINATOR));
     }
 
     // Staff delete tests
@@ -920,7 +920,7 @@ public class UserRepositoryTest {
     public void userRepositoryDeleteStaffTestPositive() throws UserRepositoryException {
         int numOfStaffsBefore = userRepositoryForTests.findAllStaffs().size();
         UUID removedStaffID = staffNo1.getUserID();
-        userRepositoryForTests.delete(staffNo1.getUserID(), UserConstants.STAFF_DISCRIMINATOR);
+        userRepositoryForTests.delete(staffNo1.getUserID(), UserEntConstants.STAFF_DISCRIMINATOR);
         int numOfStaffsAfter = userRepositoryForTests.findAllStaffs().size();
         assertNotEquals(numOfStaffsBefore, numOfStaffsAfter);
         assertEquals(2, numOfStaffsBefore);
@@ -931,38 +931,38 @@ public class UserRepositoryTest {
     @Test
     public void userRepositoryDeleteStaffThatIsNotInTheDatabaseTestNegative() {
         StaffEnt staff = new StaffEnt(UUID.randomUUID(), "SomeLogin", "SomePassword");
-        assertThrows(UserRepositoryDeleteException.class, () -> userRepositoryForTests.delete(staff.getUserID(), UserConstants.STAFF_DISCRIMINATOR));
+        assertThrows(UserRepositoryDeleteException.class, () -> userRepositoryForTests.delete(staff.getUserID(), UserEntConstants.STAFF_DISCRIMINATOR));
     }
 
     // Delete user with wrong discriminator
 
     @Test
     public void userRepositoryTryDeletingClientWithAdminDiscriminatorTestNegative() {
-        assertThrows(UserRepositoryDeleteException.class, () -> userRepositoryForTests.delete(clientNo1.getUserID(), UserConstants.ADMIN_DISCRIMINATOR));
+        assertThrows(UserRepositoryDeleteException.class, () -> userRepositoryForTests.delete(clientNo1.getUserID(), UserEntConstants.ADMIN_DISCRIMINATOR));
     }
 
     @Test
     public void userRepositoryTryDeletingClientWithStaffDiscriminatorTestNegative() {
-        assertThrows(UserRepositoryDeleteException.class, () -> userRepositoryForTests.delete(clientNo1.getUserID(), UserConstants.STAFF_DISCRIMINATOR));
+        assertThrows(UserRepositoryDeleteException.class, () -> userRepositoryForTests.delete(clientNo1.getUserID(), UserEntConstants.STAFF_DISCRIMINATOR));
     }
 
     @Test
     public void userRepositoryTryDeletingAdminWithClientDiscriminatorTestNegative() {
-        assertThrows(UserRepositoryDeleteException.class, () -> userRepositoryForTests.delete(adminNo1.getUserID(), UserConstants.CLIENT_DISCRIMINATOR));
+        assertThrows(UserRepositoryDeleteException.class, () -> userRepositoryForTests.delete(adminNo1.getUserID(), UserEntConstants.CLIENT_DISCRIMINATOR));
     }
 
     @Test
     public void userRepositoryTryDeletingAdminWithStaffDiscriminatorTestNegative() {
-        assertThrows(UserRepositoryDeleteException.class, () -> userRepositoryForTests.delete(adminNo1.getUserID(), UserConstants.STAFF_DISCRIMINATOR));
+        assertThrows(UserRepositoryDeleteException.class, () -> userRepositoryForTests.delete(adminNo1.getUserID(), UserEntConstants.STAFF_DISCRIMINATOR));
     }
 
     @Test
     public void userRepositoryTryDeletingStaffWithClientDiscriminatorTestNegative() {
-        assertThrows(UserRepositoryDeleteException.class, () -> userRepositoryForTests.delete(staffNo1.getUserID(), UserConstants.CLIENT_DISCRIMINATOR));
+        assertThrows(UserRepositoryDeleteException.class, () -> userRepositoryForTests.delete(staffNo1.getUserID(), UserEntConstants.CLIENT_DISCRIMINATOR));
     }
 
     @Test
     public void userRepositoryTryDeletingStaffWithAdminDiscriminatorTestNegative() {
-        assertThrows(UserRepositoryDeleteException.class, () -> userRepositoryForTests.delete(staffNo1.getUserID(), UserConstants.ADMIN_DISCRIMINATOR));
+        assertThrows(UserRepositoryDeleteException.class, () -> userRepositoryForTests.delete(staffNo1.getUserID(), UserEntConstants.ADMIN_DISCRIMINATOR));
     }
 }

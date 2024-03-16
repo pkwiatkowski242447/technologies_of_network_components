@@ -7,7 +7,7 @@ import pl.tks.gr3.cinema.application_services.exceptions.crud.movie.*;
 import pl.tks.gr3.cinema.application_services.services.MovieService;
 import pl.tks.gr3.cinema.adapters.aggregates.MovieRepositoryAdapter;
 import pl.tks.gr3.cinema.adapters.repositories.MovieRepository;
-import pl.tks.gr3.cinema.domain_model.model.Movie;
+import pl.tks.gr3.cinema.domain_model.Movie;
 
 import java.util.List;
 import java.util.UUID;

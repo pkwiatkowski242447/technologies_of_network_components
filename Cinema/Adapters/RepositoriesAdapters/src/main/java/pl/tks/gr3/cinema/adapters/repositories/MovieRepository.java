@@ -11,13 +11,13 @@ import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
-import pl.tks.gr3.cinema.adapters.consts.model.MovieConstants;
-import pl.tks.gr3.cinema.adapters.consts.model.TicketConstants;
+import pl.tks.gr3.cinema.adapters.consts.model.MovieEntConstants;
+import pl.tks.gr3.cinema.adapters.consts.model.TicketEntConstants;
 import pl.tks.gr3.cinema.adapters.exceptions.MovieRepositoryException;
 import pl.tks.gr3.cinema.adapters.exceptions.crud.movie.*;
 import pl.tks.gr3.cinema.adapters.exceptions.crud.other.MovieNullReferenceException;
 import pl.tks.gr3.cinema.adapters.exceptions.other.movie.ResourceIsCurrentlyUsedDeleteException;
-import pl.tks.gr3.cinema.adapters.messages.repositories.MongoRepositoryMessages;
+import pl.tks.gr3.cinema.adapters.messages.MongoRepositoryMessages;
 import pl.tks.gr3.cinema.adapters.model.MovieEnt;
 import pl.tks.gr3.cinema.adapters.model.TicketEnt;
 import pl.tks.gr3.cinema.adapters.api.MovieRepositoryInterface;
@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Repository
-public class MovieRepository extends MongoRepository implements MovieRepositoryInterface, Cloneable {
+public class MovieRepository extends MongoRepository implements MovieRepositoryInterface {
 
     private final String databaseName;
     private static final Logger logger = LoggerFactory.getLogger(MovieRepository.class);
@@ -107,7 +107,7 @@ public class MovieRepository extends MongoRepository implements MovieRepositoryI
 
         List<MovieEnt> listOfMovies = List.of(movieNo1, movieNo2, movieNo3);
         for (MovieEnt movie : listOfMovies) {
-            Bson filter = Filters.eq(MovieConstants.GENERAL_IDENTIFIER, movie.getMovieID());
+            Bson filter = Filters.eq(MovieEntConstants.GENERAL_IDENTIFIER, movie.getMovieID());
             if (this.getMovieCollection().find(filter).first() == null) {
                 this.getMovieCollection().insertOne(movie);
             }
@@ -178,7 +178,7 @@ public class MovieRepository extends MongoRepository implements MovieRepositoryI
 
     public List<TicketEnt> getListOfTicketsForMovie(UUID movieID) {
         List<TicketEnt> listOfActiveTickets;
-        List<Bson> listOfFilters = List.of(Aggregates.match(Filters.eq(TicketConstants.MOVIE_ID, movieID)));
+        List<Bson> listOfFilters = List.of(Aggregates.match(Filters.eq(TicketEntConstants.MOVIE_ID, movieID)));
         listOfActiveTickets = findTicketsWithAggregate(listOfFilters);
         return listOfActiveTickets;
     }
@@ -188,7 +188,7 @@ public class MovieRepository extends MongoRepository implements MovieRepositoryI
     @Override
     public void update(MovieEnt movie) throws MovieRepositoryException {
         try {
-            Bson movieFilter = Filters.eq(MovieConstants.GENERAL_IDENTIFIER, movie.getMovieID());
+            Bson movieFilter = Filters.eq(MovieEntConstants.GENERAL_IDENTIFIER, movie.getMovieID());
             MovieEnt updatedMovie = getMovieCollection().findOneAndReplace(movieFilter, movie);
             if (updatedMovie == null) {
                 throw new MovieNullReferenceException(MongoRepositoryMessages.MOVIE_DOC_OBJECT_NOT_FOUND);
@@ -203,10 +203,10 @@ public class MovieRepository extends MongoRepository implements MovieRepositoryI
     @Override
     public void delete(UUID movieID) throws MovieRepositoryException {
         try {
-            Bson ticketFilter = Filters.eq(TicketConstants.MOVIE_ID, movieID);
+            Bson ticketFilter = Filters.eq(TicketEntConstants.MOVIE_ID, movieID);
             List<TicketEnt> listOfTicket = getTicketCollection().find(ticketFilter).into(new ArrayList<>());
             if (listOfTicket.isEmpty()) {
-                Bson movieFilter = Filters.eq(MovieConstants.GENERAL_IDENTIFIER, movieID);
+                Bson movieFilter = Filters.eq(MovieEntConstants.GENERAL_IDENTIFIER, movieID);
                 MovieEnt removedMovie = getMovieCollection().findOneAndDelete(movieFilter);
                 if (removedMovie == null) {
                     throw new MovieNullReferenceException(MongoRepositoryMessages.MOVIE_DOC_OBJECT_NOT_FOUND);

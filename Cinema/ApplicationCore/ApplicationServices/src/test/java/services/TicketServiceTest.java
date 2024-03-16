@@ -27,11 +27,11 @@ import pl.tks.gr3.cinema.adapters.repositories.MovieRepository;
 import pl.tks.gr3.cinema.adapters.repositories.TicketRepository;
 import pl.tks.gr3.cinema.adapters.repositories.UserRepository;
 import pl.tks.gr3.cinema.application_services.services.*;
-import pl.tks.gr3.cinema.domain_model.model.Movie;
-import pl.tks.gr3.cinema.domain_model.model.Ticket;
-import pl.tks.gr3.cinema.domain_model.model.users.Admin;
-import pl.tks.gr3.cinema.domain_model.model.users.Client;
-import pl.tks.gr3.cinema.domain_model.model.users.Staff;
+import pl.tks.gr3.cinema.domain_model.Movie;
+import pl.tks.gr3.cinema.domain_model.Ticket;
+import pl.tks.gr3.cinema.domain_model.users.Admin;
+import pl.tks.gr3.cinema.domain_model.users.Client;
+import pl.tks.gr3.cinema.domain_model.users.Staff;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;

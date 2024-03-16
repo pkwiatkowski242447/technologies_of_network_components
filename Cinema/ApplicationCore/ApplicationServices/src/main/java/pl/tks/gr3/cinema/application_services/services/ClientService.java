@@ -3,13 +3,13 @@ package pl.tks.gr3.cinema.application_services.services;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pl.tks.gr3.cinema.adapters.aggregates.UserRepositoryAdapter;
-import pl.tks.gr3.cinema.adapters.consts.model.UserConstants;
+import pl.tks.gr3.cinema.adapters.consts.model.UserEntConstants;
 import pl.tks.gr3.cinema.adapters.exceptions.UserRepositoryException;
 import pl.tks.gr3.cinema.adapters.exceptions.crud.user.UserRepositoryCreateUserDuplicateLoginException;
 import pl.tks.gr3.cinema.adapters.exceptions.crud.user.UserRepositoryUserNotFoundException;
 import pl.tks.gr3.cinema.application_services.exceptions.crud.client.*;
-import pl.tks.gr3.cinema.domain_model.model.Ticket;
-import pl.tks.gr3.cinema.domain_model.model.users.Client;
+import pl.tks.gr3.cinema.domain_model.Ticket;
+import pl.tks.gr3.cinema.domain_model.users.Client;
 import pl.tks.gr3.cinema.ports.userinterface.UserServiceInterface;
 
 import java.util.List;
@@ -110,7 +110,7 @@ public class ClientService implements UserServiceInterface<Client> {
     @Override
     public List<Ticket> getTicketsForUser(UUID clientID) throws ClientServiceReadException {
         try {
-            return this.userRepository.getListOfTickets(clientID, UserConstants.CLIENT_DISCRIMINATOR);
+            return this.userRepository.getListOfTickets(clientID, UserEntConstants.CLIENT_DISCRIMINATOR);
         } catch (UserRepositoryException exception) {
             throw new ClientServiceReadException(exception.getMessage(), exception);
         }
@@ -119,7 +119,7 @@ public class ClientService implements UserServiceInterface<Client> {
     @Override
     public void delete(UUID userID) throws ClientServiceDeleteException {
         try {
-            this.userRepository.delete(userID, UserConstants.CLIENT_DISCRIMINATOR);
+            this.userRepository.delete(userID, UserEntConstants.CLIENT_DISCRIMINATOR);
         } catch (UserRepositoryException exception) {
             throw new ClientServiceDeleteException(exception.getMessage(), exception);
         }

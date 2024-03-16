@@ -15,8 +15,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import pl.tks.gr3.cinema.adapters.exceptions.crud.user.UserRepositoryReadException;
 import pl.tks.gr3.cinema.adapters.model.users.UserEnt;
 import pl.tks.gr3.cinema.adapters.repositories.UserRepository;
-import pl.tks.gr3.cinema.domain_model.model.users.User;
-import pl.tks.gr3.cinema.security.SecurityMessages;
+import pl.tks.gr3.cinema.security.consts.SecurityMessages;
 
 import java.util.List;
 

@@ -16,11 +16,11 @@ import pl.tks.gr3.cinema.application_services.exceptions.GeneralServiceException
 import pl.tks.gr3.cinema.application_services.exceptions.crud.staff.StaffServiceStaffNotFoundException;
 import pl.tks.gr3.cinema.application_services.services.StaffService;
 import pl.tks.gr3.cinema.controllers.interfaces.UserControllerInterface;
-import pl.tks.gr3.cinema.domain_model.model.users.Staff;
-import pl.tks.gr3.cinema.domain_model.model.users.User;
-import pl.tks.gr3.cinema.dto.auth.UserOutputDTO;
-import pl.tks.gr3.cinema.dto.auth.UserUpdateDTO;
-import pl.tks.gr3.cinema.security.services.JWSService;
+import pl.tks.gr3.cinema.domain_model.users.Staff;
+import pl.tks.gr3.cinema.domain_model.users.User;
+import pl.tks.gr3.cinema.viewrest.output.UserOutputDTO;
+import pl.tks.gr3.cinema.viewrest.input.UserUpdateDTO;
+import pl.tks.gr3.cinema.application_services.services.JWSService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,7 +44,7 @@ public class StaffController implements UserControllerInterface<Staff> {
         this.passwordEncoder = passwordEncoder;
     }
 
-    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).STAFF) || hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).ADMIN)")
+    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).STAFF) || hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).ADMIN)")
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Override
     public ResponseEntity<?> findByUUID(@PathVariable("id") UUID staffID) {
@@ -59,7 +59,7 @@ public class StaffController implements UserControllerInterface<Staff> {
         }
     }
 
-    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).STAFF) || hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).ADMIN)")
+    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).STAFF) || hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).ADMIN)")
     @GetMapping(value = "/login/{login}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Override
     public ResponseEntity<?> findByLogin(@PathVariable("login") String staffLogin) {
@@ -88,7 +88,7 @@ public class StaffController implements UserControllerInterface<Staff> {
         }
     }
 
-    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).STAFF) || hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).ADMIN)")
+    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).STAFF) || hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).ADMIN)")
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @Override
     public ResponseEntity<?> findAllWithMatchingLogin(@RequestParam("match") String staffLogin) {
@@ -100,7 +100,7 @@ public class StaffController implements UserControllerInterface<Staff> {
         }
     }
 
-    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).STAFF) || hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).ADMIN)")
+    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).STAFF) || hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).ADMIN)")
     @GetMapping(value = "/all", produces = MediaType.APPLICATION_JSON_VALUE)
     @Override
     public ResponseEntity<?> findAll() {
@@ -134,7 +134,7 @@ public class StaffController implements UserControllerInterface<Staff> {
         }
     }
 
-    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).ADMIN)")
+    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).ADMIN)")
     @PostMapping(value = "/{id}/activate")
     @Override
     public ResponseEntity<?> activate(@PathVariable("id") UUID staffID) {
@@ -146,7 +146,7 @@ public class StaffController implements UserControllerInterface<Staff> {
         }
     }
 
-    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).ADMIN)")
+    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).ADMIN)")
     @PostMapping(value = "/{id}/deactivate")
     @Override
     public ResponseEntity<?> deactivate(@PathVariable("id") UUID staffID) {

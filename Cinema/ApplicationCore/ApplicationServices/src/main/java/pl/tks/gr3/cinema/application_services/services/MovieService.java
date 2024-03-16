@@ -6,8 +6,8 @@ import pl.tks.gr3.cinema.adapters.aggregates.MovieRepositoryAdapter;
 import pl.tks.gr3.cinema.adapters.exceptions.MovieRepositoryException;
 import pl.tks.gr3.cinema.adapters.exceptions.crud.movie.MovieRepositoryMovieNotFoundException;
 import pl.tks.gr3.cinema.application_services.exceptions.crud.movie.*;
-import pl.tks.gr3.cinema.domain_model.model.Movie;
-import pl.tks.gr3.cinema.domain_model.model.Ticket;
+import pl.tks.gr3.cinema.domain_model.Movie;
+import pl.tks.gr3.cinema.domain_model.Ticket;
 import pl.tks.gr3.cinema.ports.userinterface.MovieServiceInterface;
 
 import java.util.List;

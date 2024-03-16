@@ -11,7 +11,7 @@ import org.junit.jupiter.api.*;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import pl.tks.gr3.cinema.adapters.aggregates.UserRepositoryAdapter;
-import pl.tks.gr3.cinema.adapters.consts.model.UserConstants;
+import pl.tks.gr3.cinema.adapters.consts.model.UserEntConstants;
 import pl.tks.gr3.cinema.adapters.exceptions.UserRepositoryException;
 import pl.tks.gr3.cinema.adapters.repositories.UserRepository;
 
@@ -19,11 +19,11 @@ import java.net.URL;
 import java.util.List;
 
 import org.slf4j.*;
-import pl.tks.gr3.cinema.domain_model.model.users.Admin;
-import pl.tks.gr3.cinema.domain_model.model.users.Client;
-import pl.tks.gr3.cinema.domain_model.model.users.Staff;
-import pl.tks.gr3.cinema.dto.auth.UserInputDTO;
-import pl.tks.gr3.cinema.dto.auth.UserOutputDTO;
+import pl.tks.gr3.cinema.domain_model.users.Admin;
+import pl.tks.gr3.cinema.domain_model.users.Client;
+import pl.tks.gr3.cinema.domain_model.users.Staff;
+import pl.tks.gr3.cinema.viewrest.input.UserInputDTO;
+import pl.tks.gr3.cinema.viewrest.output.UserOutputDTO;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -83,17 +83,17 @@ public class AuthenticationControllerTest {
         try {
             List<Client> listOfClients = userRepository.findAllClients();
             for (Client client : listOfClients) {
-                userRepository.delete(client.getUserID(), UserConstants.CLIENT_DISCRIMINATOR);
+                userRepository.delete(client.getUserID(), UserEntConstants.CLIENT_DISCRIMINATOR);
             }
 
             List<Admin> listOfAdmins = userRepository.findAllAdmins();
             for (Admin admin : listOfAdmins) {
-                userRepository.delete(admin.getUserID(), UserConstants.ADMIN_DISCRIMINATOR);
+                userRepository.delete(admin.getUserID(), UserEntConstants.ADMIN_DISCRIMINATOR);
             }
 
             List<Staff> listOfStaffs = userRepository.findAllStaffs();
             for (Staff staff : listOfStaffs) {
-                userRepository.delete(staff.getUserID(), UserConstants.STAFF_DISCRIMINATOR);
+                userRepository.delete(staff.getUserID(), UserEntConstants.STAFF_DISCRIMINATOR);
             }
         } catch (UserRepositoryException exception) {
             throw new RuntimeException("Could not delete sample users with userRepository object.", exception);

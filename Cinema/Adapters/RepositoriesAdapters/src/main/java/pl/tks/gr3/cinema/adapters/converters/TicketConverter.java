@@ -1,7 +1,7 @@
 package pl.tks.gr3.cinema.adapters.converters;
 
 import pl.tks.gr3.cinema.adapters.model.TicketEnt;
-import pl.tks.gr3.cinema.domain_model.model.Ticket;
+import pl.tks.gr3.cinema.domain_model.Ticket;
 
 public class TicketConverter {
     public static TicketEnt convertToTicketEnt(Ticket ticket) {

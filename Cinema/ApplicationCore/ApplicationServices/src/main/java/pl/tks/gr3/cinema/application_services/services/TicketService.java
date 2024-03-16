@@ -6,7 +6,7 @@ import pl.tks.gr3.cinema.adapters.aggregates.TicketRepositoryAdapter;
 import pl.tks.gr3.cinema.adapters.exceptions.TicketRepositoryException;
 import pl.tks.gr3.cinema.adapters.exceptions.crud.ticket.TicketRepositoryTicketNotFoundException;
 import pl.tks.gr3.cinema.application_services.exceptions.crud.ticket.*;
-import pl.tks.gr3.cinema.domain_model.model.Ticket;
+import pl.tks.gr3.cinema.domain_model.Ticket;
 import pl.tks.gr3.cinema.ports.userinterface.TicketServiceInterface;
 
 import java.time.LocalDateTime;

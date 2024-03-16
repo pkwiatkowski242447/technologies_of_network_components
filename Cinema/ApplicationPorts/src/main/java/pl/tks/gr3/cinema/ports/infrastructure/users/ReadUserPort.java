@@ -1,10 +1,10 @@
 package pl.tks.gr3.cinema.ports.infrastructure.users;
 
-import pl.tks.gr3.cinema.domain_model.model.Ticket;
-import pl.tks.gr3.cinema.domain_model.model.users.Client;
-import pl.tks.gr3.cinema.domain_model.model.users.Admin;
-import pl.tks.gr3.cinema.domain_model.model.users.Staff;
-import pl.tks.gr3.cinema.domain_model.model.users.User;
+import pl.tks.gr3.cinema.domain_model.Ticket;
+import pl.tks.gr3.cinema.domain_model.users.Client;
+import pl.tks.gr3.cinema.domain_model.users.Admin;
+import pl.tks.gr3.cinema.domain_model.users.Staff;
+import pl.tks.gr3.cinema.domain_model.users.User;
 
 import java.util.List;
 import java.util.UUID;

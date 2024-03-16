@@ -7,7 +7,6 @@ import pl.tks.gr3.cinema.adapters.model.users.AdminEnt;
 import pl.tks.gr3.cinema.adapters.model.users.ClientEnt;
 import pl.tks.gr3.cinema.adapters.model.users.StaffEnt;
 import pl.tks.gr3.cinema.adapters.model.users.UserEnt;
-import pl.tks.gr3.cinema.domain_model.model.users.Staff;
 
 import java.util.List;
 import java.util.UUID;

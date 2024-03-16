@@ -7,7 +7,7 @@ import pl.tks.gr3.cinema.application_services.exceptions.crud.client.*;
 import pl.tks.gr3.cinema.application_services.services.ClientService;
 import pl.tks.gr3.cinema.adapters.aggregates.UserRepositoryAdapter;
 import pl.tks.gr3.cinema.adapters.repositories.UserRepository;
-import pl.tks.gr3.cinema.domain_model.model.users.Client;
+import pl.tks.gr3.cinema.domain_model.users.Client;
 
 import java.util.List;
 import java.util.UUID;

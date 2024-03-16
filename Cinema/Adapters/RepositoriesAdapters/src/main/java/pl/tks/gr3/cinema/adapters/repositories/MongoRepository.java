@@ -11,14 +11,14 @@ import org.bson.codecs.pojo.ClassModel;
 import org.bson.codecs.pojo.Conventions;
 import org.bson.codecs.pojo.PojoCodecProvider;
 import org.bson.conversions.Bson;
-import pl.tks.gr3.cinema.adapters.consts.model.MovieConstants;
-import pl.tks.gr3.cinema.adapters.consts.model.TicketConstants;
-import pl.tks.gr3.cinema.adapters.consts.model.UserConstants;
-import pl.tks.gr3.cinema.adapters.consts.repositories.MongoRepositoryConstants;
+import pl.tks.gr3.cinema.adapters.consts.model.MovieEntConstants;
+import pl.tks.gr3.cinema.adapters.consts.model.TicketEntConstants;
+import pl.tks.gr3.cinema.adapters.consts.model.UserEntConstants;
+import pl.tks.gr3.cinema.adapters.consts.MongoRepositoryConstants;
 import pl.tks.gr3.cinema.adapters.exceptions.crud.other.MovieNullReferenceException;
 import pl.tks.gr3.cinema.adapters.exceptions.crud.other.TicketNullReferenceException;
 import pl.tks.gr3.cinema.adapters.exceptions.crud.other.UserNullReferenceException;
-import pl.tks.gr3.cinema.adapters.messages.repositories.MongoRepositoryMessages;
+import pl.tks.gr3.cinema.adapters.messages.MongoRepositoryMessages;
 import pl.tks.gr3.cinema.adapters.model.MovieEnt;
 import pl.tks.gr3.cinema.adapters.model.TicketEnt;
 import pl.tks.gr3.cinema.adapters.model.users.AdminEnt;
@@ -102,7 +102,7 @@ public abstract class MongoRepository implements AutoCloseable {
     // Find client / movie / ticket by ID
 
     protected UserEnt findUser(UUID userID) throws UserNullReferenceException {
-        Bson clientFilter = Filters.eq(UserConstants.GENERAL_IDENTIFIER, userID);
+        Bson clientFilter = Filters.eq(UserEntConstants.GENERAL_IDENTIFIER, userID);
         UserEnt user = getClientCollection().find(clientFilter).first();
         if (user != null) {
             return user;
@@ -112,7 +112,7 @@ public abstract class MongoRepository implements AutoCloseable {
     }
 
     protected MovieEnt findMovie(UUID movieID) throws MovieNullReferenceException {
-        Bson movieFilter = Filters.eq(MovieConstants.GENERAL_IDENTIFIER, movieID);
+        Bson movieFilter = Filters.eq(MovieEntConstants.GENERAL_IDENTIFIER, movieID);
         MovieEnt movie = getMovieCollection().find(movieFilter).first();
         if (movie != null) {
             return movie;
@@ -122,7 +122,7 @@ public abstract class MongoRepository implements AutoCloseable {
     }
 
     protected TicketEnt findTicket(UUID ticketID) throws TicketNullReferenceException {
-        Bson ticketFilter = Filters.eq(TicketConstants.GENERAL_IDENTIFIER, ticketID);
+        Bson ticketFilter = Filters.eq(TicketEntConstants.GENERAL_IDENTIFIER, ticketID);
         TicketEnt ticket = getTicketCollection().find(ticketFilter).first();
         if (ticket != null) {
             return ticket;

@@ -3,7 +3,7 @@ package model;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import pl.tks.gr3.cinema.domain_model.model.Movie;
+import pl.tks.gr3.cinema.domain_model.Movie;
 
 import java.util.UUID;
 
