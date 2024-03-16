@@ -12,9 +12,10 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import pl.tks.gr3.cinema.exceptions.repositories.crud.user.UserRepositoryReadException;
-import pl.tks.gr3.cinema.model.users.User;
-import pl.tks.gr3.cinema.adapters.repositories.implementations.UserRepository;
+import pl.tks.gr3.cinema.adapters.exceptions.crud.user.UserRepositoryReadException;
+import pl.tks.gr3.cinema.adapters.model.users.UserEnt;
+import pl.tks.gr3.cinema.adapters.repositories.UserRepository;
+import pl.tks.gr3.cinema.domain_model.model.users.User;
 import pl.tks.gr3.cinema.security.SecurityMessages;
 
 import java.util.List;
@@ -29,14 +30,14 @@ public class ApplicationConfig {
     public UserDetailsService userDetailsService() {
         return username -> {
             try {
-                User user = userRepository.findByLogin(username);
-                return new org.springframework.security.core.userdetails.User(user.getUserLogin(),
-                        user.getUserPassword(),
-                        user.isUserStatusActive(),
+                UserEnt userEnt = userRepository.findByLogin(username);
+                return new org.springframework.security.core.userdetails.User(userEnt.getUserLogin(),
+                        userEnt.getUserPassword(),
+                        userEnt.isUserStatusActive(),
                         true,
                         true,
                         true,
-                        List.of(new SimpleGrantedAuthority("ROLE_" + user.getUserRole().name())));
+                        List.of(new SimpleGrantedAuthority("ROLE_" + userEnt.getUserRole().name())));
             } catch (UserRepositoryReadException exception) {
                 throw new UsernameNotFoundException(SecurityMessages.USER_NOT_FOUND);
             }

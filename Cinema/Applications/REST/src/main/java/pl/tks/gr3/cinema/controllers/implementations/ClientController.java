@@ -12,17 +12,17 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-import pl.tks.gr3.cinema.exceptions.services.crud.client.ClientServiceClientNotFoundException;
-import pl.tks.gr3.cinema.model.users.User;
+import pl.tks.gr3.cinema.application_services.exceptions.GeneralServiceException;
+import pl.tks.gr3.cinema.application_services.exceptions.crud.client.ClientServiceClientNotFoundException;
+import pl.tks.gr3.cinema.application_services.services.ClientService;
+import pl.tks.gr3.cinema.controllers.interfaces.UserControllerInterface;
+import pl.tks.gr3.cinema.domain_model.model.Ticket;
+import pl.tks.gr3.cinema.domain_model.model.users.Client;
+import pl.tks.gr3.cinema.domain_model.model.users.User;
+import pl.tks.gr3.cinema.dto.auth.UserOutputDTO;
+import pl.tks.gr3.cinema.dto.auth.UserUpdateDTO;
+import pl.tks.gr3.cinema.dto.output.TicketDTO;
 import pl.tks.gr3.cinema.security.services.JWSService;
-import pl.pas.gr3.dto.auth.UserOutputDTO;
-import pl.pas.gr3.dto.auth.UserUpdateDTO;
-import pl.pas.gr3.dto.output.TicketDTO;
-import pl.tks.gr3.cinema.exceptions.services.GeneralServiceException;
-import pl.tks.gr3.cinema.services.implementations.ClientService;
-import pl.tks.gr3.cinema.model.Ticket;
-import pl.tks.gr3.cinema.model.users.Client;
-import pl.tks.gr3.cinema.controllers.interfaces.UserServiceInterface;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,7 +31,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/clients")
-public class ClientController implements UserServiceInterface<Client> {
+public class ClientController implements UserControllerInterface<Client> {
 
     private static final Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
 
@@ -118,7 +118,7 @@ public class ClientController implements UserServiceInterface<Client> {
     @GetMapping(value = "/{id}/ticket-list", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getTicketsForCertainUser(@PathVariable("id") UUID clientID) {
         try {
-            List<Ticket> listOfTicketsForAClient = this.clientService.getTicketsForClient(clientID);
+            List<Ticket> listOfTicketsForAClient = this.clientService.getTicketsForUser(clientID);
             List<TicketDTO> listOfDTOs = new ArrayList<>();
             for (Ticket ticket : listOfTicketsForAClient) {
                 listOfDTOs.add(new TicketDTO(ticket.getTicketID(), ticket.getMovieTime(), ticket.getTicketPrice(), ticket.getUserID(), ticket.getMovieID()));
@@ -137,7 +137,7 @@ public class ClientController implements UserServiceInterface<Client> {
     public ResponseEntity<?> getTicketsForCertainUser() {
         try {
             Client client = this.clientService.findByLogin(SecurityContextHolder.getContext().getAuthentication().getName());
-            List<Ticket> listOfTicketsForAClient = this.clientService.getTicketsForClient(client.getUserID());
+            List<Ticket> listOfTicketsForAClient = this.clientService.getTicketsForUser(client.getUserID());
             List<TicketDTO> listOfDTOs = new ArrayList<>();
             for (Ticket ticket : listOfTicketsForAClient) {
                 listOfDTOs.add(new TicketDTO(ticket.getTicketID(), ticket.getMovieTime(), ticket.getTicketPrice(), ticket.getUserID(), ticket.getMovieID()));

@@ -8,18 +8,18 @@ import org.springframework.http.*;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-import pl.tks.gr3.cinema.exceptions.services.crud.client.ClientServiceReadException;
-import pl.tks.gr3.cinema.exceptions.services.crud.ticket.TicketServiceTicketNotFoundException;
-import pl.tks.gr3.cinema.model.users.Client;
+import pl.tks.gr3.cinema.application_services.exceptions.GeneralServiceException;
+import pl.tks.gr3.cinema.application_services.exceptions.crud.client.ClientServiceReadException;
+import pl.tks.gr3.cinema.application_services.exceptions.crud.ticket.TicketServiceTicketNotFoundException;
+import pl.tks.gr3.cinema.application_services.services.ClientService;
+import pl.tks.gr3.cinema.application_services.services.TicketService;
+import pl.tks.gr3.cinema.domain_model.model.Ticket;
+import pl.tks.gr3.cinema.domain_model.model.users.Client;
+import pl.tks.gr3.cinema.dto.input.TicketInputDTO;
+import pl.tks.gr3.cinema.dto.input.TicketSelfInputDTO;
+import pl.tks.gr3.cinema.dto.output.TicketDTO;
 import pl.tks.gr3.cinema.security.services.JWSService;
-import pl.tks.gr3.cinema.services.implementations.ClientService;
-import pl.pas.gr3.dto.input.TicketSelfInputDTO;
-import pl.pas.gr3.dto.output.TicketDTO;
-import pl.pas.gr3.dto.input.TicketInputDTO;
-import pl.tks.gr3.cinema.exceptions.services.GeneralServiceException;
-import pl.tks.gr3.cinema.services.implementations.TicketService;
-import pl.tks.gr3.cinema.model.Ticket;
-import pl.tks.gr3.cinema.controllers.interfaces.TicketServiceInterface;
+import pl.tks.gr3.cinema.controllers.interfaces.TicketControllerInterface;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -29,7 +29,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/tickets")
-public class TicketController implements TicketServiceInterface {
+public class TicketController implements TicketControllerInterface {
 
     private static final Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
 

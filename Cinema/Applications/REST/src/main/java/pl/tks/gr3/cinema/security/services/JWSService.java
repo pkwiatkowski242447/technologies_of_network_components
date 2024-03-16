@@ -4,15 +4,16 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import io.jsonwebtoken.io.Decoders;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import pl.tks.gr3.cinema.adapters.consts.model.MovieConstants;
 import pl.tks.gr3.cinema.adapters.consts.model.TicketConstants;
 import pl.tks.gr3.cinema.adapters.consts.model.UserConstants;
-import pl.tks.gr3.cinema.model.Movie;
-import pl.tks.gr3.cinema.model.Ticket;
-import pl.tks.gr3.cinema.model.users.User;
+import pl.tks.gr3.cinema.domain_model.model.Movie;
+import pl.tks.gr3.cinema.domain_model.model.Ticket;
+import pl.tks.gr3.cinema.domain_model.model.users.User;
+
+import java.util.Base64;
 
 @Service
 public class JWSService {
@@ -71,7 +72,7 @@ public class JWSService {
     }
 
     private String getSignInKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
+        byte[] keyBytes = Base64.getDecoder().decode(SECRET_KEY);
         return new String(keyBytes);
     }
 }

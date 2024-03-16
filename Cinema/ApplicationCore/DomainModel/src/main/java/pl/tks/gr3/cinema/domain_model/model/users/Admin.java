@@ -1,6 +1,5 @@
 package pl.tks.gr3.cinema.domain_model.model.users;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;

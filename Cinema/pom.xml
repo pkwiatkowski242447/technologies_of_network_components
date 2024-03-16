@@ -21,8 +21,15 @@
 
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
+
         <maven-surefire-plugin.version>3.2.1</maven-surefire-plugin.version>
-        <maven-site-plugin.version>4.0.0-M1</maven-site-plugin.version>
+        <maven-site-plugin.version>4.0.0-M13</maven-site-plugin.version>
+        <maven-compiler-plugin.version>3.12.1</maven-compiler-plugin.version>
+        <jacoco-maven-plugin.version>0.8.11</jacoco-maven-plugin.version>
+        <maven-jxr-plugin.version>3.3.2</maven-jxr-plugin.version>
+        <maven-pmd-plugin.version>3.21.2</maven-pmd-plugin.version>
+        <maven-project-info-reports-plugin.version>3.4.5</maven-project-info-reports-plugin.version>
+
         <java.version>21</java.version>
 
         <junit.version>5.7.0</junit.version>
@@ -37,8 +44,12 @@
         <jakarta-validation.version>3.1.0-M1</jakarta-validation.version>
         <hibernate-validator.version>8.0.1.Final</hibernate-validator.version>
 
-        <jjwt.version>0.12.3</jjwt.version>
+        <java-jwt.version>4.4.0</java-jwt.version>
         <jackson.version>2.16.0</jackson.version>
+
+        <rest-assured.version>5.4.0</rest-assured.version>
+        <mockito.version>5.11.0</mockito.version>
+        <jax-rs.version>3.1.0</jax-rs.version>
 
         <lombok.version>1.18.30</lombok.version>
         <commons-lang3.version>3.13.0</commons-lang3.version>
@@ -61,20 +72,40 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>${lombok.version}</version>
             <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <version>${commons-lang3.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <version>${slf4j.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>jakarta.ws.rs</groupId>
+            <artifactId>jakarta.ws.rs-api</artifactId>
         </dependency>
     </dependencies>
 
@@ -96,7 +127,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.11.0</version>
+                <version>${maven-compiler-plugin.version}</version>
                 <configuration>
                     <source>${maven.compiler.source}</source>
                     <target>${maven.compiler.target}</target>
@@ -120,22 +151,22 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-project-info-reports-plugin</artifactId>
-                <version>3.4.5</version>
+                <version>${maven-project-info-reports-plugin.version}</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-pmd-plugin</artifactId>
-                <version>3.21.2</version>
+                <version>${maven-pmd-plugin.version}</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jxr-plugin</artifactId>
-                <version>3.3.1</version>
+                <version>${maven-jxr-plugin.version}</version>
             </plugin>
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.11</version>
+                <version>${jacoco-maven-plugin.version}</version>
                 <reportSets>
                     <reportSet>
                         <reports>

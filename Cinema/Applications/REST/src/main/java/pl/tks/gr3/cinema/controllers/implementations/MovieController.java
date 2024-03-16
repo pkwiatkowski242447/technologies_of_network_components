@@ -9,16 +9,16 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import pl.tks.gr3.cinema.exceptions.services.crud.movie.MovieServiceMovieNotFoundException;
+import pl.tks.gr3.cinema.application_services.exceptions.GeneralServiceException;
+import pl.tks.gr3.cinema.application_services.exceptions.crud.movie.MovieServiceMovieNotFoundException;
+import pl.tks.gr3.cinema.application_services.services.MovieService;
+import pl.tks.gr3.cinema.domain_model.model.Movie;
+import pl.tks.gr3.cinema.domain_model.model.Ticket;
+import pl.tks.gr3.cinema.dto.input.MovieInputDTO;
+import pl.tks.gr3.cinema.dto.output.MovieDTO;
+import pl.tks.gr3.cinema.dto.output.TicketDTO;
 import pl.tks.gr3.cinema.security.services.JWSService;
-import pl.pas.gr3.dto.output.MovieDTO;
-import pl.pas.gr3.dto.input.MovieInputDTO;
-import pl.pas.gr3.dto.output.TicketDTO;
-import pl.tks.gr3.cinema.exceptions.services.GeneralServiceException;
-import pl.tks.gr3.cinema.services.implementations.MovieService;
-import pl.tks.gr3.cinema.model.Movie;
-import pl.tks.gr3.cinema.model.Ticket;
-import pl.tks.gr3.cinema.controllers.interfaces.MovieServiceInterface;
+import pl.tks.gr3.cinema.controllers.interfaces.MovieControllerInterface;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -28,7 +28,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/movies")
-public class MovieController implements MovieServiceInterface {
+public class MovieController implements MovieControllerInterface {
 
     private final static Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
 
@@ -101,7 +101,7 @@ public class MovieController implements MovieServiceInterface {
     @GetMapping(value = "{id}/tickets", produces = MediaType.APPLICATION_JSON_VALUE)
     @Override
     public ResponseEntity<?> findAllTicketsForCertainMovie(@PathVariable("id") UUID movieID) {
-        List<Ticket> listOfTickets = this.movieService.getListOfTicketsForCertainMovie(movieID);
+        List<Ticket> listOfTickets = this.movieService.getListOfTickets(movieID);
         List<TicketDTO> listOfDTOs = new ArrayList<>();
         for (Ticket ticket : listOfTickets) {
             listOfDTOs.add(new TicketDTO(ticket.getTicketID(), ticket.getMovieTime(), ticket.getTicketPrice(), ticket.getUserID(), ticket.getMovieID()));

@@ -5,14 +5,13 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import io.jsonwebtoken.io.Decoders;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import pl.tks.gr3.cinema.adapters.consts.model.UserConstants;
-import pl.tks.gr3.cinema.model.users.User;
+import pl.tks.gr3.cinema.domain_model.model.users.User;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -73,7 +72,7 @@ public class JWTService {
     }
 
     private String getSignInKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
+        byte[] keyBytes = Base64.getDecoder().decode(SECRET_KEY);
         return new String(keyBytes);
     }
 }

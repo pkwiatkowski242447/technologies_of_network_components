@@ -6,8 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import pl.tks.gr3.dto.messages.UserMessages;
-import pl.tks.gr3.dto.validation.UserConstants;
+import pl.tks.gr3.cinema.dto.messages.UserMessages;
+import pl.tks.gr3.cinema.dto.validation.UserConstants;
 
 @Getter @Setter
 @NoArgsConstructor

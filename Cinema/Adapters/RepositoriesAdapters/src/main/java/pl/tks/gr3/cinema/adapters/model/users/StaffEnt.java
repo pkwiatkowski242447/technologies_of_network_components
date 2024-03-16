@@ -16,8 +16,7 @@ import java.util.UUID;
 @BsonDiscriminator(key = UserConstants.USER_DISCRIMINATOR_NAME, value = UserConstants.STAFF_DISCRIMINATOR)
 public class StaffEnt extends UserEnt {
 
-    public StaffEnt() {
-    }
+    // Constructors
 
     public StaffEnt(UUID clientID,
                     String clientLogin,

@@ -12,15 +12,15 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-import pl.tks.gr3.cinema.exceptions.services.crud.staff.StaffServiceStaffNotFoundException;
-import pl.tks.gr3.cinema.model.users.User;
+import pl.tks.gr3.cinema.application_services.exceptions.GeneralServiceException;
+import pl.tks.gr3.cinema.application_services.exceptions.crud.staff.StaffServiceStaffNotFoundException;
+import pl.tks.gr3.cinema.application_services.services.StaffService;
+import pl.tks.gr3.cinema.controllers.interfaces.UserControllerInterface;
+import pl.tks.gr3.cinema.domain_model.model.users.Staff;
+import pl.tks.gr3.cinema.domain_model.model.users.User;
+import pl.tks.gr3.cinema.dto.auth.UserOutputDTO;
+import pl.tks.gr3.cinema.dto.auth.UserUpdateDTO;
 import pl.tks.gr3.cinema.security.services.JWSService;
-import pl.pas.gr3.dto.auth.UserOutputDTO;
-import pl.pas.gr3.dto.auth.UserUpdateDTO;
-import pl.tks.gr3.cinema.exceptions.services.GeneralServiceException;
-import pl.tks.gr3.cinema.services.implementations.StaffService;
-import pl.tks.gr3.cinema.model.users.Staff;
-import pl.tks.gr3.cinema.controllers.interfaces.UserServiceInterface;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +29,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/staffs")
-public class StaffController implements UserServiceInterface<Staff> {
+public class StaffController implements UserControllerInterface<Staff> {
 
     private final static Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
 
