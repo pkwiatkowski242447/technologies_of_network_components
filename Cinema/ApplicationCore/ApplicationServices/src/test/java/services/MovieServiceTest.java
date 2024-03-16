@@ -8,6 +8,10 @@ import pl.tks.gr3.cinema.application_services.services.MovieService;
 import pl.tks.gr3.cinema.adapters.aggregates.MovieRepositoryAdapter;
 import pl.tks.gr3.cinema.adapters.repositories.MovieRepository;
 import pl.tks.gr3.cinema.domain_model.Movie;
+import pl.tks.gr3.cinema.ports.infrastructure.movies.CreateMoviePort;
+import pl.tks.gr3.cinema.ports.infrastructure.movies.DeleteMoviePort;
+import pl.tks.gr3.cinema.ports.infrastructure.movies.ReadMoviePort;
+import pl.tks.gr3.cinema.ports.infrastructure.movies.UpdateMoviePort;
 
 import java.util.List;
 import java.util.UUID;
@@ -22,13 +26,25 @@ public class MovieServiceTest {
     private static MovieRepository movieRepository;
     private static MovieService movieService;
 
+    private static CreateMoviePort createMoviePort;
+    private static ReadMoviePort readMoviePort;
+    private static UpdateMoviePort updateMoviePort;
+    private static DeleteMoviePort deleteMoviePort;
+
     private Movie movieNo1;
     private Movie movieNo2;
 
     @BeforeAll
     public static void initialize() {
         movieRepository = new MovieRepository(databaseName);
-        movieService = new MovieService(new MovieRepositoryAdapter(movieRepository));
+        MovieRepositoryAdapter movieRepositoryAdapter = new MovieRepositoryAdapter(movieRepository);
+
+        createMoviePort = movieRepositoryAdapter;
+        readMoviePort = movieRepositoryAdapter;
+        updateMoviePort = movieRepositoryAdapter;
+        deleteMoviePort = movieRepositoryAdapter;
+
+        movieService = new MovieService(createMoviePort, readMoviePort, updateMoviePort, deleteMoviePort);
     }
 
     @BeforeEach
@@ -59,16 +75,10 @@ public class MovieServiceTest {
     }
 
     // Constructor tests
-    
-    @Test
-    public void movieServiceNoArgsConstructorTestPositive() {
-        MovieService testMovieService = new MovieService();
-        assertNotNull(testMovieService);
-    }
 
     @Test
     public void movieServiceAllArgsConstructorTestPositive() {
-        MovieService testMovieService = new MovieService(new MovieRepositoryAdapter(movieRepository));
+        MovieService testMovieService = new MovieService(createMoviePort, readMoviePort, updateMoviePort, deleteMoviePort);
         assertNotNull(testMovieService);
     }
     

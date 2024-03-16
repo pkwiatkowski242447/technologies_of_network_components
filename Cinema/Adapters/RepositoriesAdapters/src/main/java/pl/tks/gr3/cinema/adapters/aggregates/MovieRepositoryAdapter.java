@@ -21,6 +21,7 @@ public class MovieRepositoryAdapter implements CreateMoviePort, ReadMoviePort, U
 
     private final MovieRepositoryInterface movieRepository;
 
+
     @Autowired
     public MovieRepositoryAdapter(MovieRepositoryInterface movieRepository) {
         this.movieRepository = movieRepository;

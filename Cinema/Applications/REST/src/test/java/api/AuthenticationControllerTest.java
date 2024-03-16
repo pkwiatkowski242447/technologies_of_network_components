@@ -22,6 +22,7 @@ import org.slf4j.*;
 import pl.tks.gr3.cinema.domain_model.users.Admin;
 import pl.tks.gr3.cinema.domain_model.users.Client;
 import pl.tks.gr3.cinema.domain_model.users.Staff;
+import pl.tks.gr3.cinema.ports.infrastructure.users.*;
 import pl.tks.gr3.cinema.viewrest.input.UserInputDTO;
 import pl.tks.gr3.cinema.viewrest.output.UserOutputDTO;
 
@@ -31,8 +32,14 @@ public class AuthenticationControllerTest {
 
     private final static Logger logger = LoggerFactory.getLogger(AuthenticationControllerTest.class);
 
-    private static UserRepository userRepositoryImpl;
-    private static UserRepositoryAdapter userRepository;
+    private static UserRepository userRepository;
+
+    private static CreateUserPort createUserPort;
+    private static ReadUserPort readUserPort;
+    private static UpdateUserPort updateUserPort;
+    private static ActivateUserPort activateUserPort;
+    private static DeactivateUserPort deactivateUserPort;
+    private static DeleteUserPort deleteUserPort;
 
     private static PasswordEncoder passwordEncoder;
 
@@ -43,8 +50,15 @@ public class AuthenticationControllerTest {
 
     @BeforeAll
     public static void init() {
-        userRepositoryImpl = new UserRepository();
-        userRepository = new UserRepositoryAdapter(userRepositoryImpl);
+        userRepository = new UserRepository(TestConstants.databaseName);
+        UserRepositoryAdapter userRepositoryAdapter = new UserRepositoryAdapter(userRepository);
+
+        createUserPort = userRepositoryAdapter;
+        readUserPort = userRepositoryAdapter;
+        updateUserPort = userRepositoryAdapter;
+        activateUserPort = userRepositoryAdapter;
+        deactivateUserPort = userRepositoryAdapter;
+        deleteUserPort = userRepositoryAdapter;
 
         passwordEncoder = new BCryptPasswordEncoder();
 
@@ -66,9 +80,9 @@ public class AuthenticationControllerTest {
     public void initializeSampleData() {
         this.clearCollection();
         try {
-            clientUser = userRepository.createClient("ClientLoginX", passwordEncoder.encode(passwordNotHashed));
-            adminUser = userRepository.createAdmin("AdminLoginX", passwordEncoder.encode(passwordNotHashed));
-            staffUser = userRepository.createStaff("StaffLoginX", passwordEncoder.encode(passwordNotHashed));
+            clientUser = createUserPort.createClient("ClientLoginX", passwordEncoder.encode(passwordNotHashed));
+            adminUser = createUserPort.createAdmin("AdminLoginX", passwordEncoder.encode(passwordNotHashed));
+            staffUser = createUserPort.createStaff("StaffLoginX", passwordEncoder.encode(passwordNotHashed));
         } catch (UserRepositoryException exception) {
             throw new RuntimeException("Could not create sample users with userRepository object.", exception);
         }
@@ -81,17 +95,17 @@ public class AuthenticationControllerTest {
 
     private void clearCollection() {
         try {
-            List<Client> listOfClients = userRepository.findAllClients();
+            List<Client> listOfClients = readUserPort.findAllClients();
             for (Client client : listOfClients) {
                 userRepository.delete(client.getUserID(), UserEntConstants.CLIENT_DISCRIMINATOR);
             }
 
-            List<Admin> listOfAdmins = userRepository.findAllAdmins();
+            List<Admin> listOfAdmins = readUserPort.findAllAdmins();
             for (Admin admin : listOfAdmins) {
                 userRepository.delete(admin.getUserID(), UserEntConstants.ADMIN_DISCRIMINATOR);
             }
 
-            List<Staff> listOfStaffs = userRepository.findAllStaffs();
+            List<Staff> listOfStaffs = readUserPort.findAllStaffs();
             for (Staff staff : listOfStaffs) {
                 userRepository.delete(staff.getUserID(), UserEntConstants.STAFF_DISCRIMINATOR);
             }
@@ -102,7 +116,7 @@ public class AuthenticationControllerTest {
 
     @AfterAll
     public static void destroy() {
-        userRepositoryImpl.close();
+        userRepository.close();
     }
 
     // Register methods

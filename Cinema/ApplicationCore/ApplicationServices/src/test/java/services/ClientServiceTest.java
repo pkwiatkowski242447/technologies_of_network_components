@@ -8,6 +8,7 @@ import pl.tks.gr3.cinema.application_services.services.ClientService;
 import pl.tks.gr3.cinema.adapters.aggregates.UserRepositoryAdapter;
 import pl.tks.gr3.cinema.adapters.repositories.UserRepository;
 import pl.tks.gr3.cinema.domain_model.users.Client;
+import pl.tks.gr3.cinema.ports.infrastructure.users.*;
 
 import java.util.List;
 import java.util.UUID;
@@ -19,6 +20,14 @@ public class ClientServiceTest {
     private final static Logger logger = LoggerFactory.getLogger(ClientServiceTest.class);
 
     private final static String databaseName = "test";
+
+    private static CreateUserPort createUserPort;
+    private static ReadUserPort readUserPort;
+    private static UpdateUserPort updateUserPort;
+    private static ActivateUserPort activateUserPort;
+    private static DeactivateUserPort deactivateUserPort;
+    private static DeleteUserPort deleteUserPort;
+
     private static UserRepository userRepository;
     private static ClientService clientService;
 
@@ -28,7 +37,16 @@ public class ClientServiceTest {
     @BeforeAll
     public static void initialize() {
         userRepository = new UserRepository(databaseName);
-        clientService = new ClientService(new UserRepositoryAdapter(userRepository));
+        UserRepositoryAdapter userRepositoryAdapter = new UserRepositoryAdapter(userRepository);
+
+        createUserPort = userRepositoryAdapter;
+        readUserPort = userRepositoryAdapter;
+        updateUserPort = userRepositoryAdapter;
+        activateUserPort = userRepositoryAdapter;
+        deactivateUserPort = userRepositoryAdapter;
+        deleteUserPort = userRepositoryAdapter;
+        
+        clientService = new ClientService(createUserPort, readUserPort, updateUserPort, activateUserPort, deactivateUserPort, deleteUserPort);
     }
 
     @BeforeEach
@@ -66,14 +84,8 @@ public class ClientServiceTest {
     // Constructor tests
 
     @Test
-    public void clientServiceNoArgsConstructorTestPositive() {
-        ClientService testClientService = new ClientService();
-        assertNotNull(testClientService);
-    }
-
-    @Test
     public void clientServiceAllArgsConstructorTestPositive() {
-        ClientService testClientService = new ClientService(new UserRepositoryAdapter(userRepository));
+        ClientService testClientService = new ClientService(createUserPort, readUserPort, updateUserPort, activateUserPort, deactivateUserPort, deleteUserPort);
         assertNotNull(testClientService);
     }
 
