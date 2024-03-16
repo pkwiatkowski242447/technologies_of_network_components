@@ -40,6 +40,15 @@ import pl.tks.gr3.cinema.domain_model.Ticket;
 import pl.tks.gr3.cinema.domain_model.users.Admin;
 import pl.tks.gr3.cinema.domain_model.users.Client;
 import pl.tks.gr3.cinema.domain_model.users.Staff;
+import pl.tks.gr3.cinema.ports.infrastructure.movies.CreateMoviePort;
+import pl.tks.gr3.cinema.ports.infrastructure.movies.DeleteMoviePort;
+import pl.tks.gr3.cinema.ports.infrastructure.movies.ReadMoviePort;
+import pl.tks.gr3.cinema.ports.infrastructure.movies.UpdateMoviePort;
+import pl.tks.gr3.cinema.ports.infrastructure.tickets.CreateTicketPort;
+import pl.tks.gr3.cinema.ports.infrastructure.tickets.DeleteTicketPort;
+import pl.tks.gr3.cinema.ports.infrastructure.tickets.ReadTicketPort;
+import pl.tks.gr3.cinema.ports.infrastructure.tickets.UpdateTicketPort;
+import pl.tks.gr3.cinema.ports.infrastructure.users.*;
 import pl.tks.gr3.cinema.viewrest.input.UserInputDTO;
 import pl.tks.gr3.cinema.viewrest.input.TicketSelfInputDTO;
 import pl.tks.gr3.cinema.viewrest.output.TicketDTO;
@@ -56,13 +65,28 @@ public class TicketControllerTest {
 
     private static final Logger logger = LoggerFactory.getLogger(TicketControllerTest.class);
 
-    private static TicketRepository ticketRepositoryImpl;
-    private static UserRepository userRepositoryImpl;
-    private static MovieRepository movieRepositoryImpl;
+    private static TicketRepository ticketRepository;
 
-    private static TicketRepositoryAdapter ticketRepository;
-    private static UserRepositoryAdapter userRepository;
-    private static MovieRepositoryAdapter movieRepository;
+    private static CreateTicketPort createTicketPort;
+    private static ReadTicketPort readTicketPort;
+    private static UpdateTicketPort updateTicketPort;
+    private static DeleteTicketPort deleteTicketPort;
+
+    private static UserRepository userRepository;
+
+    private static CreateUserPort createUserPort;
+    private static ReadUserPort readUserPort;
+    private static UpdateUserPort updateUserPort;
+    private static ActivateUserPort activateUserPort;
+    private static DeactivateUserPort deactivateUserPort;
+    private static DeleteUserPort deleteUserPort;
+
+    private static MovieRepository movieRepository;
+
+    private static CreateMoviePort createMoviePort;
+    private static ReadMoviePort readMoviePort;
+    private static UpdateMoviePort updateMoviePort;
+    private static DeleteMoviePort deleteMoviePort;
 
     private static TicketService ticketService;
     private static ClientService clientService;
@@ -96,19 +120,38 @@ public class TicketControllerTest {
 
     @BeforeAll
     public static void init() {
-        ticketRepositoryImpl = new TicketRepository(TestConstants.databaseName);
-        userRepositoryImpl = new UserRepository(TestConstants.databaseName);
-        movieRepositoryImpl = new MovieRepository(TestConstants.databaseName);
+        ticketRepository = new TicketRepository(TestConstants.databaseName);
+        userRepository = new UserRepository(TestConstants.databaseName);
+        movieRepository = new MovieRepository(TestConstants.databaseName);
 
-        ticketRepository = new TicketRepositoryAdapter(ticketRepositoryImpl);
-        userRepository = new UserRepositoryAdapter(userRepositoryImpl);
-        movieRepository = new MovieRepositoryAdapter(movieRepositoryImpl);
+        TicketRepositoryAdapter ticketRepositoryAdapter = new TicketRepositoryAdapter(ticketRepository);
+        UserRepositoryAdapter userRepositoryAdapter = new UserRepositoryAdapter(userRepository);
+        MovieRepositoryAdapter movieRepositoryAdapter = new MovieRepositoryAdapter(movieRepository);
 
-        ticketService = new TicketService(ticketRepository);
-        clientService = new ClientService(userRepository);
-        adminService = new AdminService(userRepository);
-        staffService = new StaffService(userRepository);
-        movieService = new MovieService(movieRepository);
+        createTicketPort = ticketRepositoryAdapter;
+        readTicketPort = ticketRepositoryAdapter;
+        updateTicketPort = ticketRepositoryAdapter;
+        deleteTicketPort = ticketRepositoryAdapter;
+
+        ticketService = new TicketService(createTicketPort, readTicketPort, updateTicketPort, deleteTicketPort);
+
+        createUserPort = userRepositoryAdapter;
+        readUserPort = userRepositoryAdapter;
+        updateUserPort = userRepositoryAdapter;
+        activateUserPort = userRepositoryAdapter;
+        deactivateUserPort = userRepositoryAdapter;
+        deleteUserPort = userRepositoryAdapter;
+
+        clientService = new ClientService(createUserPort, readUserPort, updateUserPort, activateUserPort, deactivateUserPort, deleteUserPort);
+        adminService = new AdminService(createUserPort, readUserPort, updateUserPort, activateUserPort, deactivateUserPort, deleteUserPort);
+        staffService = new StaffService(createUserPort, readUserPort, updateUserPort, activateUserPort, deactivateUserPort, deleteUserPort);
+
+        createMoviePort = movieRepositoryAdapter;
+        readMoviePort = movieRepositoryAdapter;
+        updateMoviePort = movieRepositoryAdapter;
+        deleteMoviePort = movieRepositoryAdapter;
+
+        movieService = new MovieService(createMoviePort, readMoviePort, updateMoviePort, deleteMoviePort);
 
         passwordEncoder = new BCryptPasswordEncoder();
 
@@ -223,9 +266,9 @@ public class TicketControllerTest {
 
     @AfterAll
     public static void destroy() {
-        ticketRepositoryImpl.close();
-        userRepositoryImpl.close();
-        movieRepositoryImpl.close();
+        ticketRepository.close();
+        userRepository.close();
+        movieRepository.close();
     }
 
     // Create tests

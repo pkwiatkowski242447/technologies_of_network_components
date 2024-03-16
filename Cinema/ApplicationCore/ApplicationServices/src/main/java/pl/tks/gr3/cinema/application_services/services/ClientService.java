@@ -2,7 +2,6 @@ package pl.tks.gr3.cinema.application_services.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import pl.tks.gr3.cinema.adapters.aggregates.UserRepositoryAdapter;
 import pl.tks.gr3.cinema.adapters.consts.model.UserEntConstants;
 import pl.tks.gr3.cinema.adapters.exceptions.UserRepositoryException;
 import pl.tks.gr3.cinema.adapters.exceptions.crud.user.UserRepositoryCreateUserDuplicateLoginException;
@@ -10,6 +9,7 @@ import pl.tks.gr3.cinema.adapters.exceptions.crud.user.UserRepositoryUserNotFoun
 import pl.tks.gr3.cinema.application_services.exceptions.crud.client.*;
 import pl.tks.gr3.cinema.domain_model.Ticket;
 import pl.tks.gr3.cinema.domain_model.users.Client;
+import pl.tks.gr3.cinema.ports.infrastructure.users.*;
 import pl.tks.gr3.cinema.ports.userinterface.UserServiceInterface;
 
 import java.util.List;
@@ -18,21 +18,32 @@ import java.util.UUID;
 @Service
 public class ClientService implements UserServiceInterface<Client> {
 
-    private UserRepositoryAdapter userRepository;
-
-    public ClientService() {
-    }
+    private final CreateUserPort createUserPort;
+    private final ReadUserPort readUserPort;
+    private final UpdateUserPort updateUserPort;
+    private final ActivateUserPort activateUserPort;
+    private final DeactivateUserPort deactivateUserPort;
+    private final DeleteUserPort deleteUserPort;
 
     @Autowired
-    public ClientService(UserRepositoryAdapter userRepository) {
-        this.userRepository = userRepository;
+    public ClientService(CreateUserPort createUserPort,
+                         ReadUserPort readUserPort,
+                         UpdateUserPort updateUserPort,
+                         ActivateUserPort activateUserPort,
+                         DeactivateUserPort deactivateUserPort,
+                         DeleteUserPort deleteUserPort) {
+        this.createUserPort = createUserPort;
+        this.readUserPort = readUserPort;
+        this.updateUserPort = updateUserPort;
+        this.activateUserPort = activateUserPort;
+        this.deactivateUserPort = deactivateUserPort;
+        this.deleteUserPort = deleteUserPort;
     }
-
 
     @Override
     public Client create(String login, String password) throws ClientServiceCreateException {
         try {
-            return this.userRepository.createClient(login, password);
+            return this.createUserPort.createClient(login, password);
         } catch (UserRepositoryCreateUserDuplicateLoginException exception) {
             throw new ClientServiceCreateClientDuplicateLoginException(exception.getMessage(), exception);
         } catch (UserRepositoryException exception) {
@@ -43,7 +54,7 @@ public class ClientService implements UserServiceInterface<Client> {
     @Override
     public Client findByUUID(UUID clientID) throws ClientServiceReadException {
         try {
-            return this.userRepository.findClientByUUID(clientID);
+            return this.readUserPort.findClientByUUID(clientID);
         } catch (UserRepositoryUserNotFoundException exception) {
             throw new ClientServiceClientNotFoundException(exception.getMessage(), exception);
         } catch (UserRepositoryException exception) {
@@ -54,7 +65,7 @@ public class ClientService implements UserServiceInterface<Client> {
     @Override
     public Client findByLogin(String login) throws ClientServiceReadException {
         try {
-            return this.userRepository.findClientByLogin(login);
+            return this.readUserPort.findClientByLogin(login);
         } catch (UserRepositoryUserNotFoundException exception) {
             throw new ClientServiceClientNotFoundException(exception.getMessage(), exception);
         } catch (UserRepositoryException exception) {
@@ -65,7 +76,7 @@ public class ClientService implements UserServiceInterface<Client> {
     @Override
     public List<Client> findAllMatchingLogin(String loginToBeMatched) throws ClientServiceReadException {
         try {
-            return this.userRepository.findAllClientsMatchingLogin(loginToBeMatched);
+            return this.readUserPort.findAllClientsMatchingLogin(loginToBeMatched);
         } catch (UserRepositoryException exception) {
             throw new ClientServiceReadException(exception.getMessage(), exception);
         }
@@ -74,7 +85,7 @@ public class ClientService implements UserServiceInterface<Client> {
     @Override
     public List<Client> findAll() throws ClientServiceReadException {
         try {
-            return this.userRepository.findAllClients();
+            return this.readUserPort.findAllClients();
         } catch (UserRepositoryException exception) {
             throw new ClientServiceReadException(exception.getMessage(), exception);
         }
@@ -83,7 +94,7 @@ public class ClientService implements UserServiceInterface<Client> {
     @Override
     public void update(Client client) throws ClientServiceUpdateException {
         try {
-            this.userRepository.updateClient(client);
+            this.updateUserPort.updateClient(client);
         } catch (UserRepositoryException exception) {
             throw new ClientServiceUpdateException(exception.getMessage(), exception);
         }
@@ -92,7 +103,7 @@ public class ClientService implements UserServiceInterface<Client> {
     @Override
     public void activate(UUID clientID) throws ClientServiceActivationException {
         try {
-            this.userRepository.activate(this.userRepository.findByUUID(clientID));
+            this.activateUserPort.activate(this.readUserPort.findByUUID(clientID));
         } catch (UserRepositoryException exception) {
             throw new ClientServiceActivationException(exception.getMessage(), exception);
         }
@@ -101,7 +112,7 @@ public class ClientService implements UserServiceInterface<Client> {
     @Override
     public void deactivate(UUID clientID) throws ClientServiceDeactivationException {
         try {
-            this.userRepository.deactivate(this.userRepository.findByUUID(clientID));
+            this.deactivateUserPort.deactivate(this.readUserPort.findByUUID(clientID));
         } catch (UserRepositoryException exception) {
             throw new ClientServiceDeactivationException(exception.getMessage(), exception);
         }
@@ -110,7 +121,7 @@ public class ClientService implements UserServiceInterface<Client> {
     @Override
     public List<Ticket> getTicketsForUser(UUID clientID) throws ClientServiceReadException {
         try {
-            return this.userRepository.getListOfTickets(clientID, UserEntConstants.CLIENT_DISCRIMINATOR);
+            return this.readUserPort.getListOfTickets(clientID, UserEntConstants.CLIENT_DISCRIMINATOR);
         } catch (UserRepositoryException exception) {
             throw new ClientServiceReadException(exception.getMessage(), exception);
         }
@@ -119,7 +130,7 @@ public class ClientService implements UserServiceInterface<Client> {
     @Override
     public void delete(UUID userID) throws ClientServiceDeleteException {
         try {
-            this.userRepository.delete(userID, UserEntConstants.CLIENT_DISCRIMINATOR);
+            this.deleteUserPort.delete(userID, UserEntConstants.CLIENT_DISCRIMINATOR);
         } catch (UserRepositoryException exception) {
             throw new ClientServiceDeleteException(exception.getMessage(), exception);
         }
