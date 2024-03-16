@@ -8,6 +8,7 @@ import pl.tks.gr3.cinema.application_services.services.StaffService;
 import pl.tks.gr3.cinema.adapters.aggregates.UserRepositoryAdapter;
 import pl.tks.gr3.cinema.adapters.repositories.UserRepository;
 import pl.tks.gr3.cinema.domain_model.users.Staff;
+import pl.tks.gr3.cinema.ports.infrastructure.users.*;
 
 import java.util.List;
 import java.util.UUID;
@@ -18,6 +19,14 @@ public class StaffServiceTest {
 
     private final static String databaseName = "test";
     private static final Logger logger = LoggerFactory.getLogger(StaffServiceTest.class);
+
+    private static CreateUserPort createUserPort;
+    private static ReadUserPort readUserPort;
+    private static UpdateUserPort updateUserPort;
+    private static ActivateUserPort activateUserPort;
+    private static DeactivateUserPort deactivateUserPort;
+    private static DeleteUserPort deleteUserPort;
+
     private static UserRepository userRepository;
     private static StaffService staffService;
 
@@ -27,7 +36,16 @@ public class StaffServiceTest {
     @BeforeAll
     public static void initialize() {
         userRepository = new UserRepository(databaseName);
-        staffService = new StaffService(new UserRepositoryAdapter(userRepository));
+        UserRepositoryAdapter userRepositoryAdapter = new UserRepositoryAdapter(userRepository);
+
+        createUserPort = userRepositoryAdapter;
+        readUserPort = userRepositoryAdapter;
+        updateUserPort = userRepositoryAdapter;
+        activateUserPort = userRepositoryAdapter;
+        deactivateUserPort = userRepositoryAdapter;
+        deleteUserPort = userRepositoryAdapter;
+
+        staffService = new StaffService(createUserPort, readUserPort, updateUserPort, activateUserPort, deactivateUserPort, deleteUserPort);
     }
 
     @BeforeEach
@@ -65,14 +83,8 @@ public class StaffServiceTest {
     // Constructor tests
 
     @Test
-    public void staffServiceNoArgsConstructorTestPositive() {
-        StaffService testStaffService = new StaffService();
-        assertNotNull(testStaffService);
-    }
-
-    @Test
     public void staffServiceAllArgsConstructorTestPositive() {
-        StaffService testStaffService = new StaffService(new UserRepositoryAdapter(userRepository));
+        StaffService testStaffService = new StaffService(createUserPort, readUserPort, updateUserPort, activateUserPort, deactivateUserPort, deleteUserPort);
         assertNotNull(testStaffService);
     }
 

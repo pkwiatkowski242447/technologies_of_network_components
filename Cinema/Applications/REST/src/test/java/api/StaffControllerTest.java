@@ -21,6 +21,7 @@ import pl.tks.gr3.cinema.adapters.repositories.UserRepository;
 import pl.tks.gr3.cinema.domain_model.users.Admin;
 import pl.tks.gr3.cinema.domain_model.users.Client;
 import pl.tks.gr3.cinema.domain_model.users.Staff;
+import pl.tks.gr3.cinema.ports.infrastructure.users.*;
 import pl.tks.gr3.cinema.viewrest.input.UserInputDTO;
 import pl.tks.gr3.cinema.viewrest.output.UserOutputDTO;
 import pl.tks.gr3.cinema.viewrest.input.UserUpdateDTO;
@@ -35,10 +36,17 @@ public class StaffControllerTest {
 
     private static final Logger logger = LoggerFactory.getLogger(StaffControllerTest.class);
 
-    private static UserRepository userRepositoryImpl;
-    private static UserRepositoryAdapter userRepository;
+    private static UserRepository userRepository;
+
     private static StaffService staffService;
     private static PasswordEncoder passwordEncoder;
+
+    private static CreateUserPort createUserPort;
+    private static ReadUserPort readUserPort;
+    private static UpdateUserPort updateUserPort;
+    private static ActivateUserPort activateUserPort;
+    private static DeactivateUserPort deactivateUserPort;
+    private static DeleteUserPort deleteUserPort;
 
     private Client clientUser;
     private Staff staffUserNo1;
@@ -48,10 +56,17 @@ public class StaffControllerTest {
 
     @BeforeAll
     public static void init() {
-        userRepositoryImpl = new UserRepository(TestConstants.databaseName);
-        userRepository = new UserRepositoryAdapter(userRepositoryImpl);
+        userRepository = new UserRepository(TestConstants.databaseName);
+        UserRepositoryAdapter userRepositoryAdapter = new UserRepositoryAdapter(userRepository);
 
-        staffService = new StaffService(userRepository);
+        createUserPort = userRepositoryAdapter;
+        readUserPort = userRepositoryAdapter;
+        updateUserPort = userRepositoryAdapter;
+        activateUserPort = userRepositoryAdapter;
+        deactivateUserPort = userRepositoryAdapter;
+        deleteUserPort = userRepositoryAdapter;
+
+        staffService = new StaffService(createUserPort, readUserPort, updateUserPort, activateUserPort, deactivateUserPort, deleteUserPort);
 
         passwordEncoder = new BCryptPasswordEncoder();
 
@@ -73,10 +88,10 @@ public class StaffControllerTest {
     public void initializeSampleData() {
         this.clearCollection();
         try {
-            clientUser = userRepository.createClient("ClientLoginX", passwordEncoder.encode(passwordNotHashed));
-            staffUserNo1 = userRepository.createStaff("StaffLoginX1", passwordEncoder.encode(passwordNotHashed));
-            staffUserNo2 = userRepository.createStaff("StaffLoginX2", passwordEncoder.encode(passwordNotHashed));
-            adminUser = userRepository.createAdmin("AdminLoginX", passwordEncoder.encode(passwordNotHashed));
+            clientUser = createUserPort.createClient("ClientLoginX", passwordEncoder.encode(passwordNotHashed));
+            staffUserNo1 = createUserPort.createStaff("StaffLoginX1", passwordEncoder.encode(passwordNotHashed));
+            staffUserNo2 = createUserPort.createStaff("StaffLoginX2", passwordEncoder.encode(passwordNotHashed));
+            adminUser = createUserPort.createAdmin("AdminLoginX", passwordEncoder.encode(passwordNotHashed));
         } catch (UserRepositoryException exception) {
             logger.debug(exception.getMessage());
         }
@@ -89,17 +104,17 @@ public class StaffControllerTest {
 
     private void clearCollection() {
         try {
-            List<Client> listOfClients = userRepository.findAllClients();
+            List<Client> listOfClients = readUserPort.findAllClients();
             for (Client client : listOfClients) {
                 userRepository.delete(client.getUserID(), UserEntConstants.CLIENT_DISCRIMINATOR);
             }
 
-            List<Admin> listOfAdmins = userRepository.findAllAdmins();
+            List<Admin> listOfAdmins = readUserPort.findAllAdmins();
             for (Admin admin : listOfAdmins) {
                 userRepository.delete(admin.getUserID(), UserEntConstants.ADMIN_DISCRIMINATOR);
             }
 
-            List<Staff> listOfStaffs = userRepository.findAllStaffs();
+            List<Staff> listOfStaffs = readUserPort.findAllStaffs();
             for (Staff staff : listOfStaffs) {
                 userRepository.delete(staff.getUserID(), UserEntConstants.STAFF_DISCRIMINATOR);
             }
@@ -110,7 +125,7 @@ public class StaffControllerTest {
 
     @AfterAll
     public static void destroy() {
-        userRepositoryImpl.close();
+        userRepository.close();
     }
 
     // Read tests

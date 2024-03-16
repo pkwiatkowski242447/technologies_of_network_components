@@ -26,6 +26,11 @@ import pl.tks.gr3.cinema.domain_model.Movie;
 import pl.tks.gr3.cinema.domain_model.users.Admin;
 import pl.tks.gr3.cinema.domain_model.users.Client;
 import pl.tks.gr3.cinema.domain_model.users.Staff;
+import pl.tks.gr3.cinema.ports.infrastructure.movies.CreateMoviePort;
+import pl.tks.gr3.cinema.ports.infrastructure.movies.DeleteMoviePort;
+import pl.tks.gr3.cinema.ports.infrastructure.movies.ReadMoviePort;
+import pl.tks.gr3.cinema.ports.infrastructure.movies.UpdateMoviePort;
+import pl.tks.gr3.cinema.ports.infrastructure.users.*;
 import pl.tks.gr3.cinema.viewrest.input.UserInputDTO;
 import pl.tks.gr3.cinema.viewrest.input.MovieInputDTO;
 import pl.tks.gr3.cinema.viewrest.output.MovieDTO;
@@ -40,10 +45,22 @@ public class MovieControllerTest {
 
     private static final Logger logger = LoggerFactory.getLogger(MovieControllerTest.class);
 
-    private static MovieRepository movieRepositoryImpl;
-    private static MovieRepositoryAdapter movieRepository;
-    private static UserRepository userRepositoryImpl;
-    private static UserRepositoryAdapter userRepository;
+    private static MovieRepository movieRepository;
+
+    private static CreateMoviePort createMoviePort;
+    private static ReadMoviePort readMoviePort;
+    private static UpdateMoviePort updateMoviePort;
+    private static DeleteMoviePort deleteMoviePort;
+
+    private static UserRepository userRepository;
+
+    private static CreateUserPort createUserPort;
+    private static ReadUserPort readUserPort;
+    private static UpdateUserPort updateUserPort;
+    private static ActivateUserPort activateUserPort;
+    private static DeactivateUserPort deactivateUserPort;
+    private static DeleteUserPort deleteUserPort;
+
     private static MovieService movieService;
     private static PasswordEncoder passwordEncoder;
 
@@ -56,13 +73,25 @@ public class MovieControllerTest {
 
     @BeforeAll
     public static void init() {
-        movieRepositoryImpl = new MovieRepository(TestConstants.databaseName);
-        movieRepository = new MovieRepositoryAdapter(movieRepositoryImpl);
+        movieRepository = new MovieRepository(TestConstants.databaseName);
+        MovieRepositoryAdapter movieRepositoryAdapter = new MovieRepositoryAdapter(movieRepository);
 
-        userRepositoryImpl = new UserRepository(TestConstants.databaseName);
-        userRepository = new UserRepositoryAdapter(userRepositoryImpl);
+        createMoviePort = movieRepositoryAdapter;
+        readMoviePort = movieRepositoryAdapter;
+        updateMoviePort = movieRepositoryAdapter;
+        deleteMoviePort = movieRepositoryAdapter;
 
-        movieService = new MovieService(movieRepository);
+        userRepository = new UserRepository(TestConstants.databaseName);
+        UserRepositoryAdapter userRepositoryAdapter = new UserRepositoryAdapter(userRepository);
+
+        createUserPort = userRepositoryAdapter;
+        readUserPort = userRepositoryAdapter;
+        updateUserPort = userRepositoryAdapter;
+        activateUserPort = userRepositoryAdapter;
+        deactivateUserPort = userRepositoryAdapter;
+        deleteUserPort = userRepositoryAdapter;
+
+        movieService = new MovieService(createMoviePort, readMoviePort, updateMoviePort, deleteMoviePort);
 
         passwordEncoder = new BCryptPasswordEncoder();
 
@@ -85,9 +114,9 @@ public class MovieControllerTest {
         this.clearCollection();
 
         try {
-            clientUser = userRepository.createClient("ClientLoginX", passwordEncoder.encode(passwordNotHashed));
-            staffUser = userRepository.createStaff("StaffLoginX", passwordEncoder.encode(passwordNotHashed));
-            adminUser = userRepository.createAdmin("AdminLoginX", passwordEncoder.encode(passwordNotHashed));
+            clientUser = createUserPort.createClient("ClientLoginX", passwordEncoder.encode(passwordNotHashed));
+            staffUser = createUserPort.createStaff("StaffLoginX", passwordEncoder.encode(passwordNotHashed));
+            adminUser = createUserPort.createAdmin("AdminLoginX", passwordEncoder.encode(passwordNotHashed));
         } catch (UserRepositoryException exception) {
             throw new RuntimeException("Could not create sample users with userRepository object.", exception);
         }
@@ -107,17 +136,17 @@ public class MovieControllerTest {
 
     private void clearCollection() {
         try {
-            List<Client> listOfClients = userRepository.findAllClients();
+            List<Client> listOfClients = readUserPort.findAllClients();
             for (Client client : listOfClients) {
                 userRepository.delete(client.getUserID(), UserEntConstants.CLIENT_DISCRIMINATOR);
             }
 
-            List<Admin> listOfAdmins = userRepository.findAllAdmins();
+            List<Admin> listOfAdmins = readUserPort.findAllAdmins();
             for (Admin admin : listOfAdmins) {
                 userRepository.delete(admin.getUserID(), UserEntConstants.ADMIN_DISCRIMINATOR);
             }
 
-            List<Staff> listOfStaffs = userRepository.findAllStaffs();
+            List<Staff> listOfStaffs = readUserPort.findAllStaffs();
             for (Staff staff : listOfStaffs) {
                 userRepository.delete(staff.getUserID(), UserEntConstants.STAFF_DISCRIMINATOR);
             }
@@ -137,8 +166,8 @@ public class MovieControllerTest {
 
     @AfterAll
     public static void destroy() {
-        movieRepositoryImpl.close();
-        userRepositoryImpl.close();
+        movieRepository.close();
+        userRepository.close();
     }
 
     // Create tests

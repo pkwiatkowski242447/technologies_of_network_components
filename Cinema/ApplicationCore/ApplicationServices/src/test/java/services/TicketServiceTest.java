@@ -32,6 +32,15 @@ import pl.tks.gr3.cinema.domain_model.Ticket;
 import pl.tks.gr3.cinema.domain_model.users.Admin;
 import pl.tks.gr3.cinema.domain_model.users.Client;
 import pl.tks.gr3.cinema.domain_model.users.Staff;
+import pl.tks.gr3.cinema.ports.infrastructure.movies.CreateMoviePort;
+import pl.tks.gr3.cinema.ports.infrastructure.movies.DeleteMoviePort;
+import pl.tks.gr3.cinema.ports.infrastructure.movies.ReadMoviePort;
+import pl.tks.gr3.cinema.ports.infrastructure.movies.UpdateMoviePort;
+import pl.tks.gr3.cinema.ports.infrastructure.tickets.CreateTicketPort;
+import pl.tks.gr3.cinema.ports.infrastructure.tickets.DeleteTicketPort;
+import pl.tks.gr3.cinema.ports.infrastructure.tickets.ReadTicketPort;
+import pl.tks.gr3.cinema.ports.infrastructure.tickets.UpdateTicketPort;
+import pl.tks.gr3.cinema.ports.infrastructure.users.*;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -47,6 +56,23 @@ public class TicketServiceTest {
     private static UserRepository userRepository;
     private static MovieRepository movieRepository;
     private static TicketRepository ticketRepository;
+
+    private static CreateUserPort createUserPort;
+    private static ReadUserPort readUserPort;
+    private static UpdateUserPort updateUserPort;
+    private static ActivateUserPort activateUserPort;
+    private static DeactivateUserPort deactivateUserPort;
+    private static DeleteUserPort deleteUserPort;
+
+    private static CreateMoviePort createMoviePort;
+    private static ReadMoviePort readMoviePort;
+    private static UpdateMoviePort updateMoviePort;
+    private static DeleteMoviePort deleteMoviePort;
+
+    private static CreateTicketPort createTicketPort;
+    private static ReadTicketPort readTicketPort;
+    private static UpdateTicketPort updateTicketPort;
+    private static DeleteTicketPort deleteTicketPort;
 
     private static ClientService clientService;
     private static AdminService adminService;
@@ -82,11 +108,31 @@ public class TicketServiceTest {
         movieRepository = new MovieRepository(databaseName);
         ticketRepository = new TicketRepository(databaseName);
 
-        clientService = new ClientService(new UserRepositoryAdapter(userRepository));
-        adminService = new AdminService(new UserRepositoryAdapter(userRepository));
-        staffService = new StaffService(new UserRepositoryAdapter(userRepository));
-        movieService = new MovieService(new MovieRepositoryAdapter(movieRepository));
-        ticketService = new TicketService(new TicketRepositoryAdapter(ticketRepository));
+        UserRepositoryAdapter userRepositoryAdapter = new UserRepositoryAdapter(userRepository);
+        MovieRepositoryAdapter movieRepositoryAdapter = new MovieRepositoryAdapter(movieRepository);
+        TicketRepositoryAdapter ticketRepositoryAdapter = new TicketRepositoryAdapter(ticketRepository);
+
+        createUserPort = userRepositoryAdapter;
+        readUserPort = userRepositoryAdapter;
+        activateUserPort = userRepositoryAdapter;
+        deactivateUserPort = userRepositoryAdapter;
+        deleteUserPort = userRepositoryAdapter;
+
+        createMoviePort = movieRepositoryAdapter;
+        readMoviePort = movieRepositoryAdapter;
+        updateMoviePort = movieRepositoryAdapter;
+        deleteMoviePort = movieRepositoryAdapter;
+
+        createTicketPort = ticketRepositoryAdapter;
+        readTicketPort = ticketRepositoryAdapter;
+        updateTicketPort = ticketRepositoryAdapter;
+        deleteTicketPort = ticketRepositoryAdapter;
+
+        clientService = new ClientService(createUserPort, readUserPort, updateUserPort, activateUserPort, deactivateUserPort, deleteUserPort);
+        adminService = new AdminService(createUserPort, readUserPort, updateUserPort, activateUserPort, deactivateUserPort, deleteUserPort);
+        staffService = new StaffService(createUserPort, readUserPort, updateUserPort, activateUserPort, deactivateUserPort, deleteUserPort);
+        movieService = new MovieService(createMoviePort, readMoviePort, updateMoviePort, deleteMoviePort);
+        ticketService = new TicketService(createTicketPort, readTicketPort, updateTicketPort, deleteTicketPort);
     }
 
     @BeforeEach
@@ -193,16 +239,10 @@ public class TicketServiceTest {
     }
 
     // Constructor tests
-    
-    @Test
-    public void ticketServiceNoArgsConstructorTestPositive() {
-        TicketService testTicketService = new TicketService();
-        assertNotNull(testTicketService);
-    }
 
     @Test
     public void ticketServiceAllArgsConstructorTestPositive() {
-        TicketService testTicketService = new TicketService(new TicketRepositoryAdapter(ticketRepository));
+        TicketService testTicketService = new TicketService(createTicketPort, readTicketPort, updateTicketPort, deleteTicketPort);
         assertNotNull(testTicketService);
     }
     

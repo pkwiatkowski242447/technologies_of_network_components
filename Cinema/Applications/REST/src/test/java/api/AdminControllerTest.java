@@ -21,6 +21,7 @@ import pl.tks.gr3.cinema.adapters.repositories.UserRepository;
 import pl.tks.gr3.cinema.domain_model.users.Admin;
 import pl.tks.gr3.cinema.domain_model.users.Client;
 import pl.tks.gr3.cinema.domain_model.users.Staff;
+import pl.tks.gr3.cinema.ports.infrastructure.users.*;
 import pl.tks.gr3.cinema.viewrest.input.UserInputDTO;
 import pl.tks.gr3.cinema.viewrest.output.UserOutputDTO;
 import pl.tks.gr3.cinema.viewrest.input.UserUpdateDTO;
@@ -35,10 +36,16 @@ public class AdminControllerTest {
 
     private static final Logger logger = LoggerFactory.getLogger(AdminControllerTest.class);
 
-    private static UserRepository userRepositoryImpl;
-    private static UserRepositoryAdapter userRepository;
+    private static UserRepository userRepository;
     private static AdminService adminService;
     private static PasswordEncoder passwordEncoder;
+
+    private static CreateUserPort createUserPort;
+    private static ReadUserPort readUserPort;
+    private static UpdateUserPort updateUserPort;
+    private static ActivateUserPort activateUserPort;
+    private static DeactivateUserPort deactivateUserPort;
+    private static DeleteUserPort deleteUserPort;
 
     private Client clientUser;
     private Staff staffUser;
@@ -48,9 +55,17 @@ public class AdminControllerTest {
 
     @BeforeAll
     public static void init() {
-        userRepositoryImpl = new UserRepository(TestConstants.databaseName);
-        userRepository = new UserRepositoryAdapter(userRepositoryImpl);
-        adminService = new AdminService(userRepository);
+        userRepository = new UserRepository(TestConstants.databaseName);
+        UserRepositoryAdapter userRepositoryAdapter = new UserRepositoryAdapter(userRepository);
+
+        createUserPort = userRepositoryAdapter;
+        readUserPort = userRepositoryAdapter;
+        updateUserPort = userRepositoryAdapter;
+        activateUserPort = userRepositoryAdapter;
+        deactivateUserPort = userRepositoryAdapter;
+        deleteUserPort = userRepositoryAdapter;
+
+        adminService = new AdminService(createUserPort, readUserPort, updateUserPort, activateUserPort, deactivateUserPort, deleteUserPort);
 
         passwordEncoder = new BCryptPasswordEncoder();
 
@@ -72,10 +87,10 @@ public class AdminControllerTest {
     public void initializeSampleData() {
         this.clearCollection();
         try {
-            clientUser = userRepository.createClient("ClientLoginX", passwordEncoder.encode(passwordNotHashed));
-            staffUser = userRepository.createStaff("StaffLoginX", passwordEncoder.encode(passwordNotHashed));
-            adminUserNo1 = userRepository.createAdmin("AdminLoginX1", passwordEncoder.encode(passwordNotHashed));
-            adminUserNo2 = userRepository.createAdmin("AdminLoginX2", passwordEncoder.encode(passwordNotHashed));
+            clientUser = createUserPort.createClient("ClientLoginX", passwordEncoder.encode(passwordNotHashed));
+            staffUser = createUserPort.createStaff("StaffLoginX", passwordEncoder.encode(passwordNotHashed));
+            adminUserNo1 = createUserPort.createAdmin("AdminLoginX1", passwordEncoder.encode(passwordNotHashed));
+            adminUserNo2 = createUserPort.createAdmin("AdminLoginX2", passwordEncoder.encode(passwordNotHashed));
         } catch (UserRepositoryException exception) {
             throw new RuntimeException("Could not create sample users with userRepository object.", exception);
         }
@@ -88,17 +103,17 @@ public class AdminControllerTest {
 
     private void clearCollection() {
         try {
-            List<Client> listOfClients = userRepository.findAllClients();
+            List<Client> listOfClients = readUserPort.findAllClients();
             for (Client client : listOfClients) {
                 userRepository.delete(client.getUserID(), UserEntConstants.CLIENT_DISCRIMINATOR);
             }
 
-            List<Admin> listOfAdmins = userRepository.findAllAdmins();
+            List<Admin> listOfAdmins = readUserPort.findAllAdmins();
             for (Admin admin : listOfAdmins) {
                 userRepository.delete(admin.getUserID(), UserEntConstants.ADMIN_DISCRIMINATOR);
             }
 
-            List<Staff> listOfStaffs = userRepository.findAllStaffs();
+            List<Staff> listOfStaffs = readUserPort.findAllStaffs();
             for (Staff staff : listOfStaffs) {
                 userRepository.delete(staff.getUserID(), UserEntConstants.STAFF_DISCRIMINATOR);
             }
@@ -109,7 +124,7 @@ public class AdminControllerTest {
 
     @AfterAll
     public static void destroy() {
-        userRepositoryImpl.close();
+        userRepository.close();
     }
 
     // Read tests

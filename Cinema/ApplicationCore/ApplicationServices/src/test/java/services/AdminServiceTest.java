@@ -9,6 +9,7 @@ import pl.tks.gr3.cinema.application_services.services.AdminService;
 import pl.tks.gr3.cinema.adapters.aggregates.UserRepositoryAdapter;
 import pl.tks.gr3.cinema.adapters.repositories.UserRepository;
 import pl.tks.gr3.cinema.domain_model.users.Admin;
+import pl.tks.gr3.cinema.ports.infrastructure.users.*;
 
 import java.util.List;
 import java.util.UUID;
@@ -20,6 +21,14 @@ public class AdminServiceTest {
     private final static Logger logger = LoggerFactory.getLogger(AdminServiceTest.class);
 
     private final static String databaseName = "test";
+
+    private static CreateUserPort createUserPort;
+    private static ReadUserPort readUserPort;
+    private static UpdateUserPort updateUserPort;
+    private static ActivateUserPort activateUserPort;
+    private static DeactivateUserPort deactivateUserPort;
+    private static DeleteUserPort deleteUserPort;
+
     private static UserRepository userRepository;
     private static AdminService adminService;
 
@@ -29,7 +38,16 @@ public class AdminServiceTest {
     @BeforeAll
     public static void initialize() {
         userRepository = new UserRepository(databaseName);
-        adminService = new AdminService(new UserRepositoryAdapter(userRepository));
+        UserRepositoryAdapter userRepositoryAdapter = new UserRepositoryAdapter(userRepository);
+
+        createUserPort = userRepositoryAdapter;
+        readUserPort = userRepositoryAdapter;
+        updateUserPort = userRepositoryAdapter;
+        activateUserPort = userRepositoryAdapter;
+        deactivateUserPort = userRepositoryAdapter;
+        deleteUserPort = userRepositoryAdapter;
+
+        adminService = new AdminService(createUserPort, readUserPort, updateUserPort, activateUserPort, deactivateUserPort, deleteUserPort);
     }
 
     @BeforeEach
@@ -67,14 +85,8 @@ public class AdminServiceTest {
     // Constructor tests
 
     @Test
-    public void adminServiceNoArgsConstructorTestPositive() {
-        AdminService testAdminService = new AdminService();
-        assertNotNull(testAdminService);
-    }
-
-    @Test
     public void adminServiceAllArgsConstructorTestPositive() {
-        AdminService testAdminService = new AdminService(new UserRepositoryAdapter(userRepository));
+        AdminService testAdminService = new AdminService(createUserPort, readUserPort, updateUserPort, activateUserPort, deactivateUserPort, deleteUserPort);
         assertNotNull(testAdminService);
     }
 

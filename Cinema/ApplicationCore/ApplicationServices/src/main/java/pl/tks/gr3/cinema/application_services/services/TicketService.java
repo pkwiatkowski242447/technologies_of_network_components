@@ -2,11 +2,14 @@ package pl.tks.gr3.cinema.application_services.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import pl.tks.gr3.cinema.adapters.aggregates.TicketRepositoryAdapter;
 import pl.tks.gr3.cinema.adapters.exceptions.TicketRepositoryException;
 import pl.tks.gr3.cinema.adapters.exceptions.crud.ticket.TicketRepositoryTicketNotFoundException;
 import pl.tks.gr3.cinema.application_services.exceptions.crud.ticket.*;
 import pl.tks.gr3.cinema.domain_model.Ticket;
+import pl.tks.gr3.cinema.ports.infrastructure.tickets.CreateTicketPort;
+import pl.tks.gr3.cinema.ports.infrastructure.tickets.DeleteTicketPort;
+import pl.tks.gr3.cinema.ports.infrastructure.tickets.ReadTicketPort;
+import pl.tks.gr3.cinema.ports.infrastructure.tickets.UpdateTicketPort;
 import pl.tks.gr3.cinema.ports.userinterface.TicketServiceInterface;
 
 import java.time.LocalDateTime;
@@ -17,21 +20,27 @@ import java.util.UUID;
 @Service
 public class TicketService implements TicketServiceInterface {
 
-    private TicketRepositoryAdapter ticketRepository;
-
-    public TicketService() {
-    }
+    private final CreateTicketPort createTicketPort;
+    private final ReadTicketPort readTicketPort;
+    private final UpdateTicketPort updateTicketPort;
+    private final DeleteTicketPort deleteTicketPort;
 
     @Autowired
-    public TicketService(TicketRepositoryAdapter ticketRepository) {
-        this.ticketRepository = ticketRepository;
+    public TicketService(CreateTicketPort createTicketPort,
+                         ReadTicketPort readTicketPort,
+                         UpdateTicketPort updateTicketPort,
+                         DeleteTicketPort deleteTicketPort) {
+        this.createTicketPort = createTicketPort;
+        this.readTicketPort = readTicketPort;
+        this.updateTicketPort = updateTicketPort;
+        this.deleteTicketPort = deleteTicketPort;
     }
 
     @Override
     public Ticket create(String movieTime, UUID clientID, UUID movieID) throws TicketServiceCreateException {
         try {
             LocalDateTime movieTimeParsed = LocalDateTime.parse(movieTime);
-            return this.ticketRepository.create(movieTimeParsed, clientID, movieID);
+            return this.createTicketPort.create(movieTimeParsed, clientID, movieID);
         } catch (TicketRepositoryException | DateTimeParseException exception) {
             throw new TicketServiceCreateException(exception.getMessage(), exception);
         }
@@ -40,7 +49,7 @@ public class TicketService implements TicketServiceInterface {
     @Override
     public Ticket findByUUID(UUID ticketID) throws TicketServiceReadException {
         try {
-            return this.ticketRepository.findByUUID(ticketID);
+            return this.readTicketPort.findByUUID(ticketID);
         } catch (TicketRepositoryTicketNotFoundException exception) {
             throw new TicketServiceTicketNotFoundException(exception.getMessage(), exception);
         } catch (TicketRepositoryException exception) {
@@ -51,7 +60,7 @@ public class TicketService implements TicketServiceInterface {
     @Override
     public List<Ticket> findAll() throws TicketServiceReadException {
         try {
-            return this.ticketRepository.findAll();
+            return this.readTicketPort.findAll();
         } catch (TicketRepositoryException exception) {
             throw new TicketServiceReadException(exception.getMessage(), exception);
         }
@@ -60,7 +69,7 @@ public class TicketService implements TicketServiceInterface {
     @Override
     public void update(Ticket ticket) throws TicketServiceUpdateException {
         try {
-            this.ticketRepository.update(ticket);
+            this.updateTicketPort.update(ticket);
         } catch (TicketRepositoryException exception) {
             throw new TicketServiceUpdateException(exception.getMessage(), exception);
         }
@@ -69,7 +78,7 @@ public class TicketService implements TicketServiceInterface {
     @Override
     public void delete(UUID ticketID) throws TicketServiceDeleteException {
         try {
-            this.ticketRepository.delete(ticketID);
+            this.deleteTicketPort.delete(ticketID);
         } catch (TicketRepositoryException exception) {
             throw new TicketServiceDeleteException(exception.getMessage(), exception);
         }
