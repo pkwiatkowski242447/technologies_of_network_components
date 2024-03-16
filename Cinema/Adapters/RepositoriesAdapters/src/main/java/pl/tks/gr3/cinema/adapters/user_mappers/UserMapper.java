@@ -1,12 +1,8 @@
 package pl.tks.gr3.cinema.adapters.user_mappers;
 
-import pl.tks.gr3.cinema.model.users.Admin;
 import pl.tks.gr3.cinema.adapters.model.users.AdminEnt;
 import pl.tks.gr3.cinema.adapters.model.users.ClientEnt;
-import pl.tks.gr3.cinema.model.users.Staff;
 import pl.tks.gr3.cinema.adapters.model.users.StaffEnt;
-import pl.tks.gr3.cinema.model.users.User;
-import pl.tks.gr3.cinema.model.users.Client;
 import pl.tks.gr3.cinema.adapters.model.users.UserEnt;
 
 public class UserMapper {

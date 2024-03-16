@@ -12,15 +12,15 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-import pl.tks.gr3.cinema.exceptions.services.crud.staff.StaffServiceStaffNotFoundException;
-import pl.tks.gr3.cinema.model.users.User;
-import pl.tks.gr3.cinema.security.services.JWSService;
-import pl.pas.gr3.dto.auth.UserOutputDTO;
-import pl.pas.gr3.dto.auth.UserUpdateDTO;
-import pl.tks.gr3.cinema.exceptions.services.GeneralServiceException;
-import pl.tks.gr3.cinema.services.implementations.StaffService;
-import pl.tks.gr3.cinema.model.users.Staff;
-import pl.tks.gr3.cinema.controllers.interfaces.UserServiceInterface;
+import pl.tks.gr3.cinema.application_services.exceptions.GeneralServiceException;
+import pl.tks.gr3.cinema.application_services.exceptions.crud.staff.StaffServiceStaffNotFoundException;
+import pl.tks.gr3.cinema.controllers.interfaces.UserControllerInterface;
+import pl.tks.gr3.cinema.domain_model.users.Staff;
+import pl.tks.gr3.cinema.domain_model.users.User;
+import pl.tks.gr3.cinema.ports.userinterface.JWSServiceInterface;
+import pl.tks.gr3.cinema.ports.userinterface.UserServiceInterface;
+import pl.tks.gr3.cinema.viewrest.output.UserOutputDTO;
+import pl.tks.gr3.cinema.viewrest.input.UserUpdateDTO;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,22 +29,22 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/staffs")
-public class StaffController implements UserServiceInterface<Staff> {
+public class StaffController implements UserControllerInterface<Staff> {
 
     private final static Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
 
-    private final StaffService staffService;
-    private final JWSService jwsService;
+    private final UserServiceInterface<Staff> staffService;
+    private final JWSServiceInterface jwsService;
     private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public StaffController(StaffService staffService, JWSService jwsService, PasswordEncoder passwordEncoder) {
+    public StaffController(UserServiceInterface<Staff> staffService, JWSServiceInterface jwsService, PasswordEncoder passwordEncoder) {
         this.staffService = staffService;
         this.jwsService = jwsService;
         this.passwordEncoder = passwordEncoder;
     }
 
-    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).STAFF) || hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).ADMIN)")
+    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).STAFF) || hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).ADMIN)")
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Override
     public ResponseEntity<?> findByUUID(@PathVariable("id") UUID staffID) {
@@ -59,7 +59,7 @@ public class StaffController implements UserServiceInterface<Staff> {
         }
     }
 
-    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).STAFF) || hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).ADMIN)")
+    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).STAFF) || hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).ADMIN)")
     @GetMapping(value = "/login/{login}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Override
     public ResponseEntity<?> findByLogin(@PathVariable("login") String staffLogin) {
@@ -88,7 +88,7 @@ public class StaffController implements UserServiceInterface<Staff> {
         }
     }
 
-    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).STAFF) || hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).ADMIN)")
+    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).STAFF) || hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).ADMIN)")
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @Override
     public ResponseEntity<?> findAllWithMatchingLogin(@RequestParam("match") String staffLogin) {
@@ -100,7 +100,7 @@ public class StaffController implements UserServiceInterface<Staff> {
         }
     }
 
-    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).STAFF) || hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).ADMIN)")
+    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).STAFF) || hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).ADMIN)")
     @GetMapping(value = "/all", produces = MediaType.APPLICATION_JSON_VALUE)
     @Override
     public ResponseEntity<?> findAll() {
@@ -134,7 +134,7 @@ public class StaffController implements UserServiceInterface<Staff> {
         }
     }
 
-    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).ADMIN)")
+    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).ADMIN)")
     @PostMapping(value = "/{id}/activate")
     @Override
     public ResponseEntity<?> activate(@PathVariable("id") UUID staffID) {
@@ -146,7 +146,7 @@ public class StaffController implements UserServiceInterface<Staff> {
         }
     }
 
-    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).ADMIN)")
+    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).ADMIN)")
     @PostMapping(value = "/{id}/deactivate")
     @Override
     public ResponseEntity<?> deactivate(@PathVariable("id") UUID staffID) {
