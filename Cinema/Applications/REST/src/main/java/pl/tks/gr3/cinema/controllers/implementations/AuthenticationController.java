@@ -14,17 +14,17 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import pl.tks.gr3.cinema.exceptions.services.GeneralServiceException;
-import pl.tks.gr3.cinema.exceptions.services.crud.authentication.login.GeneralAuthenticationLoginException;
-import pl.tks.gr3.cinema.exceptions.services.crud.authentication.register.AuthenticationServiceUserWithGivenLoginExistsException;
-import pl.tks.gr3.cinema.model.users.Admin;
-import pl.tks.gr3.cinema.model.users.Client;
-import pl.tks.gr3.cinema.model.users.Staff;
-import pl.tks.gr3.cinema.model.users.User;
-import pl.tks.gr3.cinema.security.services.JWTService;
-import pl.tks.gr3.cinema.services.implementations.AuthenticationService;
-import pl.pas.gr3.dto.auth.UserInputDTO;
-import pl.pas.gr3.dto.auth.UserOutputDTO;
+import pl.tks.gr3.cinema.ports.userinterface.AuthenticationServiceInterface;
+import pl.tks.gr3.cinema.ports.userinterface.JWTServiceInterface;
+import pl.tks.gr3.cinema.viewrest.input.UserInputDTO;
+import pl.tks.gr3.cinema.viewrest.output.UserOutputDTO;
+import pl.tks.gr3.cinema.application_services.exceptions.GeneralServiceException;
+import pl.tks.gr3.cinema.application_services.exceptions.crud.authentication.login.GeneralAuthenticationLoginException;
+import pl.tks.gr3.cinema.application_services.exceptions.crud.authentication.register.AuthenticationServiceUserWithGivenLoginExistsException;
+import pl.tks.gr3.cinema.domain_model.users.Admin;
+import pl.tks.gr3.cinema.domain_model.users.Client;
+import pl.tks.gr3.cinema.domain_model.users.Staff;
+import pl.tks.gr3.cinema.domain_model.users.User;
 
 import java.net.URI;
 import java.util.List;
@@ -38,11 +38,11 @@ public class AuthenticationController {
 
     private static final Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
 
-    private AuthenticationService authenticationService;
-    private JWTService jwtService;
+    private AuthenticationServiceInterface authenticationService;
+    private JWTServiceInterface jwtService;
 
     @Autowired
-    public AuthenticationController(AuthenticationService authenticationService, JWTService jwtService) {
+    public AuthenticationController(AuthenticationServiceInterface authenticationService, JWTServiceInterface jwtService) {
         this.authenticationService = authenticationService;
         this.jwtService = jwtService;
     }
@@ -82,7 +82,7 @@ public class AuthenticationController {
         }
     }
 
-    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).ADMIN)")
+    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).ADMIN)")
     @PostMapping("/register/admin")
     public ResponseEntity<?> registerAdmin(@RequestBody UserInputDTO userInputDTO) {
         try {
@@ -118,7 +118,7 @@ public class AuthenticationController {
         }
     }
 
-    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).ADMIN)")
+    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).ADMIN)")
     @PostMapping("/register/staff")
     public ResponseEntity<?> registerStaff(@RequestBody UserInputDTO userInputDTO) {
         try {

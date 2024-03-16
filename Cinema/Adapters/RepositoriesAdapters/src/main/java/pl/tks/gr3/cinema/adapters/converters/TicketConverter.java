@@ -1,10 +1,10 @@
 package pl.tks.gr3.cinema.adapters.converters;
 
 import pl.tks.gr3.cinema.adapters.model.TicketEnt;
-import pl.tks.gr3.cinema.domain_model.model.Ticket;
+import pl.tks.gr3.cinema.domain_model.Ticket;
 
 public class TicketConverter {
-    public static TicketEnt convertTicketToTicketEnt(Ticket ticket) {
+    public static TicketEnt convertToTicketEnt(Ticket ticket) {
         return new TicketEnt(ticket.getTicketID(),
                 ticket.getMovieTime(),
                 ticket.getTicketPrice(),
@@ -12,7 +12,7 @@ public class TicketConverter {
                 ticket.getMovieID());
     }
 
-    public static Ticket convertTicketEntToTicket(TicketEnt ticketEnt) {
+    public static Ticket convertToTicket(TicketEnt ticketEnt) {
         return new Ticket(ticketEnt.getTicketID(),
                 ticketEnt.getMovieTime(),
                 ticketEnt.getTicketPrice(),

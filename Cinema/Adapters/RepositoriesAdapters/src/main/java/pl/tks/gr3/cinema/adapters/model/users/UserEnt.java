@@ -9,33 +9,34 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.bson.codecs.pojo.annotations.BsonDiscriminator;
 import org.bson.codecs.pojo.annotations.BsonProperty;
-import pl.tks.gr3.cinema.adapters.consts.model.UserConstants;
-import pl.tks.gr3.cinema.adapters.messages.validation.UserValidationMessages;
+import pl.tks.gr3.cinema.adapters.consts.model.UserEntConstants;
+import pl.tks.gr3.cinema.utils.consts.UserConstants;
+import pl.tks.gr3.cinema.utils.validation.UserValidationMessages;
 
 import java.util.UUID;
 
 @Getter @Setter
-@BsonDiscriminator(key = UserConstants.USER_DISCRIMINATOR_NAME)
+@BsonDiscriminator(key = UserEntConstants.USER_DISCRIMINATOR_NAME)
 public abstract class UserEnt {
 
-    @BsonProperty(UserConstants.GENERAL_IDENTIFIER)
+    @BsonProperty(UserEntConstants.GENERAL_IDENTIFIER)
     @Setter(AccessLevel.NONE)
     @NotNull(message = UserValidationMessages.NULL_IDENTIFIER)
     protected UUID userID;
 
-    @BsonProperty(UserConstants.USER_LOGIN)
+    @BsonProperty(UserEntConstants.USER_LOGIN)
     @NotNull(message = UserValidationMessages.NULL_LOGIN)
     @Size(min = UserConstants.LOGIN_MIN_LENGTH, message = UserValidationMessages.LOGIN_TOO_SHORT)
     @Size(max = UserConstants.LOGIN_MAX_LENGTH, message = UserValidationMessages.LOGIN_TOO_LONG)
     protected String userLogin;
 
-    @BsonProperty(UserConstants.USER_PASSWORD)
+    @BsonProperty(UserEntConstants.USER_PASSWORD)
     @NotNull(message = UserValidationMessages.NULL_LOGIN)
     @Size(min = UserConstants.PASSWORD_MIN_LENGTH, message = UserValidationMessages.PASSWORD_TOO_SHORT)
     @Size(max = UserConstants.PASSWORD_MAX_LENGTH, message = UserValidationMessages.PASSWORD_TOO_LONG)
     protected String userPassword;
 
-    @BsonProperty(UserConstants.USER_STATUS_ACTIVE)
+    @BsonProperty(UserEntConstants.USER_STATUS_ACTIVE)
     protected boolean userStatusActive;
 
     @Setter(AccessLevel.NONE)

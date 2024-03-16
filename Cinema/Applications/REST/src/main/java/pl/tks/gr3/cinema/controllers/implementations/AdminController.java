@@ -12,37 +12,37 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-import pl.tks.gr3.cinema.exceptions.services.crud.admin.AdminServiceAdminNotFoundException;
-import pl.tks.gr3.cinema.model.users.User;
-import pl.tks.gr3.cinema.security.services.JWSService;
-import pl.pas.gr3.dto.auth.UserOutputDTO;
-import pl.pas.gr3.dto.auth.UserUpdateDTO;
-import pl.tks.gr3.cinema.exceptions.services.GeneralServiceException;
-import pl.tks.gr3.cinema.services.implementations.AdminService;
-import pl.tks.gr3.cinema.model.users.Admin;
-import pl.tks.gr3.cinema.controllers.interfaces.UserServiceInterface;
+import pl.tks.gr3.cinema.ports.userinterface.JWSServiceInterface;
+import pl.tks.gr3.cinema.viewrest.output.UserOutputDTO;
+import pl.tks.gr3.cinema.viewrest.input.UserUpdateDTO;
+import pl.tks.gr3.cinema.application_services.exceptions.GeneralServiceException;
+import pl.tks.gr3.cinema.application_services.exceptions.crud.admin.AdminServiceAdminNotFoundException;
+import pl.tks.gr3.cinema.controllers.interfaces.UserControllerInterface;
+import pl.tks.gr3.cinema.domain_model.users.Admin;
+import pl.tks.gr3.cinema.domain_model.users.User;
+import pl.tks.gr3.cinema.ports.userinterface.UserServiceInterface;
 
 import java.util.*;
 
 
 @RestController
 @RequestMapping("/api/v1/admins")
-public class AdminController implements UserServiceInterface<Admin> {
+public class AdminController implements UserControllerInterface<Admin> {
 
     private final Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
 
-    private final AdminService adminService;
-    private final JWSService jwsService;
+    private final UserServiceInterface<Admin> adminService;
+    private final JWSServiceInterface jwsService;
     private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public AdminController(AdminService adminService, JWSService jwsService, PasswordEncoder passwordEncoder) {
+    public AdminController(UserServiceInterface<Admin> adminService, JWSServiceInterface jwsService, PasswordEncoder passwordEncoder) {
         this.adminService = adminService;
         this.jwsService = jwsService;
         this.passwordEncoder = passwordEncoder;
     }
 
-    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).ADMIN)")
+    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).ADMIN)")
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Override
     public ResponseEntity<?> findByUUID(@PathVariable("id") UUID adminID) {
@@ -57,7 +57,7 @@ public class AdminController implements UserServiceInterface<Admin> {
         }
     }
 
-    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).ADMIN)")
+    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).ADMIN)")
     @GetMapping(value = "/login/{login}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Override
     public ResponseEntity<?> findByLogin(@PathVariable("login") String adminLogin) {
@@ -86,7 +86,7 @@ public class AdminController implements UserServiceInterface<Admin> {
         }
     }
 
-    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).ADMIN)")
+    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).ADMIN)")
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @Override
     public ResponseEntity<?> findAllWithMatchingLogin(@RequestParam("match") String adminLogin) {
@@ -98,7 +98,7 @@ public class AdminController implements UserServiceInterface<Admin> {
         }
     }
 
-    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).ADMIN)")
+    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).ADMIN)")
     @GetMapping(value = "/all", produces = MediaType.APPLICATION_JSON_VALUE)
     @Override
     public ResponseEntity<?> findAll() {
@@ -133,7 +133,7 @@ public class AdminController implements UserServiceInterface<Admin> {
         }
     }
 
-    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).ADMIN)")
+    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).ADMIN)")
     @PostMapping(value = "/{id}/activate")
     @Override
     public ResponseEntity<?> activate(@PathVariable("id") UUID adminID) {
@@ -145,7 +145,7 @@ public class AdminController implements UserServiceInterface<Admin> {
         }
     }
 
-    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).ADMIN)")
+    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).ADMIN)")
     @PostMapping(value = "/{id}/deactivate")
     @Override
     public ResponseEntity<?> deactivate(@PathVariable("id") UUID adminID) {

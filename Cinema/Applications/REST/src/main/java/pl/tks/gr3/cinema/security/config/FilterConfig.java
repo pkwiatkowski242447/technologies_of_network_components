@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import pl.tks.gr3.cinema.security.filters.ObjectUpdateFilter;
 import pl.tks.gr3.cinema.security.filters.UserUpdateFilter;
-import pl.tks.gr3.cinema.security.services.JWSService;
+import pl.tks.gr3.cinema.application_services.services.JWSService;
 
 import java.util.List;
 
