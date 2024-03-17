@@ -11,8 +11,10 @@ import io.restassured.specification.RequestSpecification;
 import org.junit.jupiter.api.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import pl.tks.gr3.cinema.CinemaApplication;
 import pl.tks.gr3.cinema.application_services.exceptions.crud.admin.AdminServiceCreateException;
 import pl.tks.gr3.cinema.application_services.exceptions.crud.admin.AdminServiceDeleteException;
 import pl.tks.gr3.cinema.application_services.exceptions.crud.admin.AdminServiceReadException;
@@ -61,6 +63,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@SpringBootTest(classes = {CinemaApplication.class}, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 public class TicketControllerTest {
 
     private static final Logger logger = LoggerFactory.getLogger(TicketControllerTest.class);
