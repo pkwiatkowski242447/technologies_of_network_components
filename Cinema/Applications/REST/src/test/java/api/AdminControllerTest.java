@@ -2,162 +2,103 @@ package api;
 
 import io.restassured.RestAssured;
 import io.restassured.common.mapper.TypeRef;
-import io.restassured.config.RestAssuredConfig;
-import io.restassured.config.SSLConfig;
 import io.restassured.response.Response;
 import io.restassured.http.ContentType;
 import io.restassured.response.ValidatableResponse;
 import io.restassured.specification.RequestSpecification;
+import org.junit.Before;
 import org.junit.jupiter.api.*;
+import org.junit.runner.RunWith;
+import org.mockito.ArgumentMatchers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import pl.tks.gr3.cinema.adapters.consts.model.UserEntConstants;
-import pl.tks.gr3.cinema.application_services.services.AdminService;
-import pl.tks.gr3.cinema.adapters.aggregates.UserRepositoryAdapter;
+import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import pl.tks.gr3.cinema.adapters.exceptions.UserRepositoryException;
-import pl.tks.gr3.cinema.adapters.repositories.UserRepository;
+import pl.tks.gr3.cinema.application_services.services.JWSService;
+import pl.tks.gr3.cinema.controllers.implementations.AdminController;
 import pl.tks.gr3.cinema.domain_model.users.Admin;
 import pl.tks.gr3.cinema.domain_model.users.Client;
 import pl.tks.gr3.cinema.domain_model.users.Staff;
-import pl.tks.gr3.cinema.ports.infrastructure.users.*;
+import pl.tks.gr3.cinema.ports.userinterface.UserServiceInterface;
 import pl.tks.gr3.cinema.viewrest.input.UserInputDTO;
 import pl.tks.gr3.cinema.viewrest.output.UserOutputDTO;
 import pl.tks.gr3.cinema.viewrest.input.UserUpdateDTO;
 
-import java.net.URL;
 import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.BDDMockito.given;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
+@RunWith(SpringRunner.class)
+@WebMvcTest(controllers = AdminController.class)
 public class AdminControllerTest {
 
     private static final Logger logger = LoggerFactory.getLogger(AdminControllerTest.class);
 
-    private static UserRepository userRepository;
-    private static AdminService adminService;
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockBean
+    private UserServiceInterface<Admin> adminService;
+
+    @MockBean
+    private JWSService jwsService;
+
+    @MockBean
     private static PasswordEncoder passwordEncoder;
 
-    private static CreateUserPort createUserPort;
-    private static ReadUserPort readUserPort;
-    private static UpdateUserPort updateUserPort;
-    private static ActivateUserPort activateUserPort;
-    private static DeactivateUserPort deactivateUserPort;
-    private static DeleteUserPort deleteUserPort;
 
     private Client clientUser;
     private Staff staffUser;
     private Admin adminUserNo1;
     private Admin adminUserNo2;
     private static String passwordNotHashed;
+    private static String urlPrefix;
 
     @BeforeAll
     public static void init() {
-        userRepository = new UserRepository(TestConstants.databaseName);
-        UserRepositoryAdapter userRepositoryAdapter = new UserRepositoryAdapter(userRepository);
-
-        createUserPort = userRepositoryAdapter;
-        readUserPort = userRepositoryAdapter;
-        updateUserPort = userRepositoryAdapter;
-        activateUserPort = userRepositoryAdapter;
-        deactivateUserPort = userRepositoryAdapter;
-        deleteUserPort = userRepositoryAdapter;
-
-        adminService = new AdminService(createUserPort, readUserPort, updateUserPort, activateUserPort, deactivateUserPort, deleteUserPort);
-
-        passwordEncoder = new BCryptPasswordEncoder();
-
-        ClassLoader classLoader = AuthenticationControllerTest.class.getClassLoader();
-        URL resourceURL = classLoader.getResource("pas-truststore.jks");
-
-        RestAssured.config = RestAssuredConfig.newConfig().sslConfig(
-                new SSLConfig().trustStore(resourceURL.getPath(), "password")
-                        .and()
-                        .port(8000)
-                        .and()
-                        .allowAllHostnames()
-        );
-
         passwordNotHashed = "password";
+        urlPrefix = "/api/v1/admins";
     }
 
     @BeforeEach
     public void initializeSampleData() {
-        this.clearCollection();
         try {
-            clientUser = createUserPort.createClient("ClientLoginX", passwordEncoder.encode(passwordNotHashed));
-            staffUser = createUserPort.createStaff("StaffLoginX", passwordEncoder.encode(passwordNotHashed));
-            adminUserNo1 = createUserPort.createAdmin("AdminLoginX1", passwordEncoder.encode(passwordNotHashed));
-            adminUserNo2 = createUserPort.createAdmin("AdminLoginX2", passwordEncoder.encode(passwordNotHashed));
+            clientUser = new Client(UUID.randomUUID(), "ClientLoginX", passwordEncoder.encode(passwordNotHashed));
+            staffUser = new Staff(UUID.randomUUID(), "StaffLoginX", passwordEncoder.encode(passwordNotHashed));
+            adminUserNo1 = new Admin(UUID.randomUUID(), "AdminLoginX1", passwordEncoder.encode(passwordNotHashed));
+            adminUserNo2 = new Admin(UUID.randomUUID(), "AdminLoginX2", passwordEncoder.encode(passwordNotHashed));
         } catch (UserRepositoryException exception) {
             throw new RuntimeException("Could not create sample users with userRepository object.", exception);
         }
     }
 
-    @AfterEach
-    public void destroySampleData() {
-        this.clearCollection();
-    }
-
-    private void clearCollection() {
-        try {
-            List<Client> listOfClients = readUserPort.findAllClients();
-            for (Client client : listOfClients) {
-                userRepository.delete(client.getUserID(), UserEntConstants.CLIENT_DISCRIMINATOR);
-            }
-
-            List<Admin> listOfAdmins = readUserPort.findAllAdmins();
-            for (Admin admin : listOfAdmins) {
-                userRepository.delete(admin.getUserID(), UserEntConstants.ADMIN_DISCRIMINATOR);
-            }
-
-            List<Staff> listOfStaffs = readUserPort.findAllStaffs();
-            for (Staff staff : listOfStaffs) {
-                userRepository.delete(staff.getUserID(), UserEntConstants.STAFF_DISCRIMINATOR);
-            }
-        } catch (UserRepositoryException exception) {
-            throw new RuntimeException("Could not delete sample users with userRepository object.", exception);
-        }
-    }
-
-    @AfterAll
-    public static void destroy() {
-        userRepository.close();
-    }
-
     // Read tests
 
     @Test
-    public void adminControllerFindAdminByIDAsUnauthenticatedUserTestNegative() {
-        UUID searchedAdminID = adminUserNo1.getUserID();
-        String path = TestConstants.adminsURL + "/" + searchedAdminID;
-        RequestSpecification requestSpecification = RestAssured.given();
-        requestSpecification.accept(ContentType.JSON);
+    public void adminControllerFindAdminByIDAsUnauthenticatedUserTestNegative() throws Exception {
+        given(adminService.findByUUID(ArgumentMatchers.eq(adminUserNo1.getUserID()))).willReturn(adminUserNo1);
 
-        Response response = requestSpecification.get(path);
-        logger.info("Response: " + response.asString());
-        ValidatableResponse validatableResponse = response.then();
+        ResultActions response = mockMvc.perform(
+                get(urlPrefix + "/" + adminUserNo1.getUserID())
+                        .accept(MediaType.APPLICATION_JSON)
+        );
 
-        validatableResponse.statusCode(403);
-    }
-
-    @Test
-    public void adminControllerFindAdminByIDAsAuthenticatedClientTestNegative() {
-        String accessToken = this.loginToAccount(new UserInputDTO(clientUser.getUserLogin(), passwordNotHashed), TestConstants.clientLoginURL);
-
-        UUID searchedAdminID = adminUserNo1.getUserID();
-        String path = TestConstants.adminsURL + "/" + searchedAdminID;
-        RequestSpecification requestSpecification = RestAssured.given();
-        requestSpecification.header("Authorization", "Bearer " + accessToken);
-        requestSpecification.accept(ContentType.JSON);
-
-        Response response = requestSpecification.get(path);
-        logger.info("Response: " + response.asString());
-        ValidatableResponse validatableResponse = response.then();
-
-        validatableResponse.statusCode(403);
+        response.andExpect(MockMvcResultMatchers.status().isUnauthorized());
     }
 
     @Test
@@ -175,6 +116,18 @@ public class AdminControllerTest {
         ValidatableResponse validatableResponse = response.then();
 
         validatableResponse.statusCode(403);
+    }
+
+    @Test
+    public void adminControllerFindAdminByIDAsAuthenticatedClientTestNegative() throws Exception {
+        given(adminService.findByUUID(ArgumentMatchers.eq(adminUserNo1.getUserID()))).willReturn(adminUserNo1);
+
+        ResultActions response = mockMvc.perform(
+                get(urlPrefix + "/" + adminUserNo1.getUserID())
+                        .accept(MediaType.APPLICATION_JSON)
+        );
+
+        response.andExpect(MockMvcResultMatchers.status().isForbidden());
     }
 
     @Test
