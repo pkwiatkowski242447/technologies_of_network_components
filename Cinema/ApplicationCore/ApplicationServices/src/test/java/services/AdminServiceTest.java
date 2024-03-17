@@ -1,92 +1,58 @@
 package services;
 
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import pl.tks.gr3.cinema.adapters.exceptions.UserRepositoryException;
+import pl.tks.gr3.cinema.adapters.exceptions.crud.user.UserRepositoryAdminNotFoundException;
+import pl.tks.gr3.cinema.adapters.exceptions.crud.user.UserRepositoryCreateException;
 import pl.tks.gr3.cinema.application_services.exceptions.GeneralAdminServiceException;
 import pl.tks.gr3.cinema.application_services.exceptions.crud.admin.*;
 import pl.tks.gr3.cinema.application_services.services.AdminService;
 import pl.tks.gr3.cinema.adapters.aggregates.UserRepositoryAdapter;
-import pl.tks.gr3.cinema.adapters.repositories.UserRepository;
 import pl.tks.gr3.cinema.domain_model.users.Admin;
-import pl.tks.gr3.cinema.ports.infrastructure.users.*;
+import pl.tks.gr3.cinema.ports.userinterface.UserServiceInterface;
 
 import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 public class AdminServiceTest {
 
     private final static Logger logger = LoggerFactory.getLogger(AdminServiceTest.class);
 
     private final static String databaseName = "test";
 
-    private static CreateUserPort createUserPort;
-    private static ReadUserPort readUserPort;
-    private static UpdateUserPort updateUserPort;
-    private static ActivateUserPort activateUserPort;
-    private static DeactivateUserPort deactivateUserPort;
-    private static DeleteUserPort deleteUserPort;
+    @Mock
+    private static UserRepositoryAdapter userRepositoryAdapter;
 
-    private static UserRepository userRepository;
+    @InjectMocks
     private static AdminService adminService;
 
-    private Admin adminNo1;
-    private Admin adminNo2;
-
-    @BeforeAll
-    public static void initialize() {
-        userRepository = new UserRepository(databaseName);
-        UserRepositoryAdapter userRepositoryAdapter = new UserRepositoryAdapter(userRepository);
-
-        createUserPort = userRepositoryAdapter;
-        readUserPort = userRepositoryAdapter;
-        updateUserPort = userRepositoryAdapter;
-        activateUserPort = userRepositoryAdapter;
-        deactivateUserPort = userRepositoryAdapter;
-        deleteUserPort = userRepositoryAdapter;
-
-        adminService = new AdminService(createUserPort, readUserPort, updateUserPort, activateUserPort, deactivateUserPort, deleteUserPort);
-    }
+    private static Admin adminNo1;
+    private static Admin adminNo2;
+    private static Admin adminNo3;
 
     @BeforeEach
     public void initializeSampleData() {
-        this.clearTestData();
-        try {
-            adminNo1 = adminService.create("UniqueAdminLoginNo1", "UniqueAdminPasswordNo1");
-            adminNo2 = adminService.create("UniqueAdminLoginNo2", "UniqueAdminPasswordNo2");
-        } catch (AdminServiceCreateException exception) {
-            logger.error(exception.getMessage());
-        }
-    }
-
-    @AfterEach
-    public void destroySampleData() {
-        this.clearTestData();
-    }
-
-    private void clearTestData() {
-        try {
-            List<Admin> listOfAdmins = adminService.findAll();
-            for (Admin admin : listOfAdmins) {
-                adminService.delete(admin.getUserID());
-            }
-        } catch (AdminServiceReadException | AdminServiceDeleteException exception) {
-            logger.error(exception.getMessage());
-        }
-    }
-
-    @AfterAll
-    public static void destroy() {
-        userRepository.close();
+        adminNo1 = new Admin(UUID.randomUUID(), "UniqueAdminLoginNo1", "UniqueAdminPasswordNo1");
+        adminNo2 = new Admin(UUID.randomUUID(), "UniqueAdminLoginNo2", "UniqueAdminPasswordNo2");
+        adminNo3 = new Admin(UUID.randomUUID(), "UniqueAdminLoginNo3", "UniqueAdminPasswordNo3");
     }
 
     // Constructor tests
 
     @Test
     public void adminServiceAllArgsConstructorTestPositive() {
-        AdminService testAdminService = new AdminService(createUserPort, readUserPort, updateUserPort, activateUserPort, deactivateUserPort, deleteUserPort);
+        AdminService testAdminService = new AdminService(userRepositoryAdapter, userRepositoryAdapter, userRepositoryAdapter, userRepositoryAdapter, userRepositoryAdapter, userRepositoryAdapter);
         assertNotNull(testAdminService);
     }
 
@@ -94,97 +60,146 @@ public class AdminServiceTest {
 
     @Test
     public void adminServiceCreateAdminTestPositive() throws AdminServiceCreateException {
-        String adminLogin = "SomeOtherLoginNo1";
-        String adminPassword = "SomeOtherPasswordNo1";
-        Admin admin = adminService.create(adminLogin, adminPassword);
+        when(userRepositoryAdapter.createAdmin(Mockito.anyString(), Mockito.anyString())).thenReturn(adminNo1);
+        Admin admin = adminService.create(adminNo1.getUserLogin(), adminNo1.getUserPassword());
+
         assertNotNull(admin);
-        assertEquals(adminLogin, admin.getUserLogin());
-        assertEquals(adminPassword, admin.getUserPassword());
+        assertEquals(adminNo1.getUserLogin(), admin.getUserLogin());
+        assertEquals(adminNo1.getUserPassword(), admin.getUserPassword());
+        verify(userRepositoryAdapter, times(1)).createAdmin(adminNo1.getUserLogin(), adminNo1.getUserPassword());
     }
 
     @Test
     public void adminServiceCreateAdminWithNullLoginThatTestNegative() {
         String adminLogin = null;
         String adminPassword = "SomeOtherPasswordNo1";
+
+        when(userRepositoryAdapter.createAdmin(Mockito.eq(adminLogin), Mockito.anyString())).thenThrow(UserRepositoryCreateException.class);
+
         assertThrows(AdminServiceCreateException.class, () -> adminService.create(adminLogin, adminPassword));
+
+        verify(userRepositoryAdapter, times(1)).createAdmin(adminLogin, adminPassword);
     }
 
     @Test
     public void adminServiceCreateAdminWithEmptyLoginThatTestNegative() {
         String adminLogin = "";
         String adminPassword = "SomeOtherPasswordNo1";
+
+        when(userRepositoryAdapter.createAdmin(Mockito.eq(adminLogin), Mockito.anyString())).thenThrow(UserRepositoryCreateException.class);
+
         assertThrows(AdminServiceCreateException.class, () -> adminService.create(adminLogin, adminPassword));
+
+        verify(userRepositoryAdapter, times(1)).createAdmin(adminLogin, adminPassword);
     }
 
     @Test
     public void adminServiceCreateAdminWithLoginTooShortThatTestNegative() {
         String adminLogin = "ddddfdd";
         String adminPassword = "SomeOtherPasswordNo1";
+
+        when(userRepositoryAdapter.createAdmin(Mockito.eq(adminLogin), Mockito.anyString())).thenThrow(UserRepositoryCreateException.class);
+
         assertThrows(AdminServiceCreateException.class, () -> adminService.create(adminLogin, adminPassword));
+
+        verify(userRepositoryAdapter, times(1)).createAdmin(adminLogin, adminPassword);
     }
 
     @Test
     public void adminServiceCreateAdminWithLoginTooLongThatTestNegative() {
         String adminLogin = "ddddfddddfddddfddddfd";
         String adminPassword = "SomeOtherPasswordNo1";
+
+        when(userRepositoryAdapter.createAdmin(Mockito.eq(adminLogin), Mockito.anyString())).thenThrow(UserRepositoryCreateException.class);
+
         assertThrows(AdminServiceCreateException.class, () -> adminService.create(adminLogin, adminPassword));
+
+        verify(userRepositoryAdapter, times(1)).createAdmin(adminLogin, adminPassword);
     }
 
     @Test
     public void adminServiceCreateAdminWithLoginLengthEqualTo8ThatTestPositive() throws AdminServiceCreateException {
-        String adminLogin = "ddddfddd";
-        String adminPassword = "SomeOtherPasswordNo1";
-        Admin admin = adminService.create(adminLogin, adminPassword);
+        when(userRepositoryAdapter.createAdmin(Mockito.anyString(), Mockito.anyString())).thenReturn(adminNo2);
+
+        Admin admin = adminService.create(adminNo2.getUserLogin(), adminNo2.getUserPassword());
+
         assertNotNull(admin);
-        assertEquals(adminLogin, admin.getUserLogin());
-        assertEquals(adminPassword, admin.getUserPassword());
+        assertEquals(adminNo2.getUserLogin(), admin.getUserLogin());
+        assertEquals(adminNo2.getUserPassword(), admin.getUserPassword());
+        verify(userRepositoryAdapter, times(1)).createAdmin(adminNo2.getUserLogin(), adminNo2.getUserPassword());
     }
 
     @Test
     public void adminServiceCreateAdminWithLoginLengthEqualTo20ThatTestNegative() throws AdminServiceCreateException {
-        String adminLogin = "ddddfddddfddddfddddf";
-        String adminPassword = "SomeOtherPasswordNo1";
-        Admin admin = adminService.create(adminLogin, adminPassword);
+        when(userRepositoryAdapter.createAdmin(Mockito.anyString(), Mockito.anyString())).thenReturn(adminNo3)
+        ;
+        Admin admin = adminService.create(adminNo3.getUserLogin(), adminNo3.getUserPassword());
+
         assertNotNull(admin);
-        assertEquals(adminLogin, admin.getUserLogin());
-        assertEquals(adminPassword, admin.getUserPassword());
+        assertEquals(adminNo3.getUserLogin(), admin.getUserLogin());
+        assertEquals(adminNo3.getUserPassword(), admin.getUserPassword());
+
+        verify(userRepositoryAdapter, times(1)).createAdmin(adminNo3.getUserLogin(), adminNo3.getUserPassword());
     }
 
     @Test
     public void adminServiceCreateAdminWithLoginThatDoesNotMeetRegExTestNegative() {
         String adminLogin = "Some Invalid Login";
         String adminPassword = "SomeOtherPasswordNo1";
+
+        when(userRepositoryAdapter.createAdmin(Mockito.eq(adminLogin), Mockito.anyString())).thenThrow(UserRepositoryCreateException.class);
+
         assertThrows(AdminServiceCreateException.class, () -> adminService.create(adminLogin, adminPassword));
+
+        verify(userRepositoryAdapter, times(1)).createAdmin(adminLogin, adminPassword);
     }
 
     // Read tests
 
     @Test
     public void adminServiceFindAdminByIDTestPositive() throws AdminServiceReadException {
+        when(userRepositoryAdapter.findAdminByUUID(Mockito.eq(adminNo1.getUserID()))).thenReturn(adminNo1);
+
         Admin foundAdmin = adminService.findByUUID(adminNo1.getUserID());
+
         assertNotNull(foundAdmin);
         assertEquals(adminNo1, foundAdmin);
+        verify(userRepositoryAdapter, times(1)).findAdminByUUID(Mockito.eq(adminNo1.getUserID()));
     }
 
     @Test
     public void adminServiceFindAdminByIDThatIsNotInTheDatabaseTestNegative() {
-        Admin admin = new Admin(UUID.randomUUID(), "SomeOtherLoginNo1", "SomeOtherPasswordNo1");
+        UUID searchedUUID = UUID.randomUUID();
+
+        when(userRepositoryAdapter.findAdminByUUID(Mockito.eq(searchedUUID))).thenThrow(UserRepositoryAdminNotFoundException.class);
+
+        Admin admin = new Admin(searchedUUID, "SomeOtherLoginNo1", "SomeOtherPasswordNo1");
+
         assertNotNull(admin);
         assertThrows(AdminServiceAdminNotFoundException.class, () -> adminService.findByUUID(admin.getUserID()));
+        verify(userRepositoryAdapter, times(1)).findAdminByUUID(Mockito.eq(admin.getUserID()));
     }
 
     @Test
     public void adminServiceFindAdminByLoginTestPositive() throws AdminServiceReadException {
-        Admin foundAdmin = adminService.findByLogin(adminNo1.getUserLogin());
+        when(userRepositoryAdapter.findAdminByLogin(adminNo2.getUserLogin())).thenReturn(adminNo2);
+
+        Admin foundAdmin = adminService.findByLogin(adminNo2.getUserLogin());
+
         assertNotNull(foundAdmin);
         assertEquals(adminNo1, foundAdmin);
+        verify(userRepositoryAdapter, times(1)).findAdminByLogin(adminNo2.getUserLogin());
     }
 
     @Test
     public void adminServiceFindAdminByLoginThatIsNotInTheDatabaseTestNegative() {
+        when(userRepositoryAdapter.findAdminByLogin(Mockito.anyString())).thenThrow(UserRepositoryAdminNotFoundException.class);
+
         Admin admin = new Admin(UUID.randomUUID(), "SomeOtherLoginNo1", "SomeOtherPasswordNo1");
+
         assertNotNull(admin);
         assertThrows(AdminServiceAdminNotFoundException.class, () -> adminService.findByLogin(admin.getUserLogin()));
+        verify(userRepositoryAdapter, times(1)).findAdminByLogin(admin.getUserLogin());
     }
 
     @Test

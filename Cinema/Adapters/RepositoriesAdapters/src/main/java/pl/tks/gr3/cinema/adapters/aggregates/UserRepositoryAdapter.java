@@ -2,6 +2,7 @@ package pl.tks.gr3.cinema.adapters.aggregates;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import pl.tks.gr3.cinema.adapters.api.UserRepositoryInterface;
 import pl.tks.gr3.cinema.adapters.consts.model.UserEntConstants;
 import pl.tks.gr3.cinema.adapters.converters.TicketConverter;
 import pl.tks.gr3.cinema.adapters.converters.UserConverter;
@@ -12,7 +13,6 @@ import pl.tks.gr3.cinema.adapters.model.users.AdminEnt;
 import pl.tks.gr3.cinema.adapters.model.users.ClientEnt;
 import pl.tks.gr3.cinema.adapters.model.users.StaffEnt;
 import pl.tks.gr3.cinema.adapters.model.users.UserEnt;
-import pl.tks.gr3.cinema.adapters.repositories.UserRepository;
 import pl.tks.gr3.cinema.domain_model.Ticket;
 import pl.tks.gr3.cinema.domain_model.users.Admin;
 import pl.tks.gr3.cinema.domain_model.users.Client;
@@ -26,10 +26,10 @@ import java.util.UUID;
 @Component
 public class UserRepositoryAdapter implements CreateUserPort, ReadUserPort, UpdateUserPort, ActivateUserPort, DeactivateUserPort, DeleteUserPort {
 
-    private final UserRepository userRepository;
+    private final UserRepositoryInterface userRepository;
 
     @Autowired
-    public UserRepositoryAdapter(UserRepository userRepository) {
+    public UserRepositoryAdapter(UserRepositoryInterface userRepository) {
         this.userRepository = userRepository;
     }
 

@@ -30,5 +30,6 @@ public interface MovieRepositoryInterface extends AutoCloseable {
 
     List<TicketEnt> getListOfTicketsForMovie(UUID movieID);
 
+    @Override
     void close();
 }
