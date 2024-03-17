@@ -28,7 +28,7 @@ public class JWSServiceTest {
     }
 
     @Test
-    public void adminServiceAllArgsConstructorTestPositive() {
+    public void jwsServiceAllArgsConstructorTestPositive() {
         JWSService jwsService = new JWSService();
         assertNotNull(jwsService);
     }
