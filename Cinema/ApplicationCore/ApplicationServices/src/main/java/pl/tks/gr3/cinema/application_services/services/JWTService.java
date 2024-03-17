@@ -5,11 +5,9 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Service;
 import pl.tks.gr3.cinema.adapters.consts.model.UserEntConstants;
 import pl.tks.gr3.cinema.domain_model.users.User;
 import pl.tks.gr3.cinema.ports.userinterface.JWTServiceInterface;
@@ -19,7 +17,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 
-@Service
 public class JWTService implements JWTServiceInterface {
 
     private final static String SECRET_KEY = "256970464e4d29792c4d2d24317256534d2d3039332a2b2e383929635f";

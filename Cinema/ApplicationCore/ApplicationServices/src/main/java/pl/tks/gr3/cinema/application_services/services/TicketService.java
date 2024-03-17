@@ -1,7 +1,5 @@
 package pl.tks.gr3.cinema.application_services.services;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 import pl.tks.gr3.cinema.adapters.exceptions.TicketRepositoryException;
 import pl.tks.gr3.cinema.adapters.exceptions.crud.ticket.TicketRepositoryTicketNotFoundException;
 import pl.tks.gr3.cinema.application_services.exceptions.crud.ticket.*;
@@ -17,7 +15,6 @@ import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.UUID;
 
-@Service
 public class TicketService implements TicketServiceInterface {
 
     private final CreateTicketPort createTicketPort;
@@ -25,7 +22,6 @@ public class TicketService implements TicketServiceInterface {
     private final UpdateTicketPort updateTicketPort;
     private final DeleteTicketPort deleteTicketPort;
 
-    @Autowired
     public TicketService(CreateTicketPort createTicketPort,
                          ReadTicketPort readTicketPort,
                          UpdateTicketPort updateTicketPort,

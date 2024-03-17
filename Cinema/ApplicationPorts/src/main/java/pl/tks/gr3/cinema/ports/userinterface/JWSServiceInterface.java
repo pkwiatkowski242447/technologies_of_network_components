@@ -1,9 +1,11 @@
 package pl.tks.gr3.cinema.ports.userinterface;
 
+import org.springframework.stereotype.Service;
 import pl.tks.gr3.cinema.domain_model.Movie;
 import pl.tks.gr3.cinema.domain_model.Ticket;
 import pl.tks.gr3.cinema.domain_model.users.User;
 
+@Service
 public interface JWSServiceInterface {
 
     String generateSignatureForUser(User user);

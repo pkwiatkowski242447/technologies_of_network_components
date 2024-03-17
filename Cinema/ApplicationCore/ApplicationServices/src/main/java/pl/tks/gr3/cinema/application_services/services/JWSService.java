@@ -4,8 +4,6 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
 import pl.tks.gr3.cinema.adapters.consts.model.MovieEntConstants;
 import pl.tks.gr3.cinema.adapters.consts.model.TicketEntConstants;
 import pl.tks.gr3.cinema.adapters.consts.model.UserEntConstants;
@@ -16,7 +14,6 @@ import pl.tks.gr3.cinema.ports.userinterface.JWSServiceInterface;
 
 import java.util.Base64;
 
-@Service
 public class JWSService implements JWSServiceInterface {
 
     private final static String SECRET_KEY = "256970464e4d29792c4d2d24317256534d2d3039332a2b2e383929635f";

@@ -1,10 +1,12 @@
 package pl.tks.gr3.cinema.ports.userinterface;
 
+import org.springframework.stereotype.Service;
 import pl.tks.gr3.cinema.domain_model.Ticket;
 
 import java.util.List;
 import java.util.UUID;
 
+@Service
 public interface UserServiceInterface<Type> extends ServiceInterface<Type> {
 
     // Create methods

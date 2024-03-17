@@ -1,7 +1,5 @@
 package pl.tks.gr3.cinema.application_services.services;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 import pl.tks.gr3.cinema.adapters.exceptions.MovieRepositoryException;
 import pl.tks.gr3.cinema.adapters.exceptions.crud.movie.MovieRepositoryMovieNotFoundException;
 import pl.tks.gr3.cinema.application_services.exceptions.crud.movie.*;
@@ -16,7 +14,6 @@ import pl.tks.gr3.cinema.ports.userinterface.MovieServiceInterface;
 import java.util.List;
 import java.util.UUID;
 
-@Service
 public class MovieService implements MovieServiceInterface {
 
     private final CreateMoviePort createMoviePort;
@@ -25,7 +22,6 @@ public class MovieService implements MovieServiceInterface {
     private final DeleteMoviePort deleteMoviePort;
 
 
-    @Autowired
     public MovieService(CreateMoviePort createMoviePort,
                         ReadMoviePort readMoviePort,
                         UpdateMoviePort updateMoviePort,

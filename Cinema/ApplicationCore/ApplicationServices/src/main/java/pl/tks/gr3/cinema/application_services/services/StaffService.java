@@ -1,7 +1,5 @@
 package pl.tks.gr3.cinema.application_services.services;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 import pl.tks.gr3.cinema.adapters.consts.model.UserEntConstants;
 import pl.tks.gr3.cinema.adapters.exceptions.UserRepositoryException;
 import pl.tks.gr3.cinema.adapters.exceptions.crud.user.UserRepositoryCreateUserDuplicateLoginException;
@@ -16,7 +14,6 @@ import pl.tks.gr3.cinema.ports.userinterface.UserServiceInterface;
 import java.util.List;
 import java.util.UUID;
 
-@Service
 public class StaffService implements UserServiceInterface<Staff> {
 
     private final CreateUserPort createUserPort;
@@ -26,7 +23,6 @@ public class StaffService implements UserServiceInterface<Staff> {
     private final DeactivateUserPort deactivateUserPort;
     private final DeleteUserPort deleteUserPort;
 
-    @Autowired
     public StaffService(CreateUserPort createUserPort,
                         ReadUserPort readUserPort,
                         UpdateUserPort updateUserPort,
