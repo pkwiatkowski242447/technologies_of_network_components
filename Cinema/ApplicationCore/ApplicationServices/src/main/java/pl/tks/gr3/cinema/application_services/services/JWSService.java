@@ -19,8 +19,7 @@ import java.util.Base64;
 @Service
 public class JWSService implements JWSServiceInterface {
 
-    @Value("${security.jwt.token.secret-key:secret-value}")
-    private String SECRET_KEY;
+    private final static String SECRET_KEY = "256970464e4d29792c4d2d24317256534d2d3039332a2b2e383929635f";
 
     @Override
     public String generateSignatureForUser(User user) {
