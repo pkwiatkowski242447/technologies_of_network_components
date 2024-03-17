@@ -231,7 +231,7 @@ public class AdminServiceTest {
 
         Admin capturedAdmin = adminArgumentCaptor.getValue();
 
-        String adminLoginAfter =  capturedAdmin.getUserLogin();
+        String adminLoginAfter = capturedAdmin.getUserLogin();
         String adminPasswordAfter = capturedAdmin.getUserPassword();
 
         assertNotNull(adminLoginAfter);
@@ -373,5 +373,20 @@ public class AdminServiceTest {
 
         verify(userRepositoryAdapter, times(1)).deactivate(admin);
         verify(userRepositoryAdapter, times(1)).findAdminByUUID(admin.getUserID());
+    }
+
+    @Test
+    public void adminServiceUpdateAdminWhenUserRepositoryExceptionIsThrownTestNegative() {
+        String errorMessage = "Repository exception";
+
+        UserRepositoryException userRepositoryException = new UserRepositoryException(errorMessage);
+
+        doThrow(userRepositoryException).when(userRepositoryAdapter).updateAdmin(any(Admin.class));
+
+        AdminServiceUpdateException thrownException = assertThrows(AdminServiceUpdateException.class, () -> adminService.update(adminNo1));
+
+        assertTrue(thrownException.getMessage().contains(errorMessage));
+
+        verify(userRepositoryAdapter, times(1)).updateAdmin(any(Admin.class));
     }
 }

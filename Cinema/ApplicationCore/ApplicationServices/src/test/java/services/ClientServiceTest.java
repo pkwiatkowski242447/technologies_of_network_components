@@ -12,6 +12,7 @@ import pl.tks.gr3.cinema.adapters.exceptions.crud.user.UserRepositoryCreateUserD
 import pl.tks.gr3.cinema.adapters.exceptions.crud.user.UserRepositoryUserNotFoundException;
 import pl.tks.gr3.cinema.application_services.exceptions.GeneralClientServiceException;
 import pl.tks.gr3.cinema.application_services.exceptions.crud.admin.AdminServiceDeactivationException;
+import pl.tks.gr3.cinema.application_services.exceptions.crud.admin.AdminServiceUpdateException;
 import pl.tks.gr3.cinema.application_services.exceptions.crud.client.*;
 import pl.tks.gr3.cinema.application_services.services.ClientService;
 import pl.tks.gr3.cinema.domain_model.users.Admin;
@@ -352,4 +353,19 @@ public class ClientServiceTest {
 //        verify(userRepositoryAdapter2, times(1)).deactivate(client);
 //        verify(userRepositoryAdapter2, times(1)).findClientByUUID(client.getUserID());
 //    }
+
+    @Test
+    public void clientServiceUpdateClientWhenUserRepositoryExceptionIsThrownTestNegative() {
+        String errorMessage = "Repository exception";
+
+        UserRepositoryException userRepositoryException = new UserRepositoryException(errorMessage);
+
+        doThrow(userRepositoryException).when(userRepositoryAdapter2).updateClient(any(Client.class));
+
+        ClientServiceUpdateException thrownException = assertThrows(ClientServiceUpdateException.class, () -> clientService.update(clientNo1));
+
+        assertTrue(thrownException.getMessage().contains(errorMessage));
+
+        verify(userRepositoryAdapter2, times(1)).updateClient(any(Client.class));
+    }
 }
