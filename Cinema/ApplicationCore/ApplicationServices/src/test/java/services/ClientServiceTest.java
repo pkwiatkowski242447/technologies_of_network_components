@@ -10,12 +10,8 @@ import pl.tks.gr3.cinema.adapters.aggregates.UserRepositoryAdapter;
 import pl.tks.gr3.cinema.adapters.exceptions.UserRepositoryException;
 import pl.tks.gr3.cinema.adapters.exceptions.crud.user.UserRepositoryCreateUserDuplicateLoginException;
 import pl.tks.gr3.cinema.adapters.exceptions.crud.user.UserRepositoryUserNotFoundException;
-import pl.tks.gr3.cinema.application_services.exceptions.GeneralClientServiceException;
-import pl.tks.gr3.cinema.application_services.exceptions.crud.admin.AdminServiceDeactivationException;
-import pl.tks.gr3.cinema.application_services.exceptions.crud.admin.AdminServiceUpdateException;
 import pl.tks.gr3.cinema.application_services.exceptions.crud.client.*;
 import pl.tks.gr3.cinema.application_services.services.ClientService;
-import pl.tks.gr3.cinema.domain_model.users.Admin;
 import pl.tks.gr3.cinema.domain_model.users.Client;
 
 import java.util.Arrays;
@@ -45,12 +41,16 @@ public class ClientServiceTest {
     private static Client clientNo1;
     private static Client clientNo2;
     private static Client clientNo3;
+    private static Client clientNo4;
+    private static Client clientNo5;
 
     @BeforeEach
     public void initializeSampleData() {
         clientNo1 = new Client(UUID.randomUUID(), "UniqueClientLoginNo1", "UniqueClientPasswordNo1");
         clientNo2 = new Client(UUID.randomUUID(), "UniqueClientLoginNo2", "UniqueClientPasswordNo2");
         clientNo3 = new Client(UUID.randomUUID(), "UniqueClientLoginNo3", "UniqueClientPasswordNo3");
+        clientNo4 = new Client(UUID.randomUUID(), "UniqueClientLoginNo4", "UniqueClientPasswordNo4");
+        clientNo5 = new Client(UUID.randomUUID(), "UniqueClientLoginNo5", "UniqueClientPasswordNo5");
     }
 
     @Test
@@ -279,31 +279,31 @@ public class ClientServiceTest {
 
 //    @Test
 //    public void clientServiceActivateClientTestPositive() throws GeneralClientServiceException {
-//        clientNo1.setUserStatusActive(false);
+//        clientNo2.setUserStatusActive(false);
 //
-//        when(userRepositoryAdapter.findClientByUUID(clientNo1.getUserID())).thenReturn(clientNo1);
+//        when(userRepositoryAdapter2.findClientByUUID(clientNo2.getUserID())).thenReturn(clientNo2);
 //
-//        clientService.activate(clientNo1.getUserID());
+//        clientService.activate(clientNo2.getUserID());
 //
-//        verify(userRepositoryAdapter).activate(clientArgumentCaptor.capture());
+//        verify(userRepositoryAdapter2).activate(clientArgumentCaptor.capture());
 //
 //        Client capturedClient = clientArgumentCaptor.getValue();
 //
 //        assertNotNull(capturedClient);
-//        assertEquals(clientNo1, capturedClient);
+//        assertEquals(clientNo2, capturedClient);
 //
-//        verify(userRepositoryAdapter, times(1)).activate(Mockito.eq(clientNo1));
-//        verify(userRepositoryAdapter, times(1)).findClientByUUID(Mockito.eq(clientNo1.getUserID()));
+//        verify(userRepositoryAdapter2, times(1)).activate(Mockito.eq(clientNo2));
+//        verify(userRepositoryAdapter2, times(1)).findClientByUUID(Mockito.eq(clientNo2.getUserID()));
 //    }
 
 //    @Test
 //    public void clientServiceDeactivateClientThatIsNotInTheDatabaseTestNegative() {
-//        Client client = new Client(UUID.randomUUID(), "SomeOtherClientLoginNo3", "SomeOtherClientPasswordNo3");
+//        Client client = new Client(UUID.randomUUID(), "SomeOther", "SomeOtherC");
 //        assertNotNull(client);
 //
-//        when(userRepositoryAdapter.findClientByUUID(client.getUserID())).thenReturn(client);
+//        when(userRepositoryAdapter2.findClientByUUID(client.getUserID())).thenReturn(client);
 //
-//        doThrow(UserRepositoryException.class).when(userRepositoryAdapter).activate(clientArgumentCaptor.capture());
+//        doThrow(UserRepositoryException.class).when(userRepositoryAdapter2).activate(clientArgumentCaptor.capture());
 //
 //        assertThrows(ClientServiceActivationException.class, () -> clientService.activate(client.getUserID()));
 //
@@ -312,10 +312,10 @@ public class ClientServiceTest {
 //        assertNotNull(capturedClient);
 //        assertEquals(client, capturedClient);
 //
-//        verify(userRepositoryAdapter, times(1)).activate(client);
+//        verify(userRepositoryAdapter2, times(1)).activate(client);
 //    }
 
-    //    @Test
+//        @Test
 //    public void clientServiceDeactivateClientTestPositive() throws GeneralClientServiceException {
 //        clientNo3.setUserStatusActive(true);
 //
@@ -333,7 +333,7 @@ public class ClientServiceTest {
 //        verify(userRepositoryAdapter2, times(1)).deactivate(Mockito.eq(clientNo3));
 //        verify(userRepositoryAdapter2, times(1)).findClientByUUID(clientNo3.getUserID());
 //    }
-
+//
 //    @Test
 //    public void clientServiceActivateClientThatIsNotInTheDatabaseTestNegative() {
 //        Client client = new Client(UUID.randomUUID(), "SomeOtherClientLoginNo3", "SomeOtherClientPasswordNo3");
