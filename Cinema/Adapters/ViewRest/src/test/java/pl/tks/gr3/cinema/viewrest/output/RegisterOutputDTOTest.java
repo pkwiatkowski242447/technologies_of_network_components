@@ -47,4 +47,18 @@ public class RegisterOutputDTOTest {
         registerOutputDTO.setAccessToken(VALID_ACCESS_TOKEN);
         assertEquals(VALID_ACCESS_TOKEN, registerOutputDTO.getAccessToken());
     }
+
+    @Test
+    public void registerOutputDTOBuilderTestPositive() {
+        RegisterOutputDTO registerOutputDTONo1 = new RegisterOutputDTO.RegisterOutputDTOBuilder()
+                .user(new UserOutputDTO(VALID_USER_ID, VALID_LOGIN, VALID_STATUS))
+                .accessToken(VALID_ACCESS_TOKEN)
+                .build();
+
+        assertNotNull(registerOutputDTONo1);
+        assertEquals(VALID_USER_ID, registerOutputDTONo1.getUser().getUserID());
+        assertEquals(VALID_LOGIN, registerOutputDTONo1.getUser().getUserLogin());
+        assertEquals(VALID_STATUS, registerOutputDTONo1.getUser().isUserStatusActive());
+        assertEquals(VALID_ACCESS_TOKEN, registerOutputDTONo1.getAccessToken());
+    }
 }

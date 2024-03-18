@@ -80,6 +80,17 @@ public class UserUpdateDTOTest {
         assertFalse(validateUserPassword(userUpdateDTO));
     }
 
+    @Test
+    public void userStatusActiveSetterTestPositive() {
+        boolean previousUserStatus = userUpdateDTO.isUserStatusActive();
+        boolean newUserStatus = !previousUserStatus;
+
+        userUpdateDTO.setUserStatusActive(newUserStatus);
+
+        assertNotEquals(previousUserStatus, newUserStatus);
+        assertEquals(newUserStatus, userUpdateDTO.isUserStatusActive());
+    }
+
     private boolean validateUserID(UserUpdateDTO userUpdateDTO) {
         return userUpdateDTO.getUserID() != null;
     }

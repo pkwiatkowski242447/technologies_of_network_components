@@ -8,8 +8,10 @@ import io.restassured.response.Response;
 import io.restassured.response.ValidatableResponse;
 import io.restassured.specification.RequestSpecification;
 import org.junit.jupiter.api.*;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import pl.tks.gr3.cinema.CinemaApplication;
 import pl.tks.gr3.cinema.adapters.aggregates.UserRepositoryAdapter;
 import pl.tks.gr3.cinema.adapters.consts.model.UserEntConstants;
 import pl.tks.gr3.cinema.adapters.exceptions.UserRepositoryException;
@@ -28,6 +30,7 @@ import pl.tks.gr3.cinema.viewrest.output.UserOutputDTO;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@SpringBootTest(classes = {CinemaApplication.class}, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 public class AuthenticationControllerTest {
 
     private final static Logger logger = LoggerFactory.getLogger(AuthenticationControllerTest.class);

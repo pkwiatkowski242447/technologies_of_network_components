@@ -1,31 +1,18 @@
 package services;
 
+import com.mongodb.MongoException;
 import org.junit.jupiter.api.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import pl.tks.gr3.cinema.application_services.exceptions.crud.admin.AdminServiceCreateException;
-import pl.tks.gr3.cinema.application_services.exceptions.crud.admin.AdminServiceDeleteException;
-import pl.tks.gr3.cinema.application_services.exceptions.crud.admin.AdminServiceReadException;
-import pl.tks.gr3.cinema.application_services.exceptions.crud.client.ClientServiceCreateException;
-import pl.tks.gr3.cinema.application_services.exceptions.crud.client.ClientServiceDeleteException;
-import pl.tks.gr3.cinema.application_services.exceptions.crud.client.ClientServiceReadException;
-import pl.tks.gr3.cinema.application_services.exceptions.crud.movie.MovieServiceCreateException;
-import pl.tks.gr3.cinema.application_services.exceptions.crud.movie.MovieServiceDeleteException;
-import pl.tks.gr3.cinema.application_services.exceptions.crud.movie.MovieServiceReadException;
-import pl.tks.gr3.cinema.application_services.exceptions.crud.staff.StaffServiceCreateException;
-import pl.tks.gr3.cinema.application_services.exceptions.crud.staff.StaffServiceDeleteException;
-import pl.tks.gr3.cinema.application_services.exceptions.crud.staff.StaffServiceReadException;
-import pl.tks.gr3.cinema.application_services.exceptions.crud.ticket.TicketServiceCreateException;
-import pl.tks.gr3.cinema.application_services.exceptions.crud.ticket.TicketServiceDeleteException;
-import pl.tks.gr3.cinema.application_services.exceptions.crud.ticket.TicketServiceReadException;
-import pl.tks.gr3.cinema.application_services.exceptions.crud.ticket.TicketServiceUpdateException;
-import pl.tks.gr3.cinema.application_services.exceptions.crud.ticket.TicketServiceTicketNotFoundException;
-import pl.tks.gr3.cinema.adapters.aggregates.MovieRepositoryAdapter;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.*;
+import org.mockito.junit.jupiter.MockitoExtension;
 import pl.tks.gr3.cinema.adapters.aggregates.TicketRepositoryAdapter;
-import pl.tks.gr3.cinema.adapters.aggregates.UserRepositoryAdapter;
-import pl.tks.gr3.cinema.adapters.repositories.MovieRepository;
-import pl.tks.gr3.cinema.adapters.repositories.TicketRepository;
-import pl.tks.gr3.cinema.adapters.repositories.UserRepository;
+import pl.tks.gr3.cinema.adapters.exceptions.TicketRepositoryException;
+import pl.tks.gr3.cinema.adapters.exceptions.UserRepositoryException;
+import pl.tks.gr3.cinema.adapters.exceptions.crud.ticket.TicketRepositoryTicketNotFoundException;
+import pl.tks.gr3.cinema.application_services.exceptions.crud.admin.AdminServiceReadException;
+import pl.tks.gr3.cinema.application_services.exceptions.crud.client.ClientServiceReadException;
+import pl.tks.gr3.cinema.application_services.exceptions.crud.staff.StaffServiceReadException;
+import pl.tks.gr3.cinema.application_services.exceptions.crud.ticket.*;
 import pl.tks.gr3.cinema.application_services.services.*;
 import pl.tks.gr3.cinema.domain_model.Movie;
 import pl.tks.gr3.cinema.domain_model.Ticket;
@@ -43,281 +30,262 @@ import pl.tks.gr3.cinema.ports.infrastructure.tickets.UpdateTicketPort;
 import pl.tks.gr3.cinema.ports.infrastructure.users.*;
 
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
+import java.time.format.DateTimeParseException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 public class TicketServiceTest {
 
-    private static final String databaseName = "test";
-    private static final Logger logger = LoggerFactory.getLogger(TicketServiceTest.class);
-    private static UserRepository userRepository;
-    private static MovieRepository movieRepository;
-    private static TicketRepository ticketRepository;
+    @Mock
+    private CreateMoviePort createMoviePort;
+    @Mock
+    private ReadMoviePort readMoviePort;
+    @Mock
+    private UpdateMoviePort updateMoviePort;
+    @Mock
+    private DeleteMoviePort deleteMoviePort;
 
-    private static CreateUserPort createUserPort;
-    private static ReadUserPort readUserPort;
-    private static UpdateUserPort updateUserPort;
-    private static ActivateUserPort activateUserPort;
-    private static DeactivateUserPort deactivateUserPort;
-    private static DeleteUserPort deleteUserPort;
+    @InjectMocks
+    private MovieService movieService;
 
-    private static CreateMoviePort createMoviePort;
-    private static ReadMoviePort readMoviePort;
-    private static UpdateMoviePort updateMoviePort;
-    private static DeleteMoviePort deleteMoviePort;
+    @Mock
+    private CreateUserPort createUserPort;
+    @Mock
+    private ReadUserPort readUserPort;
+    @Mock
+    private UpdateUserPort updateUserPort;
+    @Mock
+    private ActivateUserPort activateUserPort;
+    @Mock
+    private DeactivateUserPort deactivateUserPort;
+    @Mock
+    private DeleteUserPort deleteUserPort;
 
-    private static CreateTicketPort createTicketPort;
-    private static ReadTicketPort readTicketPort;
-    private static UpdateTicketPort updateTicketPort;
-    private static DeleteTicketPort deleteTicketPort;
+    @InjectMocks
+    private ClientService clientService;
 
-    private static ClientService clientService;
-    private static AdminService adminService;
-    private static StaffService staffService;
-    private static MovieService movieService;
-    private static TicketService ticketService;
+    @InjectMocks
+    private StaffService staffService;
+
+    @InjectMocks
+    private AdminService adminService;
+
+
+    @Mock
+    private CreateTicketPort createTicketPort;
+
+    @Mock
+    private ReadTicketPort readTicketPort;
+
+    @Mock
+    private UpdateTicketPort updateTicketPort;
+
+    @Mock
+    private DeleteTicketPort deleteTicketPort;
+
+    @InjectMocks
+    private TicketService ticketService;
+
+    @Captor
+    private static ArgumentCaptor<UUID> uuidArgumentCaptor;
+
+    @Captor
+    private static ArgumentCaptor<Ticket> ticketArgumentCaptor;
 
     private Client clientNo1;
     private Client clientNo2;
-
-    private Admin adminNo1;
-    private Admin adminNo2;
+    private Client clientNo3;
 
     private Staff staffNo1;
     private Staff staffNo2;
 
-    private Movie movieNo1;
-    private Movie movieNo2;
+    private Admin adminNo1;
+    private Admin adminNo2;
 
     private Ticket ticketNo1;
     private Ticket ticketNo2;
     private Ticket ticketNo3;
-    private Ticket ticketNo4;
-    private Ticket ticketNo5;
-    private Ticket ticketNo6;
 
-    private LocalDateTime movieTimeNo1;
-    private LocalDateTime movieTimeNo2;
+    private Movie movieNo1;
+    private Movie movieNo2;
+    private Movie movieNo3;
 
-    @BeforeAll
-    public static void initialize() {
-        userRepository = new UserRepository(databaseName);
-        movieRepository = new MovieRepository(databaseName);
-        ticketRepository = new TicketRepository(databaseName);
-
-        UserRepositoryAdapter userRepositoryAdapter = new UserRepositoryAdapter(userRepository);
-        MovieRepositoryAdapter movieRepositoryAdapter = new MovieRepositoryAdapter(movieRepository);
-        TicketRepositoryAdapter ticketRepositoryAdapter = new TicketRepositoryAdapter(ticketRepository);
-
-        createUserPort = userRepositoryAdapter;
-        readUserPort = userRepositoryAdapter;
-        activateUserPort = userRepositoryAdapter;
-        deactivateUserPort = userRepositoryAdapter;
-        deleteUserPort = userRepositoryAdapter;
-
-        createMoviePort = movieRepositoryAdapter;
-        readMoviePort = movieRepositoryAdapter;
-        updateMoviePort = movieRepositoryAdapter;
-        deleteMoviePort = movieRepositoryAdapter;
-
-        createTicketPort = ticketRepositoryAdapter;
-        readTicketPort = ticketRepositoryAdapter;
-        updateTicketPort = ticketRepositoryAdapter;
-        deleteTicketPort = ticketRepositoryAdapter;
-
-        clientService = new ClientService(createUserPort, readUserPort, updateUserPort, activateUserPort, deactivateUserPort, deleteUserPort);
-        adminService = new AdminService(createUserPort, readUserPort, updateUserPort, activateUserPort, deactivateUserPort, deleteUserPort);
-        staffService = new StaffService(createUserPort, readUserPort, updateUserPort, activateUserPort, deactivateUserPort, deleteUserPort);
-        movieService = new MovieService(createMoviePort, readMoviePort, updateMoviePort, deleteMoviePort);
-        ticketService = new TicketService(createTicketPort, readTicketPort, updateTicketPort, deleteTicketPort);
-    }
 
     @BeforeEach
     public void initializeSampleData() {
-        try {
-            clientNo1 = clientService.create("UniqueClientLoginNo1", "UniqueClientPasswordNo1");
-            clientNo2 = clientService.create("UniqueClientLoginNo2", "UniqueClientPasswordNo2");
-        } catch (ClientServiceCreateException exception) {
-            logger.error(exception.getMessage());
-        }
+        movieNo1 = new Movie(UUID.randomUUID(), "UniqueMovieNameNo1", 10, 1, 10);
+        movieNo2 = new Movie(UUID.randomUUID(), "UniqueMovieNameNo2", 20, 2, 20);
+        movieNo3 = new Movie(UUID.randomUUID(), "UniqueMovieNameNo3", 30, 3, 30);
 
-        try {
-            adminNo1 = adminService.create("UniqueAdminLoginNo1", "UniqueAdminPasswordNo1");
-            adminNo2 = adminService.create("UniqueAdminLoginNo2", "UniqueAdminPasswordNo2");
-        } catch (AdminServiceCreateException exception) {
-            logger.error(exception.getMessage());
-        }
+        clientNo1 = new Client(UUID.randomUUID(), "UniqueClientLoginNo1", "UniqueClientPasswordNo1");
+        clientNo2 = new Client(UUID.randomUUID(), "UniqueClientLoginNo2", "UniqueClientPasswordNo2");
+        clientNo3 = new Client(UUID.randomUUID(), "UniqueClientLoginNo3", "UniqueClientPasswordNo3");
 
-        try {
-            staffNo1 = staffService.create("UniqueStaffLoginNo1", "UniqueStaffPasswordNo1");
-            staffNo2 = staffService.create("UniqueStaffLoginNo2", "UniqueStaffPasswordNo2");
-        } catch (StaffServiceCreateException exception) {
-            logger.error(exception.getMessage());
-        }
+        staffNo1 = new Staff(UUID.randomUUID(), "UniqueStaffLoginNo1", "UniqueStaffPasswordNo1");
+        staffNo2 = new Staff(UUID.randomUUID(), "UniqueStaffLoginNo2", "UniqueStaffPasswordNo2");
 
-        try {
-            movieNo1 = movieService.create("UniqueMovieTitleNo1", 45.00, 1, 60);
-            movieNo2 = movieService.create("UniqueMovieTitleNo2", 35.50, 2, 40);
-        } catch (MovieServiceCreateException exception) {
-            logger.error(exception.getMessage());
-        }
+        adminNo1 = new Admin(UUID.randomUUID(), "UniqueAdminLoginNo1", "UniqueAdminPasswordNo1");
+        adminNo2 = new Admin(UUID.randomUUID(), "UniqueAdminLoginNo2", "UniqueAdminPasswordNo2");
 
-        movieTimeNo1 = LocalDateTime.now().plusHours(3).plusDays(2).truncatedTo(ChronoUnit.SECONDS);
-        movieTimeNo2 = LocalDateTime.now().plusHours(8).plusDays(5).truncatedTo(ChronoUnit.SECONDS);
-
-        try {
-            ticketNo1 = ticketService.create(movieTimeNo1.toString(), clientNo1.getUserID(), movieNo1.getMovieID());
-            ticketNo2 = ticketService.create(movieTimeNo2.toString(), clientNo1.getUserID(), movieNo2.getMovieID());
-
-            ticketNo3 = ticketService.create(movieTimeNo1.toString(), adminNo1.getUserID(), movieNo1.getMovieID());
-            ticketNo4 = ticketService.create(movieTimeNo2.toString(), adminNo1.getUserID(), movieNo2.getMovieID());
-
-            ticketNo5 = ticketService.create(movieTimeNo1.toString(), staffNo1.getUserID(), movieNo1.getMovieID());
-            ticketNo6 = ticketService.create(movieTimeNo2.toString(), staffNo1.getUserID(), movieNo2.getMovieID());
-        } catch (TicketServiceCreateException exception) {
-            logger.error(exception.getMessage());
-        }
+        ticketNo1 = new Ticket(UUID.randomUUID(), LocalDateTime.now().plusDays(1), movieNo1.getMovieBasePrice(), clientNo1.getUserID(), movieNo1.getMovieID());
+        ticketNo2 = new Ticket(UUID.randomUUID(), LocalDateTime.now().plusDays(2), movieNo2.getMovieBasePrice(), clientNo2.getUserID(), movieNo2.getMovieID());
+        ticketNo3 = new Ticket(UUID.randomUUID(), LocalDateTime.now().plusDays(3), movieNo3.getMovieBasePrice(), clientNo3.getUserID(), movieNo3.getMovieID());
     }
-
-    @AfterEach
-    public void destroySampleData() {
-
-        try {
-            List<Ticket> listOfTickets = ticketService.findAll();
-            for (Ticket ticket : listOfTickets) {
-                ticketService.delete(ticket.getTicketID());
-            }
-        } catch (TicketServiceDeleteException | TicketServiceReadException exception) {
-            logger.error(exception.getMessage());
-        }
-
-        try {
-            List<Movie> listOfMovies = movieService.findAll();
-            for (Movie movie : listOfMovies) {
-                movieService.delete(movie.getMovieID());
-            }
-        } catch (MovieServiceDeleteException | MovieServiceReadException exception) {
-            logger.error(exception.getMessage());
-        }
-
-        try {
-            List<Client> listOfClient = clientService.findAll();
-            for (Client client : listOfClient) {
-                clientService.delete(client.getUserID());
-            }
-        } catch (ClientServiceDeleteException | ClientServiceReadException exception) {
-            logger.error(exception.getMessage());
-        }
-
-        try {
-            List<Admin> listOfAdmins = adminService.findAll();
-            for (Admin admin : listOfAdmins) {
-                adminService.delete(admin.getUserID());
-            }
-        } catch (AdminServiceDeleteException | AdminServiceReadException exception) {
-            logger.error(exception.getMessage());
-        }
-
-        try {
-            List<Staff> listOfStaffs = staffService.findAll();
-            for (Staff staff : listOfStaffs) {
-                staffService.delete(staff.getUserID());
-            }
-        } catch (StaffServiceDeleteException | StaffServiceReadException exception) {
-            logger.error(exception.getMessage());
-        }
-    }
-
-    @AfterAll
-    public static void destroy() {
-        userRepository.close();
-        movieRepository.close();
-        ticketRepository.close();
-    }
-
-    // Constructor tests
 
     @Test
     public void ticketServiceAllArgsConstructorTestPositive() {
         TicketService testTicketService = new TicketService(createTicketPort, readTicketPort, updateTicketPort, deleteTicketPort);
         assertNotNull(testTicketService);
     }
-    
-    // Create tests
 
     @Test
-    public void ticketServiceCreateTicketNormalTestPositive() throws TicketServiceCreateException {
-        Ticket ticket = ticketService.create(movieTimeNo1.toString(), clientNo1.getUserID(), movieNo1.getMovieID());
+    public void ticketServiceCreateTicketTestPositive() throws TicketServiceCreateException {
+        when(createTicketPort.create(
+                Mockito.eq(ticketNo1.getMovieTime()),
+                Mockito.eq(ticketNo1.getUserID()),
+                Mockito.eq(ticketNo1.getMovieID()))
+        ).thenReturn(ticketNo1);
+        Ticket ticket = ticketService.create(ticketNo1.getMovieTime().toString(), ticketNo1.getUserID(),
+                ticketNo1.getMovieID());
+
         assertNotNull(ticket);
-        assertEquals(movieTimeNo1, ticket.getMovieTime());
-        assertEquals(clientNo1.getUserID(), ticket.getUserID());
-        assertEquals(movieNo1.getMovieID(), ticket.getMovieID());
-        assertEquals(movieNo1.getMovieBasePrice(), ticket.getTicketPrice());
+        assertEquals(ticketNo1.getMovieTime(), ticket.getMovieTime());
+        assertEquals(ticketNo1.getUserID(), ticket.getUserID());
+        assertEquals(ticketNo1.getMovieID(), ticket.getMovieID());
+        verify(createTicketPort, times(1)).create(ticketNo1.getMovieTime(), ticketNo1.getUserID(),
+                ticketNo1.getMovieID());
     }
 
     @Test
-    public void ticketServiceCreateTicketReducedTestPositive() throws TicketServiceCreateException {
-        Ticket ticket = ticketService.create(movieTimeNo1.toString(), clientNo1.getUserID(), movieNo1.getMovieID());
-        assertNotNull(ticket);
-        assertEquals(movieTimeNo1, ticket.getMovieTime());
-        assertEquals(clientNo1.getUserID(), ticket.getUserID());
-        assertEquals(movieNo1.getMovieID(), ticket.getMovieID());
-        assertEquals(movieNo1.getMovieBasePrice(), ticket.getTicketPrice());
+    public void ticketServiceCreateTicketRepositoryExceptionIsThrownTestNegative() {
+        when(createTicketPort.create(
+                Mockito.eq(ticketNo1.getMovieTime()),
+                Mockito.eq(ticketNo1.getUserID()),
+                Mockito.eq(ticketNo1.getMovieID()))
+        ).thenThrow(TicketRepositoryException.class);
+
+        assertThrows(TicketServiceCreateException.class, () -> ticketService.create(ticketNo1.getMovieTime().toString(),
+                ticketNo1.getUserID(),
+                ticketNo1.getMovieID()));
+
+        verify(createTicketPort, times(1)).create(ticketNo1.getMovieTime(), ticketNo1.getUserID(),
+                ticketNo1.getMovieID());
     }
 
     @Test
-    public void ticketServiceCreateTicketWithNullClientTestNegative() {
-        assertThrows(TicketServiceCreateException.class, () -> ticketService.create(movieTimeNo1.toString(), null, movieNo1.getMovieID()));
-    }
+    public void ticketServiceCreateTicketWhoseDataDoesNotFollowConstraintsTestNegative() {
+        LocalDateTime movieTime = LocalDateTime.now().plusHours(2);
+        UUID clientID = null;
+        UUID movieID = movieNo1.getMovieID();
 
-    @Test
-    public void ticketServiceCreateTicketWithNullMovieTestNegative() {
-        assertThrows(TicketServiceCreateException.class, () -> ticketService.create(movieTimeNo1.toString(), clientNo1.getUserID(), null));
+        when(createTicketPort.create(Mockito.eq(movieTime),
+                Mockito.isNull(), Mockito.eq(movieID))).thenThrow(DateTimeParseException.class);
+
+        assertThrows(TicketServiceCreateException.class, () -> ticketService.create(movieTime.toString(), clientID, movieID));
+
+        verify(createTicketPort, times(1)).create(movieTime, clientID, movieID);
     }
 
     // Read tests
 
     @Test
     public void ticketServiceFindTicketByIDTestPositive() throws TicketServiceReadException {
-        Ticket ticket = ticketService.findByUUID(ticketNo1.getTicketID());
-        assertNotNull(ticket);
-        assertEquals(ticketNo1, ticket);
+        when(readTicketPort.findByUUID(Mockito.eq(ticketNo1.getTicketID()))).thenReturn(ticketNo1);
+
+        Ticket foundTicket = ticketService.findByUUID(ticketNo1.getTicketID());
+
+        assertNotNull(foundTicket);
+        assertEquals(ticketNo1, foundTicket);
+
+        verify(readTicketPort, times(1)).findByUUID(Mockito.eq(ticketNo1.getTicketID()));
     }
 
     @Test
-    public void ticketServiceFindTicketByIDThatIsNotInTheDatabaseTestPositive() {
-        Ticket ticket = new Ticket(UUID.randomUUID(), movieTimeNo1, movieNo1.getMovieBasePrice(), clientNo1.getUserID(), movieNo1.getMovieID());
-        assertNotNull(ticket);
-        assertThrows(TicketServiceTicketNotFoundException.class, () -> ticketService.findByUUID(ticket.getTicketID()));
+    public void ticketServiceFindTicketByIDThatIsNotInTheDatabaseTestNegative() {
+        UUID searchedUUID = UUID.randomUUID();
+
+        when(readTicketPort.findByUUID(Mockito.eq(searchedUUID))).thenThrow(TicketRepositoryTicketNotFoundException.class);
+
+        assertThrows(TicketServiceTicketNotFoundException.class, () -> ticketService.findByUUID(searchedUUID));
+
+        verify(readTicketPort, times(1)).findByUUID(Mockito.eq(searchedUUID));
+    }
+
+    @Test
+    public void ticketServiceFindTicketByIDWhenTicketRepositoryExceptionIsThrownTestNegative() {
+        UUID searchedUUID = UUID.randomUUID();
+
+        when(readTicketPort.findByUUID(Mockito.eq(searchedUUID))).thenThrow(TicketRepositoryException.class);
+
+        assertThrows(TicketServiceReadException.class, () -> ticketService.findByUUID(searchedUUID));
+
+        verify(readTicketPort, times(1)).findByUUID(searchedUUID);
     }
 
     @Test
     public void ticketServiceFindAllTicketsTestPositive() throws TicketServiceReadException {
+        when(readTicketPort.findAll()).thenReturn(Arrays.asList(ticketNo1, ticketNo2, ticketNo3));
+
         List<Ticket> listOfTickets = ticketService.findAll();
+
         assertNotNull(listOfTickets);
         assertFalse(listOfTickets.isEmpty());
-        assertEquals(6, listOfTickets.size());
+        assertEquals(3, listOfTickets.size());
+
+        verify(readTicketPort, times(1)).findAll();
     }
 
-    // Update tests
+    @Test
+    public void ticketServiceFindAllTicketsWhenTicketRepositoryExceptionIsThrownTestNegative() {
+        when(readTicketPort.findAll()).thenThrow(TicketRepositoryException.class);
+
+        assertThrows(TicketServiceReadException.class, () -> ticketService.findAll());
+
+        verify(readTicketPort, times(1)).findAll();
+    }
+
+    //Update tests
 
     @Test
-    public void ticketServiceUpdateTicketTestPositive() {
-        LocalDateTime newMovieTime = LocalDateTime.now().plusDays(4).plusHours(12).plusMinutes(30).truncatedTo(ChronoUnit.SECONDS);
+    public void ticketServiceUpdateTicketTestPositive() throws TicketServiceUpdateException, TicketServiceReadException {
+        LocalDateTime movieTimeBefore = ticketNo1.getMovieTime();
+
+        LocalDateTime newMovieTime = ticketNo1.getMovieTime().plusDays(20);
+
         ticketNo1.setMovieTime(newMovieTime);
+
         ticketService.update(ticketNo1);
-        Ticket foundTicket = ticketService.findByUUID(ticketNo1.getTicketID());
-        assertEquals(newMovieTime, foundTicket.getMovieTime());
+
+        verify(updateTicketPort).update(ticketArgumentCaptor.capture());
+
+        Ticket capturedTicket = ticketArgumentCaptor.getValue();
+
+        LocalDateTime movieTimeAfter = capturedTicket.getMovieTime();
+
+        assertNotNull(movieTimeAfter);
+        assertEquals(newMovieTime, movieTimeAfter);
+
+        assertNotEquals(movieTimeBefore, movieTimeAfter);
+
+        verify(updateTicketPort, times(1)).update(ticketNo1);
     }
 
     @Test
-    public void ticketServiceUpdateTicketThatIsNotInTheDatabaseTestNegative() {
-        Ticket ticket = new Ticket(UUID.randomUUID(), movieTimeNo1, movieNo1.getMovieBasePrice(), clientNo1.getUserID(), movieNo1.getMovieID());
-        assertNotNull(ticket);
-        assertThrows(TicketServiceUpdateException.class, () -> ticketService.update(ticket));
+    public void ticketServiceUpdateTicketWithDataThatDoesNotFollowConstraintsTestNegative() {
+        LocalDateTime movieTime = null;
+
+        ticketNo1.setMovieTime(movieTime);
+
+        doThrow(TicketServiceUpdateException.class).when(updateTicketPort).update(ticketArgumentCaptor.capture());
+
+        assertThrows(TicketServiceUpdateException.class, () -> ticketService.update(ticketNo1));
+
+        verify(updateTicketPort, times(1)).update(ticketNo1);
     }
 
     // Delete tests
@@ -325,86 +293,136 @@ public class TicketServiceTest {
     @Test
     public void ticketServiceDeleteTicketTestPositive() throws TicketServiceReadException, TicketServiceDeleteException {
         UUID removedTicketUUID = ticketNo1.getTicketID();
-        Ticket foundTicket = ticketService.findByUUID(removedTicketUUID);
-        assertNotNull(foundTicket);
-        assertEquals(ticketNo1, foundTicket);
+
+        when(readTicketPort.findByUUID(removedTicketUUID)).thenThrow(TicketServiceDeleteException.class);
+
         ticketService.delete(removedTicketUUID);
-        assertThrows(TicketServiceReadException.class, () -> ticketService.findByUUID(removedTicketUUID));
+        verify(deleteTicketPort).delete(uuidArgumentCaptor.capture());
+
+        UUID capturedTicketUUID = uuidArgumentCaptor.getValue();
+
+        assertNotNull(capturedTicketUUID);
+        assertEquals(removedTicketUUID, capturedTicketUUID);
+        assertThrows(TicketServiceDeleteException.class, () -> ticketService.findByUUID(removedTicketUUID));
+
+        verify(deleteTicketPort, times(1)).delete(Mockito.eq(removedTicketUUID));
+        verify(readTicketPort, times(1)).findByUUID(removedTicketUUID);
     }
 
     @Test
     public void ticketServiceDeleteTicketThatIsNotInTheDatabaseTestNegative() {
-        Ticket ticket = new Ticket(UUID.randomUUID(), movieTimeNo1, movieNo1.getMovieBasePrice(), clientNo1.getUserID(), movieNo1.getMovieID());
-        assertNotNull(ticket);
-        assertThrows(TicketServiceDeleteException.class, () -> ticketService.delete(ticket.getTicketID()));
-    }
+        UUID exampleUUID = UUID.randomUUID();
 
-    // Other tests
+        doThrow(TicketRepositoryException.class).when(deleteTicketPort).delete(uuidArgumentCaptor.capture());
 
-    @Test
-    public void movieServiceDeleteMovieThatIsUsedInTicketTestNegative() {
-        assertThrows(MovieServiceDeleteException.class, () -> movieService.delete(movieNo1.getMovieID()));
-    }
+        assertThrows(TicketServiceDeleteException.class, () -> ticketService.delete(exampleUUID));
 
-    @Test
-    public void movieServiceGetAllTicketForCertainMovieTestPositive() {
-        List<Ticket> listOfTicketsForMovieNo1 = movieService.getListOfTickets(movieNo1.getMovieID());
-        assertNotNull(listOfTicketsForMovieNo1);
-        assertFalse(listOfTicketsForMovieNo1.isEmpty());
-        assertEquals(3, listOfTicketsForMovieNo1.size());
+        UUID capturedTicketUUID = uuidArgumentCaptor.getValue();
+        assertEquals(exampleUUID, capturedTicketUUID);
+
+        verify(deleteTicketPort, times(1)).delete(Mockito.eq(exampleUUID));
     }
 
     @Test
-    public void clientServiceGetAllTicketForCertainClientTestPositive() throws ClientServiceReadException {
-        List<Ticket> listOfTicketsForClientNo1 = clientService.getTicketsForUser(clientNo1.getUserID());
-        assertNotNull(listOfTicketsForClientNo1);
-        assertFalse(listOfTicketsForClientNo1.isEmpty());
-        assertEquals(2, listOfTicketsForClientNo1.size());
+    public void ticketServiceUpdateTicketWhenTicketRepositoryExceptionIsThrownTestNegative() {
+        String errorMessage = "Repository exception";
+        MongoException exception = null;
+
+        TicketRepositoryException ticketRepositoryException = new TicketRepositoryException(errorMessage, exception);
+
+        doThrow(ticketRepositoryException).when(updateTicketPort).update(any(Ticket.class));
+
+        TicketServiceUpdateException thrownException = assertThrows(TicketServiceUpdateException.class, () -> ticketService.update(ticketNo1));
+
+        assertTrue(thrownException.getMessage().contains(errorMessage));
+
+        verify(updateTicketPort, times(1)).update(any(Ticket.class));
+    }
+
+    // Client
+
+    @Test
+    public void clientServiceGetAllTicketsForAClientTestPositive() {
+        when(readUserPort.getListOfTickets(Mockito.eq(clientNo1.getUserID()), Mockito.anyString())).thenReturn(Arrays.asList(ticketNo1, ticketNo2));
+
+        List<Ticket> listOfTicketsForClient = clientService.getTicketsForUser(clientNo1.getUserID());
+
+        assertNotNull(listOfTicketsForClient);
+        assertFalse(listOfTicketsForClient.isEmpty());
+        assertEquals(listOfTicketsForClient.size(), 2);
+
+        verify(readUserPort, times(1)).getListOfTickets(clientNo1.getUserID(), "client");
     }
 
     @Test
-    public void clientServiceGetAllTicketForCertainClientButUsingAdminIDTestPositive() {
-        assertThrows(ClientServiceReadException.class, () -> clientService.getTicketsForUser(adminNo1.getUserID()));
+    public void clientServiceGetAllTicketsForAClientWhenUserRepositoryExceptionIsThrownTestPositive() {
+        when(readUserPort.getListOfTickets(Mockito.eq(clientNo2.getUserID()), Mockito.anyString())).thenThrow(UserRepositoryException.class);
+
+        assertThrows(ClientServiceReadException.class, () -> clientService.getTicketsForUser(clientNo2.getUserID()));
+
+        verify(readUserPort, times(1)).getListOfTickets(clientNo2.getUserID(), "client");
+    }
+
+    // Staff
+
+    @Test
+    public void staffServiceGetAllTicketsForAStaffTestPositive() {
+        when(readUserPort.getListOfTickets(Mockito.eq(staffNo1.getUserID()), Mockito.anyString())).thenReturn(Arrays.asList(ticketNo1, ticketNo2));
+
+        List<Ticket> listOfTicketsForStaff = staffService.getTicketsForUser(staffNo1.getUserID());
+
+        assertNotNull(listOfTicketsForStaff);
+        assertFalse(listOfTicketsForStaff.isEmpty());
+        assertEquals(listOfTicketsForStaff.size(), 2);
+
+        verify(readUserPort, times(1)).getListOfTickets(staffNo1.getUserID(), "staff");
     }
 
     @Test
-    public void clientServiceGetAllTicketForCertainClientButUsingStaffIDTestPositive() {
-        assertThrows(ClientServiceReadException.class, () -> clientService.getTicketsForUser(staffNo1.getUserID()));
+    public void staffServiceGetAllTicketsForAStaffWhenUserRepositoryExceptionIsThrownTestPositive() {
+        when(readUserPort.getListOfTickets(Mockito.eq(staffNo2.getUserID()), Mockito.anyString())).thenThrow(UserRepositoryException.class);
+
+        assertThrows(StaffServiceReadException.class, () -> staffService.getTicketsForUser(staffNo2.getUserID()));
+
+        verify(readUserPort, times(1)).getListOfTickets(staffNo2.getUserID(), "staff");
+    }
+
+    // Admin
+
+    @Test
+    public void adminServiceGetAllTicketsForAnAdminTestPositive() {
+        when(readUserPort.getListOfTickets(Mockito.eq(adminNo1.getUserID()), Mockito.anyString())).thenReturn(Arrays.asList(ticketNo1, ticketNo2));
+
+        List<Ticket> listOfTicketsForAdmin = adminService.getTicketsForUser(adminNo1.getUserID());
+
+        assertNotNull(listOfTicketsForAdmin);
+        assertFalse(listOfTicketsForAdmin.isEmpty());
+        assertEquals(listOfTicketsForAdmin.size(), 2);
+
+        verify(readUserPort, times(1)).getListOfTickets(adminNo1.getUserID(), "admin");
     }
 
     @Test
-    public void adminServiceGetAllTicketForCertainAdminTestPositive() throws AdminServiceReadException {
-        List<Ticket> listOfTicketsForAdminNo1 = adminService.getTicketsForUser(adminNo1.getUserID());
-        assertNotNull(listOfTicketsForAdminNo1);
-        assertFalse(listOfTicketsForAdminNo1.isEmpty());
-        assertEquals(2, listOfTicketsForAdminNo1.size());
+    public void adminServiceGetAllTicketsForAnAdminWhenUserRepositoryExceptionIsThrownTestPositive() {
+        when(readUserPort.getListOfTickets(Mockito.eq(adminNo2.getUserID()), Mockito.anyString())).thenThrow(UserRepositoryException.class);
+
+        assertThrows(AdminServiceReadException.class, () -> adminService.getTicketsForUser(adminNo2.getUserID()));
+
+        verify(readUserPort, times(1)).getListOfTickets(adminNo2.getUserID(), "admin");
     }
 
-    @Test
-    public void adminServiceGetAllTicketForCertainAdminButUsingClientIDTestPositive() {
-        assertThrows(AdminServiceReadException.class, () -> adminService.getTicketsForUser(clientNo1.getUserID()));
-    }
+    // Movie
 
     @Test
-    public void adminServiceGetAllTicketForCertainAdminButUsingStaffIDTestPositive() {
-        assertThrows(AdminServiceReadException.class, () -> adminService.getTicketsForUser(staffNo1.getUserID()));
-    }
+    public void movieServiceGetAllTicketsForAMovieTestPositive() {
+        when(readMoviePort.getListOfTickets(Mockito.eq(movieNo1.getMovieID()))).thenReturn(Arrays.asList(ticketNo1, ticketNo2));
 
-    @Test
-    public void staffServiceGetAllTicketForCertainStaffTestPositive() throws StaffServiceReadException {
-        List<Ticket> listOfTicketsForStaffNo1 = staffService.getTicketsForUser(staffNo1.getUserID());
-        assertNotNull(listOfTicketsForStaffNo1);
-        assertFalse(listOfTicketsForStaffNo1.isEmpty());
-        assertEquals(2, listOfTicketsForStaffNo1.size());
-    }
+        List<Ticket> listOfTicketsForMovie = movieService.getListOfTickets(movieNo1.getMovieID());
 
-    @Test
-    public void staffServiceGetAllTicketForCertainAdminButUsingClientIDTestPositive() {
-        assertThrows(StaffServiceReadException.class, () -> staffService.getTicketsForUser(clientNo1.getUserID()));
-    }
+        assertNotNull(listOfTicketsForMovie);
+        assertFalse(listOfTicketsForMovie.isEmpty());
+        assertEquals(listOfTicketsForMovie.size(), 2);
 
-    @Test
-    public void staffServiceGetAllTicketForCertainStaffButUsingAdminIDTestPositive() {
-        assertThrows(StaffServiceReadException.class, () -> staffService.getTicketsForUser(adminNo1.getUserID()));
+        verify(readMoviePort, times(1)).getListOfTickets(movieNo1.getMovieID());
     }
 }

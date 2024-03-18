@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-public interface TicketRepositoryInterface {
+public interface TicketRepositoryInterface extends AutoCloseable {
 
     // Create methods
 
@@ -25,4 +25,7 @@ public interface TicketRepositoryInterface {
     // Delete methods
 
     void delete(UUID ticketID) throws TicketRepositoryException;
+
+    @Override
+    void close();
 }

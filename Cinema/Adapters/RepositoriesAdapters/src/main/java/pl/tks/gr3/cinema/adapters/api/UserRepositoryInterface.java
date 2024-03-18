@@ -11,7 +11,7 @@ import pl.tks.gr3.cinema.adapters.model.users.UserEnt;
 import java.util.List;
 import java.util.UUID;
 
-public interface UserRepositoryInterface {
+public interface UserRepositoryInterface extends AutoCloseable {
 
     // Create methods
 
@@ -20,6 +20,8 @@ public interface UserRepositoryInterface {
     StaffEnt createStaff(String staffLogin, String staffPassword) throws UserRepositoryException;
 
     // Read methods
+
+    UserEnt findByUUID(UUID userID) throws UserRepositoryException;
 
     ClientEnt findClientByUUID(UUID clientID) throws UserRepositoryException;
     AdminEnt findAdminByUUID(UUID adminID) throws UserRepositoryException;
@@ -53,4 +55,7 @@ public interface UserRepositoryInterface {
     // Other required methods
 
     List<TicketEnt> getListOfTicketsForClient(UUID userID, String name) throws UserRepositoryException;
+
+    @Override
+    void close();
 }

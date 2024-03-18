@@ -1,515 +1,237 @@
 package services;
 
+import com.mongodb.MongoException;
 import org.junit.jupiter.api.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.*;
+import org.mockito.junit.jupiter.MockitoExtension;
+import pl.tks.gr3.cinema.adapters.aggregates.MovieRepositoryAdapter;
+import pl.tks.gr3.cinema.adapters.exceptions.MovieRepositoryException;
+import pl.tks.gr3.cinema.adapters.exceptions.crud.movie.MovieRepositoryMovieNotFoundException;
 import pl.tks.gr3.cinema.application_services.exceptions.crud.movie.*;
 import pl.tks.gr3.cinema.application_services.services.MovieService;
-import pl.tks.gr3.cinema.adapters.aggregates.MovieRepositoryAdapter;
-import pl.tks.gr3.cinema.adapters.repositories.MovieRepository;
 import pl.tks.gr3.cinema.domain_model.Movie;
 import pl.tks.gr3.cinema.ports.infrastructure.movies.CreateMoviePort;
 import pl.tks.gr3.cinema.ports.infrastructure.movies.DeleteMoviePort;
 import pl.tks.gr3.cinema.ports.infrastructure.movies.ReadMoviePort;
 import pl.tks.gr3.cinema.ports.infrastructure.movies.UpdateMoviePort;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 public class MovieServiceTest {
 
-    private static final String databaseName = "test";
-    private static final Logger logger = LoggerFactory.getLogger(MovieServiceTest.class);
+    @Mock
+    private CreateMoviePort createMoviePort;
 
-    private static MovieRepository movieRepository;
-    private static MovieService movieService;
+    @Mock
+    private ReadMoviePort readMoviePort;
 
-    private static CreateMoviePort createMoviePort;
-    private static ReadMoviePort readMoviePort;
-    private static UpdateMoviePort updateMoviePort;
-    private static DeleteMoviePort deleteMoviePort;
+    @Mock
+    private UpdateMoviePort updateMoviePort;
 
-    private Movie movieNo1;
-    private Movie movieNo2;
+    @Mock
+    private DeleteMoviePort deleteMoviePort;
 
-    @BeforeAll
-    public static void initialize() {
-        movieRepository = new MovieRepository(databaseName);
-        MovieRepositoryAdapter movieRepositoryAdapter = new MovieRepositoryAdapter(movieRepository);
+    @InjectMocks
+    private MovieService movieService;
 
-        createMoviePort = movieRepositoryAdapter;
-        readMoviePort = movieRepositoryAdapter;
-        updateMoviePort = movieRepositoryAdapter;
-        deleteMoviePort = movieRepositoryAdapter;
+    @Captor
+    private static ArgumentCaptor<UUID> uuidArgumentCaptor;
 
-        movieService = new MovieService(createMoviePort, readMoviePort, updateMoviePort, deleteMoviePort);
-    }
+    @Captor
+    private static ArgumentCaptor<Movie> movieArgumentCaptor;
+
+    private static Movie movieNo1;
+    private static Movie movieNo2;
+    private static Movie movieNo3;
 
     @BeforeEach
     public void initializeSampleData() {
-        try {
-            movieNo1 = movieService.create("UniqueMovieTitleNo1", 45.00, 1, 60);
-            movieNo2 = movieService.create("UniqueMovieTitleNo2", 35.50, 2, 40);
-        } catch (MovieServiceCreateException exception) {
-            logger.error(exception.getMessage());
-        }
+        movieNo1 = new Movie(UUID.randomUUID(), "UniqueMovieNameNo1", 10, 1, 10);
+        movieNo2 = new Movie(UUID.randomUUID(), "UniqueMovieNameNo2", 20, 2, 20);
+        movieNo3 = new Movie(UUID.randomUUID(), "UniqueMovieNameNo3", 30, 3, 30);
     }
-
-    @AfterEach
-    public void destroySampleData() {
-        try {
-            List<Movie> listOfMovies = movieService.findAll();
-            for (Movie movie : listOfMovies) {
-                movieService.delete(movie.getMovieID());
-            }
-        } catch (MovieServiceReadException | MovieServiceDeleteException exception) {
-            logger.error(exception.getMessage());
-        }
-    }
-
-    @AfterAll
-    public static void destroy() {
-        movieRepository.close();
-    }
-
-    // Constructor tests
 
     @Test
     public void movieServiceAllArgsConstructorTestPositive() {
         MovieService testMovieService = new MovieService(createMoviePort, readMoviePort, updateMoviePort, deleteMoviePort);
         assertNotNull(testMovieService);
     }
-    
-    // Create tests
 
     @Test
     public void movieServiceCreateMovieTestPositive() throws MovieServiceCreateException {
-        String movieTitle = "SomeOtherMovieTitleNo1";
-        double movieBasePrice = 42.25;
-        int scrRoomNumber = 10;
-        int numberOfAvailableSeats = 30;
-        Movie movie = movieService.create(movieTitle, movieBasePrice, scrRoomNumber, numberOfAvailableSeats);
+        when(createMoviePort.create(
+                Mockito.eq(movieNo1.getMovieTitle()),
+                Mockito.eq(movieNo1.getMovieBasePrice()), Mockito.eq(movieNo1.getScrRoomNumber()),
+                Mockito.eq(movieNo1.getNumberOfAvailableSeats()))
+        ).thenReturn(movieNo1);
+        Movie movie = movieService.create(movieNo1.getMovieTitle(), movieNo1.getMovieBasePrice(),
+                movieNo1.getScrRoomNumber(), movieNo1.getNumberOfAvailableSeats());
+
         assertNotNull(movie);
-        assertEquals(movieTitle, movie.getMovieTitle());
-        assertEquals(movieBasePrice, movie.getMovieBasePrice());
-        assertEquals(scrRoomNumber, movie.getScrRoomNumber());
-        assertEquals(numberOfAvailableSeats, movie.getNumberOfAvailableSeats());
+        assertEquals(movieNo1.getMovieTitle(), movie.getMovieTitle());
+        assertEquals(movieNo1.getMovieBasePrice(), movie.getMovieBasePrice());
+        assertEquals(movieNo1.getScrRoomNumber(), movie.getScrRoomNumber());
+        assertEquals(movieNo1.getNumberOfAvailableSeats(), movie.getNumberOfAvailableSeats());
+        verify(createMoviePort, times(1)).create(movieNo1.getMovieTitle(), movieNo1.getMovieBasePrice(),
+                movieNo1.getScrRoomNumber(), movieNo1.getNumberOfAvailableSeats());
     }
 
     @Test
-    public void movieServiceCreateMovieWithNullMovieTitleTestNegative() {
+    public void movieServiceCreateMovieExceptionThrownTestNegative() {
+        when(createMoviePort.create(
+                Mockito.eq(movieNo1.getMovieTitle()),
+                Mockito.eq(movieNo1.getMovieBasePrice()), Mockito.eq(movieNo1.getScrRoomNumber()),
+                Mockito.eq(movieNo1.getNumberOfAvailableSeats()))
+        ).thenThrow(MovieRepositoryException.class);
+
+        assertThrows(MovieServiceCreateException.class, () -> movieService.create(movieNo1.getMovieTitle(), movieNo1.getMovieBasePrice(),
+                movieNo1.getScrRoomNumber(), movieNo1.getNumberOfAvailableSeats()));
+
+        verify(createMoviePort, times(1)).create(movieNo1.getMovieTitle(), movieNo1.getMovieBasePrice(),
+                movieNo1.getScrRoomNumber(), movieNo1.getNumberOfAvailableSeats());
+    }
+
+    @Test
+    public void movieServiceCreateMovieWhoseDataDoesNotFollowConstraintsTestNegative() {
         String movieTitle = null;
-        double movieBasePrice = 42.25;
-        int scrRoomNumber = 10;
-        int numberOfAvailableSeats = 30;
-        assertThrows(MovieServiceCreateException.class, () -> movieService.create(movieTitle, movieBasePrice, scrRoomNumber, numberOfAvailableSeats));
-    }
-
-    @Test
-    public void movieServiceCreateMovieWithEmptyMovieTitleTestNegative() {
-        String movieTitle = "";
-        double movieBasePrice = 42.25;
-        int scrRoomNumber = 10;
-        int numberOfAvailableSeats = 30;
-        assertThrows(MovieServiceCreateException.class, () -> movieService.create(movieTitle, movieBasePrice, scrRoomNumber, numberOfAvailableSeats));
-    }
-
-    @Test
-    public void movieServiceCreateMovieWithMovieTitleTooShortTestNegative() {
-        String movieTitle = "";
-        double movieBasePrice = 42.25;
-        int scrRoomNumber = 10;
-        int numberOfAvailableSeats = 30;
-        assertThrows(MovieServiceCreateException.class, () -> movieService.create(movieTitle, movieBasePrice, scrRoomNumber, numberOfAvailableSeats));
-    }
-
-    @Test
-    public void movieServiceCreateMovieWithMovieTitleTooLongTestNegative() {
-        String movieTitle = "ddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfd";
-        double movieBasePrice = 42.25;
-        int scrRoomNumber = 10;
-        int numberOfAvailableSeats = 30;
-        assertThrows(MovieServiceCreateException.class, () -> movieService.create(movieTitle, movieBasePrice, scrRoomNumber, numberOfAvailableSeats));
-    }
-
-    @Test
-    public void movieServiceCreateMovieWithMovieTitleLengthEqualTo1TestPositive() throws MovieServiceCreateException {
-        String movieTitle = "d";
-        double movieBasePrice = 42.25;
-        int scrRoomNumber = 10;
-        int numberOfAvailableSeats = 30;
-        Movie movie = movieService.create(movieTitle, movieBasePrice, scrRoomNumber, numberOfAvailableSeats);
-        assertNotNull(movie);
-        assertEquals(movieTitle, movie.getMovieTitle());
-        assertEquals(movieBasePrice, movie.getMovieBasePrice());
-        assertEquals(scrRoomNumber, movie.getScrRoomNumber());
-        assertEquals(numberOfAvailableSeats, movie.getNumberOfAvailableSeats());
-    }
-
-    @Test
-    public void movieServiceCreateMovieWithMovieTitleLengthEqualTo150TestPositive() throws MovieServiceCreateException {
-        String movieTitle = "ddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddf";
-        double movieBasePrice = 42.25;
-        int scrRoomNumber = 10;
-        int numberOfAvailableSeats = 30;
-        Movie movie = movieService.create(movieTitle, movieBasePrice, scrRoomNumber, numberOfAvailableSeats);
-        assertNotNull(movie);
-        assertEquals(movieTitle, movie.getMovieTitle());
-        assertEquals(movieBasePrice, movie.getMovieBasePrice());
-        assertEquals(scrRoomNumber, movie.getScrRoomNumber());
-        assertEquals(numberOfAvailableSeats, movie.getNumberOfAvailableSeats());
-    }
-
-    @Test
-    public void movieServiceCreateMovieWithNegativeMovieBasePriceTestNegative() {
-        String movieTitle = "SomeOtherMovieTitleNo1";
-        double movieBasePrice = -1.00;
-        int scrRoomNumber = 10;
-        int numberOfAvailableSeats = 30;
-        assertThrows(MovieServiceCreateException.class, () -> movieService.create(movieTitle, movieBasePrice, scrRoomNumber, numberOfAvailableSeats));
-    }
-
-    @Test
-    public void movieServiceCreateMovieWithMovieBasePriceTooHighTestNegative() {
-        String movieTitle = "SomeOtherMovieTitleNo1";
-        double movieBasePrice = 101.50;
-        int scrRoomNumber = 10;
-        int numberOfAvailableSeats = 30;
-        assertThrows(MovieServiceCreateException.class, () -> movieService.create(movieTitle, movieBasePrice, scrRoomNumber, numberOfAvailableSeats));
-    }
-
-    @Test
-    public void movieServiceCreateMovieWithMovieBasePriceEqualTo0TestPositive() throws MovieServiceCreateException {
-        String movieTitle = "SomeOtherMovieTitleNo1";
-        double movieBasePrice = 0;
-        int scrRoomNumber = 10;
-        int numberOfAvailableSeats = 30;
-        Movie movie = movieService.create(movieTitle, movieBasePrice, scrRoomNumber, numberOfAvailableSeats);
-        assertNotNull(movie);
-        assertEquals(movieTitle, movie.getMovieTitle());
-        assertEquals(movieBasePrice, movie.getMovieBasePrice());
-        assertEquals(scrRoomNumber, movie.getScrRoomNumber());
-        assertEquals(numberOfAvailableSeats, movie.getNumberOfAvailableSeats());
-    }
-
-    @Test
-    public void movieServiceCreateMovieWithMovieBasePriceEqualTo100TestPositive() throws MovieServiceCreateException {
-        String movieTitle = "SomeOtherMovieTitleNo1";
-        double movieBasePrice = 100;
-        int scrRoomNumber = 10;
-        int numberOfAvailableSeats = 30;
-        Movie movie = movieService.create(movieTitle, movieBasePrice, scrRoomNumber, numberOfAvailableSeats);
-        assertNotNull(movie);
-        assertEquals(movieTitle, movie.getMovieTitle());
-        assertEquals(movieBasePrice, movie.getMovieBasePrice());
-        assertEquals(scrRoomNumber, movie.getScrRoomNumber());
-        assertEquals(numberOfAvailableSeats, movie.getNumberOfAvailableSeats());
-    }
-
-    @Test
-    public void movieServiceCreateMovieWithScreeningRoomNumberEqualTo0TestNegative() {
-        String movieTitle = "SomeOtherMovieTitleNo1";
-        double movieBasePrice = 42.25;
-        int scrRoomNumber = 0;
-        int numberOfAvailableSeats = 30;
-        assertThrows(MovieServiceCreateException.class, () -> movieService.create(movieTitle, movieBasePrice, scrRoomNumber, numberOfAvailableSeats));
-    }
-
-    @Test
-    public void movieServiceCreateMovieWithScreeningRoomNumberTooHighTestNegative() {
-        String movieTitle = "SomeOtherMovieTitleNo1";
-        double movieBasePrice = 42.25;
-        int scrRoomNumber = 31;
-        int numberOfAvailableSeats = 30;
-        assertThrows(MovieServiceCreateException.class, () -> movieService.create(movieTitle, movieBasePrice, scrRoomNumber, numberOfAvailableSeats));
-    }
-
-    @Test
-    public void movieServiceCreateMovieWithScreeningRoomNumberEqualTo1TestPositive() throws MovieServiceCreateException {
-        String movieTitle = "SomeOtherMovieTitleNo1";
-        double movieBasePrice = 100;
+        double movieBasePrice = 1;
         int scrRoomNumber = 1;
-        int numberOfAvailableSeats = 30;
-        Movie movie = movieService.create(movieTitle, movieBasePrice, scrRoomNumber, numberOfAvailableSeats);
-        assertNotNull(movie);
-        assertEquals(movieTitle, movie.getMovieTitle());
-        assertEquals(movieBasePrice, movie.getMovieBasePrice());
-        assertEquals(scrRoomNumber, movie.getScrRoomNumber());
-        assertEquals(numberOfAvailableSeats, movie.getNumberOfAvailableSeats());
-    }
+        int numberOfSeats = 2;
 
-    @Test
-    public void movieServiceCreateMovieWithScreeningRoomNumberEqualTo30TestPositive() throws MovieServiceCreateException {
-        String movieTitle = "SomeOtherMovieTitleNo1";
-        double movieBasePrice = 100;
-        int scrRoomNumber = 30;
-        int numberOfAvailableSeats = 30;
-        Movie movie = movieService.create(movieTitle, movieBasePrice, scrRoomNumber, numberOfAvailableSeats);
-        assertNotNull(movie);
-        assertEquals(movieTitle, movie.getMovieTitle());
-        assertEquals(movieBasePrice, movie.getMovieBasePrice());
-        assertEquals(scrRoomNumber, movie.getScrRoomNumber());
-        assertEquals(numberOfAvailableSeats, movie.getNumberOfAvailableSeats());
-    }
+        when(createMoviePort.create(Mockito.isNull(), Mockito.eq(movieBasePrice),
+                Mockito.eq(scrRoomNumber), Mockito.eq(numberOfSeats))).thenThrow(MovieServiceCreateException.class);
 
-    @Test
-    public void movieServiceCreateMovieWithNegativeNumberOfAvailableSeatsTestNegative() {
-        String movieTitle = "SomeOtherMovieTitleNo1";
-        double movieBasePrice = 42.25;
-        int scrRoomNumber = 10;
-        int numberOfAvailableSeats = -1;
-        assertThrows(MovieServiceCreateException.class, () -> movieService.create(movieTitle, movieBasePrice, scrRoomNumber, numberOfAvailableSeats));
-    }
+        assertThrows(MovieServiceCreateException.class, () -> movieService.create(movieTitle, movieBasePrice, scrRoomNumber, numberOfSeats));
 
-    @Test
-    public void movieServiceCreateMovieWithNumberOfAvailableSeatsTooHighTestNegative() {
-        String movieTitle = "SomeOtherMovieTitleNo1";
-        double movieBasePrice = 42.25;
-        int scrRoomNumber = 10;
-        int numberOfAvailableSeats = 121;
-        assertThrows(MovieServiceCreateException.class, () -> movieService.create(movieTitle, movieBasePrice, scrRoomNumber, numberOfAvailableSeats));
-    }
-
-    @Test
-    public void movieServiceCreateMovieWithNumberOfAvailableSeatsEqualTo0TestPositive() throws MovieServiceCreateException {
-        String movieTitle = "SomeOtherMovieTitleNo1";
-        double movieBasePrice = 100;
-        int scrRoomNumber = 30;
-        int numberOfAvailableSeats = 0;
-        Movie movie = movieService.create(movieTitle, movieBasePrice, scrRoomNumber, numberOfAvailableSeats);
-        assertNotNull(movie);
-        assertEquals(movieTitle, movie.getMovieTitle());
-        assertEquals(movieBasePrice, movie.getMovieBasePrice());
-        assertEquals(scrRoomNumber, movie.getScrRoomNumber());
-        assertEquals(numberOfAvailableSeats, movie.getNumberOfAvailableSeats());
-    }
-
-    @Test
-    public void movieServiceCreateMovieWithNumberOfAvailableSeatsEqualTo120TestPositive() throws MovieServiceCreateException {
-        String movieTitle = "SomeOtherMovieTitleNo1";
-        double movieBasePrice = 100;
-        int scrRoomNumber = 30;
-        int numberOfAvailableSeats = 120;
-        Movie movie = movieService.create(movieTitle, movieBasePrice, scrRoomNumber, numberOfAvailableSeats);
-        assertNotNull(movie);
-        assertEquals(movieTitle, movie.getMovieTitle());
-        assertEquals(movieBasePrice, movie.getMovieBasePrice());
-        assertEquals(scrRoomNumber, movie.getScrRoomNumber());
-        assertEquals(numberOfAvailableSeats, movie.getNumberOfAvailableSeats());
+        verify(createMoviePort, times(1)).create(movieTitle, movieBasePrice, scrRoomNumber, numberOfSeats);
     }
 
     // Read tests
 
     @Test
     public void movieServiceFindMovieByIDTestPositive() throws MovieServiceReadException {
+        when(readMoviePort.findByUUID(Mockito.eq(movieNo1.getMovieID()))).thenReturn(movieNo1);
+
         Movie foundMovie = movieService.findByUUID(movieNo1.getMovieID());
+
         assertNotNull(foundMovie);
         assertEquals(movieNo1, foundMovie);
+
+        verify(readMoviePort, times(1)).findByUUID(Mockito.eq(movieNo1.getMovieID()));
     }
 
     @Test
     public void movieServiceFindMovieByIDThatIsNotInTheDatabaseTestNegative() {
-        Movie movie = new Movie(UUID.randomUUID(), "SomeExampleTitleNo1", 25.75, 4, 40);
-        assertNotNull(movie);
-        assertThrows(MovieServiceMovieNotFoundException.class, () -> movieService.findByUUID(movie.getMovieID()));
+        UUID searchedUUID = UUID.randomUUID();
+
+        when(readMoviePort.findByUUID(Mockito.eq(searchedUUID))).thenThrow(MovieRepositoryMovieNotFoundException.class);
+
+        assertThrows(MovieServiceMovieNotFoundException.class, () -> movieService.findByUUID(searchedUUID));
+
+        verify(readMoviePort, times(1)).findByUUID(Mockito.eq(searchedUUID));
+    }
+
+    @Test
+    public void movieServiceFindMovieByIDWhenMovieRepositoryExceptionIsThrownTestNegative() {
+        UUID searchedUUID = UUID.randomUUID();
+
+        when(readMoviePort.findByUUID(Mockito.eq(searchedUUID))).thenThrow(MovieRepositoryException.class);
+
+        assertThrows(MovieServiceReadException.class, () -> movieService.findByUUID(searchedUUID));
+
+        verify(readMoviePort, times(1)).findByUUID(searchedUUID);
     }
 
     @Test
     public void movieServiceFindAllMoviesTestPositive() throws MovieServiceReadException {
+        when(readMoviePort.findAll()).thenReturn(Arrays.asList(movieNo1, movieNo2, movieNo3));
+
         List<Movie> listOfMovies = movieService.findAll();
+
         assertNotNull(listOfMovies);
         assertFalse(listOfMovies.isEmpty());
-        assertEquals(2, listOfMovies.size());
+        assertEquals(3, listOfMovies.size());
+
+        verify(readMoviePort, times(1)).findAll();
     }
 
-    // Update tests
+    @Test
+    public void movieServiceFindAllMoviesWhenMovieRepositoryExceptionIsThrownTestNegative() {
+        when(readMoviePort.findAll()).thenThrow(MovieRepositoryException.class);
+
+        assertThrows(MovieServiceReadException.class, () -> movieService.findAll());
+
+        verify(readMoviePort, times(1)).findAll();
+    }
+
+//     Update tests
 
     @Test
-    public void movieServiceUpdateMovieTestPositive() {
+    public void movieServiceUpdateMovieTestPositive() throws MovieServiceUpdateException, MovieServiceReadException {
         String movieTitleBefore = movieNo1.getMovieTitle();
-        double movieBasePriceBefore = movieNo1.getMovieBasePrice();
-        int scrRoomNumberBefore = movieNo1.getScrRoomNumber();
-        int numberOfAvailableSeatsBefore = movieNo1.getNumberOfAvailableSeats();
+        double moviePriceBefore = movieNo1.getMovieBasePrice();
+        int scrRoomBefore = movieNo1.getScrRoomNumber();
+        int noOfSeatsBefore = movieNo1.getNumberOfAvailableSeats();
 
-        String newMovieTitle = "SomeNewMovieTitleNo1";
-        double newMovieBasePrice = 50.25;
-        int newScrRoomNumber = 19;
-        int newNumberOfAvailableSeats = 27;
+        String newMovieTitle = "Changed title";
+        double newMoviePrice = movieNo1.getMovieBasePrice() + 10;
+        int newScrRoom = movieNo1.getScrRoomNumber() + 10;
+        int newNoOfSeats = movieNo1.getNumberOfAvailableSeats() + 10;
 
         movieNo1.setMovieTitle(newMovieTitle);
-        movieNo1.setMovieBasePrice(newMovieBasePrice);
-        movieNo1.setScrRoomNumber(newScrRoomNumber);
-        movieNo1.setNumberOfAvailableSeats(newNumberOfAvailableSeats);
+        movieNo1.setMovieBasePrice(newMoviePrice);
+        movieNo1.setScrRoomNumber(newScrRoom);
+        movieNo1.setNumberOfAvailableSeats(newNoOfSeats);
 
         movieService.update(movieNo1);
 
-        Movie foundMovie = movieService.findByUUID(movieNo1.getMovieID());
+        verify(updateMoviePort).update(movieArgumentCaptor.capture());
 
-        String movieTitleAfter = foundMovie.getMovieTitle();
-        double movieBasePriceAfter = foundMovie.getMovieBasePrice();
-        int scrRoomNumberAfter = foundMovie.getScrRoomNumber();
-        int numberOfAvailableAfter = foundMovie.getNumberOfAvailableSeats();
+        Movie capturedMovie = movieArgumentCaptor.getValue();
 
+        String movieTitleAfter = capturedMovie.getMovieTitle();
+        double movieBasePriceAfter = capturedMovie.getMovieBasePrice();
+        int scrRoomAfter = capturedMovie.getScrRoomNumber();
+        int noOfSeatsAfter = capturedMovie.getNumberOfAvailableSeats();
+
+        assertNotNull(movieTitleAfter);
         assertEquals(newMovieTitle, movieTitleAfter);
-        assertEquals(newMovieBasePrice, movieBasePriceAfter);
-        assertEquals(newScrRoomNumber, scrRoomNumberAfter);
-        assertEquals(newNumberOfAvailableSeats, numberOfAvailableAfter);
+        assertEquals(newMoviePrice, movieBasePriceAfter);
+        assertEquals(newScrRoom, scrRoomAfter);
+        assertEquals(newNoOfSeats, noOfSeatsAfter);
 
         assertNotEquals(movieTitleBefore, movieTitleAfter);
-        assertNotEquals(movieBasePriceBefore, movieBasePriceAfter);
-        assertNotEquals(scrRoomNumberBefore, scrRoomNumberAfter);
-        assertNotEquals(numberOfAvailableSeatsBefore, numberOfAvailableAfter);
+        assertNotEquals(moviePriceBefore, movieBasePriceAfter);
+        assertNotEquals(scrRoomBefore, scrRoomAfter);
+        assertNotEquals(noOfSeatsBefore, noOfSeatsAfter);
+
+        verify(updateMoviePort, times(1)).update(movieNo1);
     }
 
     @Test
-    public void movieServiceUpdateMovieWithNullMovieTitleTestNegative() {
-        String newMovieTitle = null;
-        movieNo1.setMovieTitle(newMovieTitle);
+    public void movieServiceUpdateMovieWithDataThatDoesNotFollowConstraintsTestNegative() {
+        String movieTitle = null;
+        double movieBasePrice = 1;
+        int scrRoomNumber = 1;
+        int numberOfSeats = 2;
+
+        movieNo1.setMovieTitle(movieTitle);
+        movieNo1.setMovieBasePrice(movieBasePrice);
+        movieNo1.setScrRoomNumber(scrRoomNumber);
+        movieNo1.setNumberOfAvailableSeats(numberOfSeats);
+
+        doThrow(MovieServiceUpdateException.class).when(updateMoviePort).update(movieArgumentCaptor.capture());
+
         assertThrows(MovieServiceUpdateException.class, () -> movieService.update(movieNo1));
-    }
 
-    @Test
-    public void movieServiceUpdateMovieWithEmptyMovieTitleTestNegative() {
-        String newMovieTitle = "";
-        movieNo1.setMovieTitle(newMovieTitle);
-        assertThrows(MovieServiceUpdateException.class, () -> movieService.update(movieNo1));
-    }
-
-    @Test
-    public void movieServiceUpdateMovieWithEmptyMovieTitleTooShortTestNegative() {
-        String newMovieTitle = "";
-        movieNo1.setMovieTitle(newMovieTitle);
-        assertThrows(MovieServiceUpdateException.class, () -> movieService.update(movieNo1));
-    }
-
-    @Test
-    public void movieServiceUpdateMovieWithEmptyMovieTitleTooLongTestNegative() {
-        String newMovieTitle = "ddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfd";
-        movieNo1.setMovieTitle(newMovieTitle);
-        assertThrows(MovieServiceUpdateException.class, () -> movieService.update(movieNo1));
-    }
-
-    @Test
-    public void movieServiceUpdateMovieWithEmptyMovieTitleLengthEqualTo1TestPositive() {
-        String newMovieTitle = "d";
-        movieNo1.setMovieTitle(newMovieTitle);
-        movieService.update(movieNo1);
-        Movie foundMovie = movieService.findByUUID(movieNo1.getMovieID());
-        assertNotNull(foundMovie);
-        assertEquals(newMovieTitle, foundMovie.getMovieTitle());
-    }
-
-    @Test
-    public void movieServiceUpdateMovieWithEmptyMovieTitleLengthEqualTo150TestPositive() {
-        String newMovieTitle = "ddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddf";
-        movieNo1.setMovieTitle(newMovieTitle);
-        movieService.update(movieNo1);
-        Movie foundMovie = movieService.findByUUID(movieNo1.getMovieID());
-        assertNotNull(foundMovie);
-        assertEquals(newMovieTitle, foundMovie.getMovieTitle());
-    }
-
-    @Test
-    public void movieServiceUpdateMovieWithNegativeMovieBasePriceTestNegative() {
-        double newMovieBasePrice = -1.00;
-        movieNo1.setMovieBasePrice(newMovieBasePrice);
-        assertThrows(MovieServiceUpdateException.class, () -> movieService.update(movieNo1));
-    }
-
-    @Test
-    public void movieServiceUpdateMovieWithMovieBasePriceTooHighTestNegative() {
-        double newMovieBasePrice = 101.00;
-        movieNo1.setMovieBasePrice(newMovieBasePrice);
-        assertThrows(MovieServiceUpdateException.class, () -> movieService.update(movieNo1));
-    }
-
-    @Test
-    public void movieServiceUpdateMovieWithMovieBasePriceEqualTo0TestPositive() {
-        double newMovieBasePrice = 0;
-        movieNo1.setMovieBasePrice(newMovieBasePrice);
-        movieService.update(movieNo1);
-        Movie foundMovie = movieService.findByUUID(movieNo1.getMovieID());
-        assertNotNull(foundMovie);
-        assertEquals(newMovieBasePrice, foundMovie.getMovieBasePrice());
-    }
-
-    @Test
-    public void movieServiceUpdateMovieWithMovieBasePriceEqualTo100TestPositive() {
-        double newMovieBasePrice = 100;
-        movieNo1.setMovieBasePrice(newMovieBasePrice);
-        movieService.update(movieNo1);
-        Movie foundMovie = movieService.findByUUID(movieNo1.getMovieID());
-        assertNotNull(foundMovie);
-        assertEquals(newMovieBasePrice, foundMovie.getMovieBasePrice());
-    }
-
-    @Test
-    public void movieServiceUpdateMovieWithScreeningRoomNumberEqualTo0TestNegative() {
-        int newScrRoomNumber = 0;
-        movieNo1.setScrRoomNumber(newScrRoomNumber);
-        assertThrows(MovieServiceUpdateException.class, () -> movieService.update(movieNo1));
-    }
-
-    @Test
-    public void movieServiceUpdateMovieWithScreeningRoomNumberTooHighTestNegative() {
-        int newScrRoomNumber = 31;
-        movieNo1.setScrRoomNumber(newScrRoomNumber);
-        assertThrows(MovieServiceUpdateException.class, () -> movieService.update(movieNo1));
-    }
-
-    @Test
-    public void movieServiceUpdateMovieWithScreeningRoomNumberEqualTo1TestPositive() throws MovieServiceReadException {
-        int newScrRoomNumber = 1;
-        movieNo1.setScrRoomNumber(newScrRoomNumber);
-        Movie foundMovie = movieService.findByUUID(movieNo1.getMovieID());
-        assertNotNull(foundMovie);
-        assertEquals(newScrRoomNumber, foundMovie.getScrRoomNumber());
-    }
-
-    @Test
-    public void movieServiceUpdateMovieWithScreeningRoomNumberEqualTo30TestPositive() {
-        int newScrRoomNumber = 30;
-        movieNo1.setScrRoomNumber(newScrRoomNumber);
-        movieService.update(movieNo1);
-        Movie foundMovie = movieService.findByUUID(movieNo1.getMovieID());
-        assertNotNull(foundMovie);
-        assertEquals(newScrRoomNumber, foundMovie.getScrRoomNumber());
-    }
-
-    @Test
-    public void movieServiceUpdateMovieWithNegativeNumberOfAvailableSeatsTestNegative() {
-        int newNumberOfAvailableSeats = -1;
-        movieNo1.setScrRoomNumber(newNumberOfAvailableSeats);
-        assertThrows(MovieServiceUpdateException.class, () -> movieService.update(movieNo1));
-    }
-
-    @Test
-    public void movieServiceUpdateMovieWithNumberOfAvailableSeatsTooHighTestNegative() {
-        int newNumberOfAvailableSeats = 121;
-        movieNo1.setScrRoomNumber(newNumberOfAvailableSeats);
-        assertThrows(MovieServiceUpdateException.class, () -> movieService.update(movieNo1));
-    }
-
-    @Test
-    public void movieServiceUpdateMovieWithNumberOfAvailableSeatsEqualTo0TestPositive() {
-        int newNumberOfAvailableSeats = 0;
-        movieNo1.setNumberOfAvailableSeats(newNumberOfAvailableSeats);
-        movieService.update(movieNo1);
-        Movie foundMovie = movieService.findByUUID(movieNo1.getMovieID());
-        assertNotNull(foundMovie);
-        assertEquals(newNumberOfAvailableSeats, foundMovie.getNumberOfAvailableSeats());
-    }
-
-    @Test
-    public void movieServiceUpdateMovieWithNumberOfAvailableSeatsEqualTo120TestPositive() {
-        int newNumberOfAvailableSeats = 120;
-        movieNo1.setNumberOfAvailableSeats(newNumberOfAvailableSeats);
-        movieService.update(movieNo1);
-        Movie foundMovie = movieService.findByUUID(movieNo1.getMovieID());
-        assertNotNull(foundMovie);
-        assertEquals(newNumberOfAvailableSeats, foundMovie.getNumberOfAvailableSeats());
+        verify(updateMoviePort, times(1)).update(movieNo1);
     }
 
     // Delete tests
@@ -517,17 +239,50 @@ public class MovieServiceTest {
     @Test
     public void movieServiceDeleteMovieTestPositive() throws MovieServiceReadException, MovieServiceDeleteException {
         UUID removedMovieUUID = movieNo1.getMovieID();
-        Movie foundMovie = movieService.findByUUID(removedMovieUUID);
-        assertNotNull(foundMovie);
-        assertEquals(movieNo1, foundMovie);
+
+        when(readMoviePort.findByUUID(removedMovieUUID)).thenThrow(MovieServiceDeleteException.class);
+
         movieService.delete(removedMovieUUID);
-        assertThrows(MovieServiceReadException.class, () -> movieService.findByUUID(removedMovieUUID));
+        verify(deleteMoviePort).delete(uuidArgumentCaptor.capture());
+
+        UUID capturedMovieUUID = uuidArgumentCaptor.getValue();
+
+        assertNotNull(capturedMovieUUID);
+        assertEquals(removedMovieUUID, capturedMovieUUID);
+        assertThrows(MovieServiceDeleteException.class, () -> movieService.findByUUID(removedMovieUUID));
+
+        verify(deleteMoviePort, times(1)).delete(Mockito.eq(removedMovieUUID));
+        verify(readMoviePort, times(1)).findByUUID(removedMovieUUID);
     }
 
     @Test
     public void movieServiceDeleteMovieThatIsNotInTheDatabaseTestNegative() {
-        Movie movie = new Movie(UUID.randomUUID(), "SomeExampleTitleNo1", 25.75, 4, 40);
-        assertNotNull(movie);
-        assertThrows(MovieServiceDeleteException.class, () -> movieService.delete(movie.getMovieID()));
+        UUID exampleUUID = UUID.randomUUID();
+
+        doThrow(MovieRepositoryException.class).when(deleteMoviePort).delete(uuidArgumentCaptor.capture());
+
+        assertThrows(MovieServiceDeleteException.class, () -> movieService.delete(exampleUUID));
+
+        UUID capturedMovieUUID = uuidArgumentCaptor.getValue();
+        assertEquals(exampleUUID, capturedMovieUUID);
+
+        verify(deleteMoviePort, times(1)).delete(Mockito.eq(exampleUUID));
     }
+
+    @Test
+    public void movieServiceUpdateMovieWhenMovieRepositoryExceptionIsThrownTestNegative() {
+        String errorMessage = "Repository exception";
+        MongoException exception = null;
+
+        MovieRepositoryException movieRepositoryException = new MovieRepositoryException(errorMessage, exception);
+
+        doThrow(movieRepositoryException).when(updateMoviePort).update(any(Movie.class));
+
+        MovieServiceUpdateException thrownException = assertThrows(MovieServiceUpdateException.class, () -> movieService.update(movieNo1));
+
+        assertTrue(thrownException.getMessage().contains(errorMessage));
+
+        verify(updateMoviePort, times(1)).update(any(Movie.class));
+    }
+
 }

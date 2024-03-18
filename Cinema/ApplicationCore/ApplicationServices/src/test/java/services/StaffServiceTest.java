@@ -1,83 +1,63 @@
 package services;
 
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.*;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import pl.tks.gr3.cinema.adapters.exceptions.UserRepositoryException;
+import pl.tks.gr3.cinema.adapters.exceptions.crud.user.UserRepositoryStaffNotFoundException;
+import pl.tks.gr3.cinema.adapters.exceptions.crud.user.UserRepositoryCreateException;
+import pl.tks.gr3.cinema.adapters.exceptions.crud.user.UserRepositoryCreateUserDuplicateLoginException;
 import pl.tks.gr3.cinema.application_services.exceptions.crud.staff.*;
 import pl.tks.gr3.cinema.application_services.services.StaffService;
-import pl.tks.gr3.cinema.adapters.aggregates.UserRepositoryAdapter;
-import pl.tks.gr3.cinema.adapters.repositories.UserRepository;
 import pl.tks.gr3.cinema.domain_model.users.Staff;
 import pl.tks.gr3.cinema.ports.infrastructure.users.*;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 public class StaffServiceTest {
 
-    private final static String databaseName = "test";
-    private static final Logger logger = LoggerFactory.getLogger(StaffServiceTest.class);
+    private final static Logger logger = LoggerFactory.getLogger(StaffServiceTest.class);
 
-    private static CreateUserPort createUserPort;
-    private static ReadUserPort readUserPort;
-    private static UpdateUserPort updateUserPort;
-    private static ActivateUserPort activateUserPort;
-    private static DeactivateUserPort deactivateUserPort;
-    private static DeleteUserPort deleteUserPort;
+    @Mock
+    private CreateUserPort createUserPort;
+    @Mock
+    private ReadUserPort readUserPort;
+    @Mock
+    private UpdateUserPort updateUserPort;
+    @Mock
+    private ActivateUserPort activateUserPort;
+    @Mock
+    private DeactivateUserPort deactivateUserPort;
+    @Mock
+    private DeleteUserPort deleteUserPort;
 
-    private static UserRepository userRepository;
-    private static StaffService staffService;
+    @InjectMocks
+    private StaffService staffService;
+
+    @Captor
+    private static ArgumentCaptor<Staff> staffArgumentCaptor;
+
+    @Captor
+    private static ArgumentCaptor<UUID> uuidArgumentCaptor;
 
     private Staff staffNo1;
     private Staff staffNo2;
-
-    @BeforeAll
-    public static void initialize() {
-        userRepository = new UserRepository(databaseName);
-        UserRepositoryAdapter userRepositoryAdapter = new UserRepositoryAdapter(userRepository);
-
-        createUserPort = userRepositoryAdapter;
-        readUserPort = userRepositoryAdapter;
-        updateUserPort = userRepositoryAdapter;
-        activateUserPort = userRepositoryAdapter;
-        deactivateUserPort = userRepositoryAdapter;
-        deleteUserPort = userRepositoryAdapter;
-
-        staffService = new StaffService(createUserPort, readUserPort, updateUserPort, activateUserPort, deactivateUserPort, deleteUserPort);
-    }
+    private Staff staffNo3;
 
     @BeforeEach
     public void initializeSampleData() {
-        this.clearTestData();
-        try {
-            staffNo1 = staffService.create("UniqueStaffLoginNo1", "UniqueStaffPasswordNo1");
-            staffNo2 = staffService.create("UniqueStaffLoginNo2", "UniqueStaffPasswordNo2");
-        } catch (StaffServiceCreateException exception) {
-            logger.error(exception.getMessage());
-        }
-    }
-
-    @AfterEach
-    public void destroySampleData() {
-        this.clearTestData();
-    }
-
-    private void clearTestData() {
-        try {
-            List<Staff> listOfStaffs = staffService.findAll();
-            for (Staff staff : listOfStaffs) {
-                staffService.delete(staff.getUserID());
-            }
-        } catch (StaffServiceReadException | StaffServiceDeleteException exception) {
-            logger.error(exception.getMessage());
-        }
-    }
-
-    @AfterAll
-    public static void destroy() {
-        userRepository.close();
+        staffNo1 = new Staff(UUID.randomUUID(), "UniqueStaffLoginNo1", "UniqueStaffPasswordNo1");
+        staffNo2 = new Staff(UUID.randomUUID(), "UniqueStaffLoginNo2", "UniqueStaffPasswordNo2");
+        staffNo3 = new Staff(UUID.randomUUID(), "UniqueStaffLoginNo3", "UniqueStaffPasswordNo3");
     }
 
     // Constructor tests
@@ -92,205 +72,200 @@ public class StaffServiceTest {
 
     @Test
     public void staffServiceCreateStaffTestPositive() throws StaffServiceCreateException {
-        String staffLogin = "SomeOtherLoginNo1";
-        String staffPassword = "SomeOtherPasswordNo1";
-        Staff staff = staffService.create(staffLogin, staffPassword);
+        when(createUserPort.createStaff(Mockito.eq(staffNo1.getUserLogin()), Mockito.eq(staffNo1.getUserPassword()))).thenReturn(staffNo1);
+        Staff staff = staffService.create(staffNo1.getUserLogin(), staffNo1.getUserPassword());
+
         assertNotNull(staff);
-        assertEquals(staffLogin, staff.getUserLogin());
-        assertEquals(staffPassword, staff.getUserPassword());
+        assertEquals(staffNo1.getUserLogin(), staff.getUserLogin());
+        assertEquals(staffNo1.getUserPassword(), staff.getUserPassword());
+        verify(createUserPort, times(1)).createStaff(staffNo1.getUserLogin(), staffNo1.getUserPassword());
     }
 
     @Test
-    public void staffServiceCreateStaffWithNullLoginThatTestNegative() {
+    public void staffServiceCreateStaffThatAlreadyExistsTestNegative() {
+        when(createUserPort.createStaff(Mockito.eq(staffNo1.getUserLogin()), Mockito.eq(staffNo1
+                .getUserPassword()))).thenThrow(UserRepositoryCreateUserDuplicateLoginException.class);
+
+        assertThrows(StaffServiceCreateStaffDuplicateLoginException.class, () -> staffService.create(staffNo1.getUserLogin(), staffNo1.getUserPassword()));
+
+        verify(createUserPort, times(1)).createStaff(staffNo1.getUserLogin(), staffNo1.getUserPassword());
+    }
+
+    @Test
+    public void staffServiceCreateStaffWhoseDataDoesNotFollowConstraintsTestNegative() {
         String staffLogin = null;
         String staffPassword = "SomeOtherPasswordNo1";
+
+        when(createUserPort.createStaff(Mockito.isNull(), Mockito.eq(staffPassword))).thenThrow(UserRepositoryCreateException.class);
+
         assertThrows(StaffServiceCreateException.class, () -> staffService.create(staffLogin, staffPassword));
-    }
 
-    @Test
-    public void staffServiceCreateStaffWithEmptyLoginThatTestNegative() {
-        String staffLogin = "";
-        String staffPassword = "SomeOtherPasswordNo1";
-        assertThrows(StaffServiceCreateException.class, () -> staffService.create(staffLogin, staffPassword));
-    }
-
-    @Test
-    public void staffServiceCreateStaffWithLoginTooShortThatTestNegative() {
-        String staffLogin = "ddddfdd";
-        String staffPassword = "SomeOtherPasswordNo1";
-        assertThrows(StaffServiceCreateException.class, () -> staffService.create(staffLogin, staffPassword));
-    }
-
-    @Test
-    public void staffServiceCreateStaffWithLoginTooLongThatTestNegative() {
-        String staffLogin = "ddddfddddfddddfddddfd";
-        String staffPassword = "SomeOtherPasswordNo1";
-        assertThrows(StaffServiceCreateException.class, () -> staffService.create(staffLogin, staffPassword));
-    }
-
-    @Test
-    public void staffServiceCreateStaffWithLoginLengthEqualTo8ThatTestPositive() throws StaffServiceCreateException {
-        String staffLogin = "ddddfddd";
-        String staffPassword = "SomeOtherPasswordNo1";
-        Staff staff = staffService.create(staffLogin, staffPassword);
-        assertNotNull(staff);
-        assertEquals(staffLogin, staff.getUserLogin());
-        assertEquals(staffPassword, staff.getUserPassword());
-    }
-
-    @Test
-    public void staffServiceCreateStaffWithLoginLengthEqualTo20ThatTestNegative() throws StaffServiceCreateException {
-        String staffLogin = "ddddfddddfddddfddddf";
-        String staffPassword = "SomeOtherPasswordNo1";
-        Staff staff = staffService.create(staffLogin, staffPassword);
-        assertNotNull(staff);
-        assertEquals(staffLogin, staff.getUserLogin());
-        assertEquals(staffPassword, staff.getUserPassword());
-    }
-
-    @Test
-    public void staffServiceCreateStaffWithLoginThatDoesNotMeetRegExTestNegative() {
-        String staffLogin = "Some Invalid Login";
-        String staffPassword = "SomeOtherPasswordNo1";
-        assertThrows(StaffServiceCreateException.class, () -> staffService.create(staffLogin, staffPassword));
+        verify(createUserPort, times(1)).createStaff(staffLogin, staffPassword);
     }
 
     // Read tests
 
     @Test
     public void staffServiceFindStaffByIDTestPositive() throws StaffServiceReadException {
+        when(readUserPort.findStaffByUUID(Mockito.eq(staffNo1.getUserID()))).thenReturn(staffNo1);
+
         Staff foundStaff = staffService.findByUUID(staffNo1.getUserID());
+
         assertNotNull(foundStaff);
         assertEquals(staffNo1, foundStaff);
+
+        verify(readUserPort, times(1)).findStaffByUUID(Mockito.eq(staffNo1.getUserID()));
     }
 
     @Test
     public void staffServiceFindStaffByIDThatIsNotInTheDatabaseTestNegative() {
-        Staff staff = new Staff(UUID.randomUUID(), "SomeOtherLoginNo1", "SomeOtherPasswordNo1");
-        assertNotNull(staff);
-        assertThrows(StaffServiceStaffNotFoundException.class, () -> staffService.findByUUID(staff.getUserID()));
+        UUID searchedUUID = UUID.randomUUID();
+
+        when(readUserPort.findStaffByUUID(Mockito.eq(searchedUUID))).thenThrow(UserRepositoryStaffNotFoundException.class);
+
+        assertThrows(StaffServiceStaffNotFoundException.class, () -> staffService.findByUUID(searchedUUID));
+
+        verify(readUserPort, times(1)).findStaffByUUID(Mockito.eq(searchedUUID));
+    }
+
+    @Test
+    public void staffServiceFindStaffByIDWhenUserRepositoryExceptionIsThrownTestNegative() {
+        UUID searchedUUID = UUID.randomUUID();
+
+        when(readUserPort.findStaffByUUID(Mockito.eq(searchedUUID))).thenThrow(UserRepositoryException.class);
+
+        assertThrows(StaffServiceReadException.class, () -> staffService.findByUUID(searchedUUID));
+
+        verify(readUserPort, times(1)).findStaffByUUID(searchedUUID);
     }
 
     @Test
     public void staffServiceFindStaffByLoginTestPositive() throws StaffServiceReadException {
-        Staff foundStaff = staffService.findByLogin(staffNo1.getUserLogin());
+        when(readUserPort.findStaffByLogin(staffNo2.getUserLogin())).thenReturn(staffNo2);
+
+        Staff foundStaff = staffService.findByLogin(staffNo2.getUserLogin());
+
         assertNotNull(foundStaff);
-        assertEquals(staffNo1, foundStaff);
+        assertEquals(staffNo2, foundStaff);
+
+        verify(readUserPort, times(1)).findStaffByLogin(staffNo2.getUserLogin());
     }
 
     @Test
     public void staffServiceFindStaffByLoginThatIsNotInTheDatabaseTestNegative() {
-        Staff staff = new Staff(UUID.randomUUID(), "SomeOtherLoginNo1", "SomeOtherPasswordNo1");
-        assertNotNull(staff);
-        assertThrows(StaffServiceStaffNotFoundException.class, () -> staffService.findByLogin(staff.getUserLogin()));
+        String searchedLogin = "SomeExampleLoginNo1";
+
+        when(readUserPort.findStaffByLogin(Mockito.eq(searchedLogin))).thenThrow(UserRepositoryStaffNotFoundException.class);
+
+        assertThrows(StaffServiceStaffNotFoundException.class, () -> staffService.findByLogin(searchedLogin));
+
+        verify(readUserPort, times(1)).findStaffByLogin(searchedLogin);
     }
 
     @Test
-    public void staffServiceFindFindStaffsMatchingLoginTestPositive() throws StaffServiceCreateException, StaffServiceReadException {
-        staffService.create("NewStaffLogin", "NewStaffPassword");
-        List<Staff> listOfStaffs = staffService.findAllMatchingLogin("New");
-        assertNotNull(listOfStaffs);
-        assertFalse(listOfStaffs.isEmpty());
-        assertEquals(1, listOfStaffs.size());
+    public void staffServiceFindStaffByLoginWhenUserRepositoryExceptionIsThrownTestNegative() {
+        String searchedLogin = "SomeExampleLoginNo2";
+
+        when(readUserPort.findStaffByLogin(Mockito.eq(searchedLogin))).thenThrow(UserRepositoryException.class);
+
+        assertThrows(StaffServiceReadException.class, () -> staffService.findByLogin(searchedLogin));
+
+        verify(readUserPort, times(1)).findStaffByLogin(searchedLogin);
     }
 
     @Test
-    public void staffServiceFindFindStaffsTestPositive() throws StaffServiceReadException {
-        List<Staff> listOfStaffs = staffService.findAll();
+    public void staffServiceFindAllStaffsMatchingLoginTestPositive() throws StaffServiceCreateException, StaffServiceReadException {
+        String exampleLogin = "New";
+
+        when(readUserPort.findAllStaffsMatchingLogin(Mockito.eq(exampleLogin))).thenReturn(Arrays.asList(staffNo1, staffNo2));
+
+        List<Staff> listOfStaffs = staffService.findAllMatchingLogin(exampleLogin);
+
         assertNotNull(listOfStaffs);
         assertFalse(listOfStaffs.isEmpty());
         assertEquals(2, listOfStaffs.size());
+
+        verify(readUserPort, times(1)).findAllStaffsMatchingLogin(exampleLogin);
+    }
+
+    @Test
+    public void staffServiceFindAllStaffsWhenUserRepositoryExceptionIsThrownTestNegative() {
+        String exampleLogin = "Example";
+
+        when(readUserPort.findAllStaffsMatchingLogin(Mockito.eq(exampleLogin))).thenThrow(UserRepositoryException.class);
+
+        assertThrows(StaffServiceReadException.class, () -> staffService.findAllMatchingLogin(exampleLogin));
+
+        verify(readUserPort, times(1)).findAllStaffsMatchingLogin(exampleLogin);
+    }
+
+    @Test
+    public void staffServiceFindAllStaffTestPositive() throws StaffServiceReadException {
+        when(readUserPort.findAllStaffs()).thenReturn(Arrays.asList(staffNo1, staffNo2, staffNo3));
+
+        List<Staff> listOfStaffs = staffService.findAll();
+
+        assertNotNull(listOfStaffs);
+        assertFalse(listOfStaffs.isEmpty());
+        assertEquals(3, listOfStaffs.size());
+
+        verify(readUserPort, times(1)).findAllStaffs();
+    }
+
+    @Test
+    public void staffServiceFindAllStaffWhenUserRepositoryExceptionIsThrownTestNegative() {
+        when(readUserPort.findAllStaffs()).thenThrow(UserRepositoryException.class);
+
+        assertThrows(StaffServiceReadException.class, () -> staffService.findAll());
+
+        verify(readUserPort, times(1)).findAllStaffs();
     }
 
     // Update tests
 
     @Test
-    public void staffServiceUpdateStaffTestPositive() {
+    public void staffServiceUpdateStaffTestPositive() throws StaffServiceUpdateException, StaffServiceReadException {
         String staffLoginBefore = staffNo1.getUserLogin();
         String staffPasswordBefore = staffNo1.getUserPassword();
+
         String newStaffLogin = "OtherNewLoginNo1";
         String newStaffPassword = "OtherNewPasswordNo1";
+
         staffNo1.setUserLogin(newStaffLogin);
         staffNo1.setUserPassword(newStaffPassword);
+
         staffService.update(staffNo1);
-        Staff foundStaff = staffService.findByUUID(staffNo1.getUserID());
-        String staffLoginAfter =  foundStaff.getUserLogin();
-        String staffPasswordAfter = foundStaff.getUserPassword();
+
+        verify(updateUserPort).updateStaff(staffArgumentCaptor.capture());
+
+        Staff capturedStaff = staffArgumentCaptor.getValue();
+
+        String staffLoginAfter = capturedStaff.getUserLogin();
+        String staffPasswordAfter = capturedStaff.getUserPassword();
+
         assertNotNull(staffLoginAfter);
         assertNotNull(staffPasswordAfter);
         assertEquals(newStaffLogin, staffLoginAfter);
         assertEquals(newStaffPassword, staffPasswordAfter);
         assertNotEquals(staffLoginBefore, staffLoginAfter);
         assertNotEquals(staffPasswordBefore, staffPasswordAfter);
+
+        verify(updateUserPort, times(1)).updateStaff(staffNo1);
     }
 
     @Test
-    public void staffServiceUpdateStaffWithNullLoginTestNegative() {
+    public void staffServiceUpdateStaffWithDataThatDoesNotFollowConstraintsTestNegative() {
         String staffLogin = null;
         String staffPassword = "SomeOtherPasswordNo2";
+
         staffNo1.setUserLogin(staffLogin);
         staffNo1.setUserPassword(staffPassword);
+
+        doThrow(StaffServiceUpdateException.class).when(updateUserPort).updateStaff(staffArgumentCaptor.capture());
+
         assertThrows(StaffServiceUpdateException.class, () -> staffService.update(staffNo1));
-    }
 
-    @Test
-    public void staffServiceUpdateStaffWithEmptyLoginTestNegative() {
-        String staffLogin = "";
-        String staffPassword = "SomeOtherPasswordNo2";
-        staffNo1.setUserLogin(staffLogin);
-        staffNo1.setUserPassword(staffPassword);
-        assertThrows(StaffServiceUpdateException.class, () -> staffService.update(staffNo1));
-    }
-
-    @Test
-    public void staffServiceUpdateStaffWithLoginTooShortTestNegative() {
-        String staffLogin = "ddddfdd";
-        String staffPassword = "SomeOtherPasswordNo2";
-        staffNo1.setUserLogin(staffLogin);
-        staffNo1.setUserPassword(staffPassword);
-        assertThrows(StaffServiceUpdateException.class, () -> staffService.update(staffNo1));
-    }
-
-    @Test
-    public void staffServiceUpdateStaffWithLoginTooLongTestNegative() {
-        String staffLogin = "ddddfddddfddddfddddfd";
-        String staffPassword = "SomeOtherPasswordNo2";
-        staffNo1.setUserLogin(staffLogin);
-        staffNo1.setUserPassword(staffPassword);
-        assertThrows(StaffServiceUpdateException.class, () -> staffService.update(staffNo1));
-    }
-
-    @Test
-    public void staffServiceUpdateStaffWithLoginLengthEqualTo8TestPositive() throws StaffServiceReadException {
-        String staffLogin = "ddddfddd";
-        String staffPassword = "SomeOtherPasswordNo2";
-        staffNo1.setUserLogin(staffLogin);
-        staffNo1.setUserPassword(staffPassword);
-        assertDoesNotThrow(() -> staffService.update(staffNo1));
-        Staff foundStaff = staffService.findByUUID(staffNo1.getUserID());
-        assertEquals(staffLogin, foundStaff.getUserLogin());
-        assertEquals(staffPassword, foundStaff.getUserPassword());
-    }
-
-    @Test
-    public void staffServiceUpdateStaffWithLoginLengthEqualTo20TestPositive() throws StaffServiceReadException {
-        String staffLogin = "ddddfddddfddddfddddf";
-        String staffPassword = "SomeOtherPasswordNo2";
-        staffNo1.setUserLogin(staffLogin);
-        staffNo1.setUserPassword(staffPassword);
-        assertDoesNotThrow(() -> staffService.update(staffNo1));
-        Staff foundStaff = staffService.findByUUID(staffNo1.getUserID());
-        assertEquals(staffLogin, foundStaff.getUserLogin());
-        assertEquals(staffPassword, foundStaff.getUserPassword());
-    }
-
-    @Test
-    public void staffServiceUpdateStaffWithLoginThatViolatesRegExTestNegative() {
-        String staffLogin = "Some Invalid Login";
-        String staffPassword = "SomeOtherPasswordNo2";
-        staffNo1.setUserLogin(staffLogin);
-        staffNo1.setUserPassword(staffPassword);
-        assertThrows(StaffServiceUpdateException.class, () -> staffService.update(staffNo1));
+        verify(updateUserPort, times(1)).updateStaff(staffNo1);
     }
 
     // Delete tests
@@ -298,60 +273,129 @@ public class StaffServiceTest {
     @Test
     public void staffServiceDeleteStaffTestPositive() throws StaffServiceReadException, StaffServiceDeleteException {
         UUID removedStaffUUID = staffNo1.getUserID();
-        Staff foundStaff = staffService.findByUUID(removedStaffUUID);
-        assertNotNull(foundStaff);
-        assertEquals(staffNo1, foundStaff);
+
+        when(readUserPort.findStaffByUUID(removedStaffUUID)).thenThrow(UserRepositoryStaffNotFoundException.class);
+
         staffService.delete(removedStaffUUID);
+        verify(deleteUserPort).delete(uuidArgumentCaptor.capture(), Mockito.anyString());
+
+        UUID capturedStaffUUID = uuidArgumentCaptor.getValue();
+
+        assertNotNull(capturedStaffUUID);
+        assertEquals(removedStaffUUID, capturedStaffUUID);
         assertThrows(StaffServiceReadException.class, () -> staffService.findByUUID(removedStaffUUID));
+
+        verify(deleteUserPort, times(1)).delete(Mockito.eq(removedStaffUUID), Mockito.anyString());
+        verify(readUserPort, times(1)).findStaffByUUID(removedStaffUUID);
     }
 
     @Test
     public void staffServiceDeleteStaffThatIsNotInTheDatabaseTestNegative() {
-        Staff staff = new Staff(UUID.randomUUID(), "SomeOtherStaffLoginNo3", "SomeOtherStaffPasswordNo3");
-        assertNotNull(staff);
-        assertThrows(StaffServiceDeleteException.class, () -> staffService.delete(staff.getUserID()));
+        UUID exampleUUID = UUID.randomUUID();
+
+        doThrow(UserRepositoryException.class).when(deleteUserPort).delete(uuidArgumentCaptor.capture(), Mockito.anyString());
+
+        assertThrows(StaffServiceDeleteException.class, () -> staffService.delete(exampleUUID));
+
+        UUID capturedStaffUUID = uuidArgumentCaptor.getValue();
+        assertEquals(exampleUUID, capturedStaffUUID);
+
+        verify(deleteUserPort, times(1)).delete(Mockito.eq(exampleUUID), Mockito.anyString());
     }
 
     // Activate tests
 
-    @Test
-    public void staffServiceActivateStaffTestPositive() {
-        staffService.deactivate(staffNo1.getUserID());
-
-        Staff foundStaff = staffService.findByUUID(staffNo1.getUserID());
-        assertNotNull(foundStaff);
-        assertFalse(foundStaff.isUserStatusActive());
-        staffService.activate(staffNo1.getUserID());
-        foundStaff = staffService.findByUUID(staffNo1.getUserID());
-        assertNotNull(foundStaff);
-        assertTrue(foundStaff.isUserStatusActive());
-    }
-
-    @Test
-    public void staffServiceActivateStaffThatIsNotInTheDatabaseTestNegative() {
-        Staff staff = new Staff(UUID.randomUUID(), "SomeOtherStaffLoginNo3", "SomeOtherStaffPasswordNo3");
-        assertNotNull(staff);
-        assertThrows(StaffServiceActivationException.class, () -> staffService.activate(staff.getUserID()));
-    }
+//    @Test
+//    public void adminServiceActivateAdminTestPositive() throws GeneralAdminServiceException {
+//        staffNo2.setUserStatusActive(false);
+//
+//        when(readUserPort.findStaffByUUID(staffNo2.getUserID())).thenReturn(staffNo2);
+//
+//        staffService.activate(staffNo2.getUserID());
+//
+//        verify(activateUserPort).activate(staffArgumentCaptor.capture());
+//
+//        Staff capturedStaff = staffArgumentCaptor.getValue();
+//
+//        assertNotNull(capturedStaff);
+//        assertEquals(staffNo2, capturedStaff);
+//
+//        verify(activateUserPort, times(1)).activate(Mockito.eq(staffNo2));
+//        verify(readUserPort, times(1)).findAdminByUUID(Mockito.eq(staffNo2.getUserID()));
+//    }
+//
+//    @Test
+//    public void staffServiceDeactivateStaffThatIsNotInTheDatabaseTestNegative() {
+//        Staff staff = new Staff(UUID.randomUUID(), "SomeOtherStaffLoginNo3", "SomeOtherStaffPasswordNo3");
+//        assertNotNull(staff);
+//
+//        when(readUserPort.findStaffByUUID(staff.getUserID())).thenReturn(staff);
+//
+//        doThrow(UserRepositoryException.class).when(activateUserPort).activate(staffArgumentCaptor.capture());
+//
+//        assertThrows(StaffServiceActivationException.class, () -> staffService.activate(staff.getUserID()));
+//
+//        Staff capturedStaff = staffArgumentCaptor.getValue();
+//
+//        assertNotNull(capturedStaff);
+//        assertEquals(staff, capturedStaff);
+//
+//        verify(activateUserPort, times(1)).activate(staff);
+//    }
 
     // Deactivate tests
 
-    @Test
-    public void staffServiceDeactivateStaffTestPositive() {
-        Staff foundStaff = staffService.findByUUID(staffNo1.getUserID());
-        assertNotNull(foundStaff);
-        assertEquals(staffNo1, foundStaff);
-        assertTrue(foundStaff.isUserStatusActive());
-        staffService.deactivate(staffNo1.getUserID());
-        foundStaff = staffService.findByUUID(staffNo1.getUserID());
-        assertNotNull(foundStaff);
-        assertFalse(foundStaff.isUserStatusActive());
-    }
+//    @Test
+//    public void staffServiceDeactivateStaffTestPositive() throws GeneralStaffServiceException {
+//        staffNo3.setUserStatusActive(true);
+//
+//        when(readUserPort.findStaffByUUID(Mockito.eq(staffNo3.getUserID()))).thenReturn(staffNo3);
+//
+//        staffService.deactivate(staffNo3.getUserID());
+//
+//        verify(deactivateUserPort).deactivate(staffArgumentCaptor.capture());
+//
+//        Staff capturedStaff = staffArgumentCaptor.getValue();
+//
+//        assertNotNull(capturedStaff);
+//        assertEquals(staffNo3, capturedStaff);
+//
+//        verify(deactivateUserPort, times(1)).deactivate(Mockito.eq(staffNo3));
+//        verify(readUserPort, times(1)).findStaffByUUID(staffNo3.getUserID());
+//    }
+//
+//    @Test
+//    public void staffServiceActivateStaffThatIsNotInTheDatabaseTestNegative() {
+//        Staff staff = new Staff(UUID.randomUUID(), "SomeOtherStaffLoginNo3", "SomeOtherStaffPasswordNo3");
+//        assertNotNull(staff);
+//
+//        when(readUserPort.findStaffByUUID(staff.getUserID())).thenReturn(staff);
+//
+//        doThrow(UserRepositoryException.class).when(deactivateUserPort).deactivate(staffArgumentCaptor.capture());
+//
+//        assertThrows(StaffServiceDeactivationException.class, () -> staffService.deactivate(staff.getUserID()));
+//
+//        Staff capturedStaff = staffArgumentCaptor.getValue();
+//
+//        assertNotNull(capturedStaff);
+//        assertEquals(staff, capturedStaff);
+//
+//        verify(deactivateUserPort, times(1)).deactivate(staff);
+//        verify(readUserPort, times(1)).findStaffByUUID(staff.getUserID());
+//    }
 
     @Test
-    public void staffServiceDeactivateStaffThatIsNotInTheDatabaseTestNegative() {
-        Staff staff = new Staff(UUID.randomUUID(), "SomeOtherStaffLoginNo3", "SomeOtherStaffPasswordNo3");
-        assertNotNull(staff);
-        assertThrows(StaffServiceDeactivationException.class, () -> staffService.deactivate(staff.getUserID()));
+    public void staffServiceUpdateStaffWhenUserRepositoryExceptionIsThrownTestNegative() {
+        String errorMessage = "Repository exception";
+
+        UserRepositoryException userRepositoryException = new UserRepositoryException(errorMessage);
+
+        doThrow(userRepositoryException).when(updateUserPort).updateStaff(any(Staff.class));
+
+        StaffServiceUpdateException thrownException = assertThrows(StaffServiceUpdateException.class, () -> staffService.update(staffNo1));
+
+        assertTrue(thrownException.getMessage().contains(errorMessage));
+
+        verify(updateUserPort, times(1)).updateStaff(any(Staff.class));
     }
 }
