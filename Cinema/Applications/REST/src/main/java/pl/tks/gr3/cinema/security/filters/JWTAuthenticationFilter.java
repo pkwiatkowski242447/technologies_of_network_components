@@ -15,8 +15,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-import pl.tks.gr3.cinema.security.services.JWTService;
-import pl.tks.gr3.cinema.security.SecurityConstants;
+import pl.tks.gr3.cinema.application_services.services.JWTService;
+import pl.tks.gr3.cinema.security.consts.SecurityConstants;
 
 import java.io.IOException;
 

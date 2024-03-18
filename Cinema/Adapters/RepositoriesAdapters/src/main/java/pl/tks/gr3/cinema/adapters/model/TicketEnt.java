@@ -10,8 +10,8 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.bson.codecs.pojo.annotations.BsonCreator;
 import org.bson.codecs.pojo.annotations.BsonProperty;
-import pl.tks.gr3.cinema.adapters.consts.model.TicketConstants;
-import pl.tks.gr3.cinema.adapters.messages.validation.TicketValidationMessages;
+import pl.tks.gr3.cinema.adapters.consts.model.TicketEntConstants;
+import pl.tks.gr3.cinema.utils.validation.TicketValidationMessages;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -19,25 +19,25 @@ import java.util.UUID;
 @Data
 public class TicketEnt {
 
-    @BsonProperty(TicketConstants.GENERAL_IDENTIFIER)
+    @BsonProperty(TicketEntConstants.GENERAL_IDENTIFIER)
     @NotNull(message = TicketValidationMessages.NULL_IDENTIFIER)
     @Setter(AccessLevel.NONE)
     private UUID ticketID;
 
-    @BsonProperty(TicketConstants.MOVIE_TIME)
+    @BsonProperty(TicketEntConstants.MOVIE_TIME)
     private LocalDateTime movieTime;
 
-    @BsonProperty(TicketConstants.TICKET_FINAL_PRICE)
+    @BsonProperty(TicketEntConstants.TICKET_FINAL_PRICE)
     @PositiveOrZero(message = TicketValidationMessages.INVALID_TICKET_FINAL_PRICE)
     @Setter(AccessLevel.NONE)
     private double ticketPrice;
 
-    @BsonProperty(TicketConstants.USER_ID)
+    @BsonProperty(TicketEntConstants.USER_ID)
     @NotNull(message = TicketValidationMessages.NULL_CLIENT_REFERENCE)
     @Setter(AccessLevel.NONE)
     private UUID userID;
 
-    @BsonProperty(TicketConstants.MOVIE_ID)
+    @BsonProperty(TicketEntConstants.MOVIE_ID)
     @NotNull(message = TicketValidationMessages.NULL_MOVIE_REFERENCE)
     @Setter(AccessLevel.NONE)
     private UUID movieID;
@@ -45,11 +45,11 @@ public class TicketEnt {
     // Constructors
 
     @BsonCreator
-    public TicketEnt(@BsonProperty(TicketConstants.GENERAL_IDENTIFIER) UUID ticketID,
-                     @BsonProperty(TicketConstants.MOVIE_TIME) LocalDateTime movieTime,
-                     @BsonProperty(TicketConstants.TICKET_FINAL_PRICE) double ticketPrice,
-                     @BsonProperty(TicketConstants.USER_ID) UUID userID,
-                     @BsonProperty(TicketConstants.MOVIE_ID) UUID movieID) {
+    public TicketEnt(@BsonProperty(TicketEntConstants.GENERAL_IDENTIFIER) UUID ticketID,
+                     @BsonProperty(TicketEntConstants.MOVIE_TIME) LocalDateTime movieTime,
+                     @BsonProperty(TicketEntConstants.TICKET_FINAL_PRICE) double ticketPrice,
+                     @BsonProperty(TicketEntConstants.USER_ID) UUID userID,
+                     @BsonProperty(TicketEntConstants.MOVIE_ID) UUID movieID) {
         this.ticketID = ticketID;
         this.movieTime = movieTime;
         this.ticketPrice = ticketPrice;

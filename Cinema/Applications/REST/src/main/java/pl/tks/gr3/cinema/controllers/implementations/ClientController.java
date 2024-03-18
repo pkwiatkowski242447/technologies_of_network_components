@@ -12,17 +12,17 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-import pl.tks.gr3.cinema.exceptions.services.crud.client.ClientServiceClientNotFoundException;
-import pl.tks.gr3.cinema.model.users.User;
-import pl.tks.gr3.cinema.security.services.JWSService;
-import pl.pas.gr3.dto.auth.UserOutputDTO;
-import pl.pas.gr3.dto.auth.UserUpdateDTO;
-import pl.pas.gr3.dto.output.TicketDTO;
-import pl.tks.gr3.cinema.exceptions.services.GeneralServiceException;
-import pl.tks.gr3.cinema.services.implementations.ClientService;
-import pl.tks.gr3.cinema.model.Ticket;
-import pl.tks.gr3.cinema.model.users.Client;
-import pl.tks.gr3.cinema.controllers.interfaces.UserServiceInterface;
+import pl.tks.gr3.cinema.application_services.exceptions.GeneralServiceException;
+import pl.tks.gr3.cinema.application_services.exceptions.crud.client.ClientServiceClientNotFoundException;
+import pl.tks.gr3.cinema.controllers.interfaces.UserControllerInterface;
+import pl.tks.gr3.cinema.domain_model.Ticket;
+import pl.tks.gr3.cinema.domain_model.users.Client;
+import pl.tks.gr3.cinema.domain_model.users.User;
+import pl.tks.gr3.cinema.ports.userinterface.JWSServiceInterface;
+import pl.tks.gr3.cinema.ports.userinterface.UserServiceInterface;
+import pl.tks.gr3.cinema.viewrest.output.UserOutputDTO;
+import pl.tks.gr3.cinema.viewrest.input.UserUpdateDTO;
+import pl.tks.gr3.cinema.viewrest.output.TicketDTO;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,22 +31,22 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/clients")
-public class ClientController implements UserServiceInterface<Client> {
+public class ClientController implements UserControllerInterface<Client> {
 
     private static final Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
 
-    private final ClientService clientService;
-    private final JWSService jwsService;
+    private final UserServiceInterface<Client> clientService;
+    private final JWSServiceInterface jwsService;
     private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public ClientController(ClientService clientService, JWSService jwsService, PasswordEncoder passwordEncoder) {
+    public ClientController(UserServiceInterface<Client> clientService, JWSServiceInterface jwsService, PasswordEncoder passwordEncoder) {
         this.clientService = clientService;
         this.jwsService = jwsService;
         this.passwordEncoder = passwordEncoder;
     }
 
-    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).STAFF) || hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).ADMIN)")
+    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).STAFF) || hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).ADMIN)")
     @GetMapping(value = "/all", produces = MediaType.APPLICATION_JSON_VALUE)
     @Override
     public ResponseEntity<?> findAll() {
@@ -58,7 +58,7 @@ public class ClientController implements UserServiceInterface<Client> {
         }
     }
 
-    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).STAFF) || hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).ADMIN)")
+    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).STAFF) || hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).ADMIN)")
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Override
     public ResponseEntity<?> findByUUID(@PathVariable("id") UUID clientID) {
@@ -73,7 +73,7 @@ public class ClientController implements UserServiceInterface<Client> {
         }
     }
 
-    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).STAFF) || hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).ADMIN)")
+    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).STAFF) || hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).ADMIN)")
     @GetMapping(value = "/login/{login}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Override
     public ResponseEntity<?> findByLogin(@PathVariable("login") String clientLogin) {
@@ -102,7 +102,7 @@ public class ClientController implements UserServiceInterface<Client> {
         }
     }
 
-    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).STAFF) || hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).ADMIN)")
+    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).STAFF) || hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).ADMIN)")
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @Override
     public ResponseEntity<?> findAllWithMatchingLogin(@RequestParam("match") String clientLogin) {
@@ -114,11 +114,11 @@ public class ClientController implements UserServiceInterface<Client> {
         }
     }
 
-    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).STAFF)")
+    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).STAFF)")
     @GetMapping(value = "/{id}/ticket-list", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getTicketsForCertainUser(@PathVariable("id") UUID clientID) {
         try {
-            List<Ticket> listOfTicketsForAClient = this.clientService.getTicketsForClient(clientID);
+            List<Ticket> listOfTicketsForAClient = this.clientService.getTicketsForUser(clientID);
             List<TicketDTO> listOfDTOs = new ArrayList<>();
             for (Ticket ticket : listOfTicketsForAClient) {
                 listOfDTOs.add(new TicketDTO(ticket.getTicketID(), ticket.getMovieTime(), ticket.getTicketPrice(), ticket.getUserID(), ticket.getMovieID()));
@@ -137,7 +137,7 @@ public class ClientController implements UserServiceInterface<Client> {
     public ResponseEntity<?> getTicketsForCertainUser() {
         try {
             Client client = this.clientService.findByLogin(SecurityContextHolder.getContext().getAuthentication().getName());
-            List<Ticket> listOfTicketsForAClient = this.clientService.getTicketsForClient(client.getUserID());
+            List<Ticket> listOfTicketsForAClient = this.clientService.getTicketsForUser(client.getUserID());
             List<TicketDTO> listOfDTOs = new ArrayList<>();
             for (Ticket ticket : listOfTicketsForAClient) {
                 listOfDTOs.add(new TicketDTO(ticket.getTicketID(), ticket.getMovieTime(), ticket.getTicketPrice(), ticket.getUserID(), ticket.getMovieID()));
@@ -174,7 +174,7 @@ public class ClientController implements UserServiceInterface<Client> {
         }
     }
 
-    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).ADMIN)")
+    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).ADMIN)")
     @PostMapping(value = "/{id}/activate")
     @Override
     public ResponseEntity<?> activate(@PathVariable("id") UUID clientID) {
@@ -186,7 +186,7 @@ public class ClientController implements UserServiceInterface<Client> {
         }
     }
 
-    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).ADMIN)")
+    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).ADMIN)")
     @PostMapping(value = "/{id}/deactivate")
     @Override
     public ResponseEntity<?> deactivate(@PathVariable("id") UUID clientID) {

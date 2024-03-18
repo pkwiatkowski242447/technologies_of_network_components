@@ -8,18 +8,18 @@ import org.springframework.http.*;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-import pl.tks.gr3.cinema.exceptions.services.crud.client.ClientServiceReadException;
-import pl.tks.gr3.cinema.exceptions.services.crud.ticket.TicketServiceTicketNotFoundException;
-import pl.tks.gr3.cinema.model.users.Client;
-import pl.tks.gr3.cinema.security.services.JWSService;
-import pl.tks.gr3.cinema.services.implementations.ClientService;
-import pl.pas.gr3.dto.input.TicketSelfInputDTO;
-import pl.pas.gr3.dto.output.TicketDTO;
-import pl.pas.gr3.dto.input.TicketInputDTO;
-import pl.tks.gr3.cinema.exceptions.services.GeneralServiceException;
-import pl.tks.gr3.cinema.services.implementations.TicketService;
-import pl.tks.gr3.cinema.model.Ticket;
-import pl.tks.gr3.cinema.controllers.interfaces.TicketServiceInterface;
+import pl.tks.gr3.cinema.application_services.exceptions.GeneralServiceException;
+import pl.tks.gr3.cinema.application_services.exceptions.crud.client.ClientServiceReadException;
+import pl.tks.gr3.cinema.application_services.exceptions.crud.ticket.TicketServiceTicketNotFoundException;
+import pl.tks.gr3.cinema.domain_model.Ticket;
+import pl.tks.gr3.cinema.domain_model.users.Client;
+import pl.tks.gr3.cinema.ports.userinterface.JWSServiceInterface;
+import pl.tks.gr3.cinema.ports.userinterface.TicketServiceInterface;
+import pl.tks.gr3.cinema.ports.userinterface.UserServiceInterface;
+import pl.tks.gr3.cinema.viewrest.input.TicketInputDTO;
+import pl.tks.gr3.cinema.viewrest.input.TicketSelfInputDTO;
+import pl.tks.gr3.cinema.viewrest.output.TicketDTO;
+import pl.tks.gr3.cinema.controllers.interfaces.TicketControllerInterface;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -29,22 +29,22 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/tickets")
-public class TicketController implements TicketServiceInterface {
+public class TicketController implements TicketControllerInterface {
 
     private static final Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
 
-    private final TicketService ticketService;
-    private final ClientService clientService;
-    private final JWSService jwsService;
+    private final TicketServiceInterface ticketService;
+    private final UserServiceInterface<Client> clientService;
+    private final JWSServiceInterface jwsService;
 
     @Autowired
-    public TicketController(TicketService ticketService, ClientService clientService, JWSService jwsService) {
+    public TicketController(TicketServiceInterface ticketService, UserServiceInterface<Client> clientService, JWSServiceInterface jwsService) {
         this.ticketService = ticketService;
         this.clientService = clientService;
         this.jwsService = jwsService;
     }
 
-    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).STAFF)")
+    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).STAFF)")
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Override
     public ResponseEntity<?> create(@RequestBody TicketInputDTO ticketInputDTO) {
@@ -65,7 +65,7 @@ public class TicketController implements TicketServiceInterface {
         }
     }
 
-    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).CLIENT)")
+    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).CLIENT)")
     @PostMapping(value = "/self", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> create(@RequestBody TicketSelfInputDTO ticketSelfInputDTO) {
         try {
@@ -85,7 +85,7 @@ public class TicketController implements TicketServiceInterface {
         }
     }
 
-    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).STAFF) or hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).CLIENT)")
+    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).STAFF) or hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).CLIENT)")
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Override
     public ResponseEntity<?> findByUUID(@PathVariable("id") UUID ticketID) {
@@ -110,7 +110,7 @@ public class TicketController implements TicketServiceInterface {
         }
     }
 
-    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).STAFF)")
+    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).STAFF)")
     @GetMapping(value = "/all", produces = MediaType.APPLICATION_JSON_VALUE)
     @Override
     public ResponseEntity<?> findAll() {
@@ -131,7 +131,7 @@ public class TicketController implements TicketServiceInterface {
         }
     }
 
-    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).CLIENT)")
+    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).CLIENT)")
     @PutMapping(value = "/update", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> update(@RequestHeader(value = HttpHeaders.IF_MATCH) String ifMatch, @RequestBody TicketDTO ticketDTO) {
         try {
@@ -160,7 +160,7 @@ public class TicketController implements TicketServiceInterface {
         }
     }
 
-    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).CLIENT)")
+    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).CLIENT)")
     @DeleteMapping(value = "/{id}/delete")
     @Override
     public ResponseEntity<?> delete(@PathVariable("id") UUID ticketID) {

@@ -9,16 +9,16 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import pl.tks.gr3.cinema.exceptions.services.crud.movie.MovieServiceMovieNotFoundException;
-import pl.tks.gr3.cinema.security.services.JWSService;
-import pl.pas.gr3.dto.output.MovieDTO;
-import pl.pas.gr3.dto.input.MovieInputDTO;
-import pl.pas.gr3.dto.output.TicketDTO;
-import pl.tks.gr3.cinema.exceptions.services.GeneralServiceException;
-import pl.tks.gr3.cinema.services.implementations.MovieService;
-import pl.tks.gr3.cinema.model.Movie;
-import pl.tks.gr3.cinema.model.Ticket;
-import pl.tks.gr3.cinema.controllers.interfaces.MovieServiceInterface;
+import pl.tks.gr3.cinema.application_services.exceptions.GeneralServiceException;
+import pl.tks.gr3.cinema.application_services.exceptions.crud.movie.MovieServiceMovieNotFoundException;
+import pl.tks.gr3.cinema.domain_model.Movie;
+import pl.tks.gr3.cinema.domain_model.Ticket;
+import pl.tks.gr3.cinema.ports.userinterface.JWSServiceInterface;
+import pl.tks.gr3.cinema.ports.userinterface.MovieServiceInterface;
+import pl.tks.gr3.cinema.viewrest.input.MovieInputDTO;
+import pl.tks.gr3.cinema.viewrest.output.MovieDTO;
+import pl.tks.gr3.cinema.viewrest.output.TicketDTO;
+import pl.tks.gr3.cinema.controllers.interfaces.MovieControllerInterface;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -28,20 +28,20 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/movies")
-public class MovieController implements MovieServiceInterface {
+public class MovieController implements MovieControllerInterface {
 
     private final static Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
 
-    private final MovieService movieService;
-    private final JWSService jwsService;
+    private final MovieServiceInterface movieService;
+    private final JWSServiceInterface jwsService;
 
     @Autowired
-    public MovieController(MovieService movieService, JWSService jwsService) {
+    public MovieController(MovieServiceInterface movieService, JWSServiceInterface jwsService) {
         this.movieService = movieService;
         this.jwsService = jwsService;
     }
 
-    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).STAFF)")
+    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).STAFF)")
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Override
     public ResponseEntity<?> create(@RequestBody MovieInputDTO movieInputDTO) {
@@ -61,7 +61,7 @@ public class MovieController implements MovieServiceInterface {
         }
     }
 
-    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).STAFF) or hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).CLIENT)")
+    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).STAFF) or hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).CLIENT)")
     @GetMapping(value = "/all", produces = MediaType.APPLICATION_JSON_VALUE)
     @Override
     public ResponseEntity<?> findAll() {
@@ -82,7 +82,7 @@ public class MovieController implements MovieServiceInterface {
         }
     }
 
-    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).STAFF) or hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).CLIENT)")
+    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).STAFF) or hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).CLIENT)")
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Override
     public ResponseEntity<?> findByUUID(@PathVariable("id") UUID movieID) {
@@ -97,11 +97,11 @@ public class MovieController implements MovieServiceInterface {
         }
     }
 
-    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).STAFF)")
+    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).STAFF)")
     @GetMapping(value = "{id}/tickets", produces = MediaType.APPLICATION_JSON_VALUE)
     @Override
     public ResponseEntity<?> findAllTicketsForCertainMovie(@PathVariable("id") UUID movieID) {
-        List<Ticket> listOfTickets = this.movieService.getListOfTicketsForCertainMovie(movieID);
+        List<Ticket> listOfTickets = this.movieService.getListOfTickets(movieID);
         List<TicketDTO> listOfDTOs = new ArrayList<>();
         for (Ticket ticket : listOfTickets) {
             listOfDTOs.add(new TicketDTO(ticket.getTicketID(), ticket.getMovieTime(), ticket.getTicketPrice(), ticket.getUserID(), ticket.getMovieID()));
@@ -114,7 +114,7 @@ public class MovieController implements MovieServiceInterface {
         }
     }
 
-    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).STAFF)")
+    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).STAFF)")
     @PutMapping(value = "/update", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> update(@RequestHeader(value = HttpHeaders.IF_MATCH) String ifMatch, @RequestBody MovieDTO movieDTO) {
         try {
@@ -137,7 +137,7 @@ public class MovieController implements MovieServiceInterface {
         }
     }
 
-    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.model.users.Role).STAFF)")
+    @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.users.Role).STAFF)")
     @DeleteMapping(value = "/{id}/delete")
     @Override
     public ResponseEntity<?> delete(@PathVariable("id") UUID movieID) {
