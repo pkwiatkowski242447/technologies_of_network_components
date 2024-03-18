@@ -1,4 +1,4 @@
-package aggregates;
+package pl.tks.gr3.cinema.adapters.aggregates;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

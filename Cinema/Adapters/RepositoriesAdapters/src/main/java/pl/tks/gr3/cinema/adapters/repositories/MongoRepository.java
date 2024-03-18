@@ -11,6 +11,7 @@ import org.bson.codecs.pojo.ClassModel;
 import org.bson.codecs.pojo.Conventions;
 import org.bson.codecs.pojo.PojoCodecProvider;
 import org.bson.conversions.Bson;
+import pl.tks.gr3.cinema.adapters.connection.MongoDBConnector;
 import pl.tks.gr3.cinema.adapters.consts.model.MovieEntConstants;
 import pl.tks.gr3.cinema.adapters.consts.model.TicketEntConstants;
 import pl.tks.gr3.cinema.adapters.consts.model.UserEntConstants;
@@ -32,8 +33,8 @@ import java.util.UUID;
 
 public abstract class MongoRepository implements AutoCloseable {
 
-    private final static ConnectionString connectionString = new ConnectionString("mongodb://mongodbnode1:27020, mongodbnode2:27021, mongodbnode3:27022");
-    private final static MongoCredential mongoCredentials = MongoCredential.createCredential("admin", "admin", "adminpassword".toCharArray());
+//    private final static ConnectionString connectionString = new ConnectionString("mongodb://mongodbnode1:27020, mongodbnode2:27021, mongodbnode3:27022");
+//    private final static MongoCredential mongoCredentials = MongoCredential.createCredential("admin", "admin", "adminpassword".toCharArray());
 
     protected final static String userCollectionName = MongoRepositoryConstants.USERS_COLLECTION_NAME;
     protected final static String movieCollectionName = MongoRepositoryConstants.MOVIES_COLLECTION_NAME;
@@ -67,12 +68,22 @@ public abstract class MongoRepository implements AutoCloseable {
     // initDBConnection method
 
     protected void initDBConnection(String databaseName) {
+        MongoDBConnector.readConnectionData();
+
+        String connectionString = "mongodb://" + MongoDBConnector.getMongoHost() + ":" + MongoDBConnector.getMongoPort();
+
+        MongoCredential mongoCredentials = MongoCredential.createCredential(
+                MongoDBConnector.getUsername(),
+                MongoDBConnector.getMongoDatabase(),
+                MongoDBConnector.getPassword().toCharArray()
+        );
+
         MongoClientSettings mongoClientSettings = MongoClientSettings.builder()
                 .credential(mongoCredentials)
                 .readConcern(ReadConcern.MAJORITY)
                 .readPreference(ReadPreference.primary())
                 .writeConcern(WriteConcern.MAJORITY)
-                .applyConnectionString(connectionString)
+                .applyConnectionString(new ConnectionString(connectionString))
                 .uuidRepresentation(UuidRepresentation.STANDARD)
                 .codecRegistry(CodecRegistries.fromRegistries(
                         MongoClientSettings.getDefaultCodecRegistry(),
