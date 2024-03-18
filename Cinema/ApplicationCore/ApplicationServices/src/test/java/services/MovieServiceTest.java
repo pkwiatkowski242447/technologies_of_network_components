@@ -7,6 +7,7 @@ import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import pl.tks.gr3.cinema.adapters.aggregates.MovieRepositoryAdapter;
 import pl.tks.gr3.cinema.adapters.exceptions.MovieRepositoryException;
+import pl.tks.gr3.cinema.adapters.exceptions.crud.movie.MovieRepositoryMovieNotFoundException;
 import pl.tks.gr3.cinema.application_services.exceptions.crud.movie.*;
 import pl.tks.gr3.cinema.application_services.services.MovieService;
 import pl.tks.gr3.cinema.domain_model.Movie;
@@ -83,12 +84,12 @@ public class MovieServiceTest {
     }
 
     @Test
-    public void movieServiceCreateMovieExceptionThrown() {
+    public void movieServiceCreateMovieExceptionThrownTestNegative() {
         when(createMoviePort.create(
                 Mockito.eq(movieNo1.getMovieTitle()),
                 Mockito.eq(movieNo1.getMovieBasePrice()), Mockito.eq(movieNo1.getScrRoomNumber()),
                 Mockito.eq(movieNo1.getNumberOfAvailableSeats()))
-        ).thenThrow(MovieServiceCreateException.class);
+        ).thenThrow(MovieRepositoryException.class);
 
         assertThrows(MovieServiceCreateException.class, () -> movieService.create(movieNo1.getMovieTitle(), movieNo1.getMovieBasePrice(),
                 movieNo1.getScrRoomNumber(), movieNo1.getNumberOfAvailableSeats()));
@@ -130,7 +131,7 @@ public class MovieServiceTest {
     public void movieServiceFindMovieByIDThatIsNotInTheDatabaseTestNegative() {
         UUID searchedUUID = UUID.randomUUID();
 
-        when(readMoviePort.findByUUID(Mockito.eq(searchedUUID))).thenThrow(MovieServiceMovieNotFoundException.class);
+        when(readMoviePort.findByUUID(Mockito.eq(searchedUUID))).thenThrow(MovieRepositoryMovieNotFoundException.class);
 
         assertThrows(MovieServiceMovieNotFoundException.class, () -> movieService.findByUUID(searchedUUID));
 
@@ -141,7 +142,7 @@ public class MovieServiceTest {
     public void movieServiceFindMovieByIDWhenMovieRepositoryExceptionIsThrownTestNegative() {
         UUID searchedUUID = UUID.randomUUID();
 
-        when(readMoviePort.findByUUID(Mockito.eq(searchedUUID))).thenThrow(MovieServiceReadException.class);
+        when(readMoviePort.findByUUID(Mockito.eq(searchedUUID))).thenThrow(MovieRepositoryException.class);
 
         assertThrows(MovieServiceReadException.class, () -> movieService.findByUUID(searchedUUID));
 
