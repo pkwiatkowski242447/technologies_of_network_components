@@ -9,25 +9,32 @@ import pl.tks.gr3.cinema.application_services.exceptions.crud.authentication.log
 import pl.tks.gr3.cinema.application_services.exceptions.crud.authentication.login.AuthenticationServiceLoginClientException;
 import pl.tks.gr3.cinema.application_services.exceptions.crud.authentication.login.AuthenticationServiceLoginStaffException;
 import pl.tks.gr3.cinema.application_services.exceptions.crud.authentication.login.GeneralAuthenticationLoginException;
-import pl.tks.gr3.cinema.adapters.aggregates.UserRepositoryAdapter;
 import pl.tks.gr3.cinema.adapters.exceptions.UserRepositoryException;
 import pl.tks.gr3.cinema.adapters.exceptions.crud.user.UserRepositoryCreateUserDuplicateLoginException;
 import pl.tks.gr3.cinema.application_services.exceptions.crud.authentication.register.*;
 import pl.tks.gr3.cinema.domain_model.users.Admin;
 import pl.tks.gr3.cinema.domain_model.users.Client;
 import pl.tks.gr3.cinema.domain_model.users.Staff;
+import pl.tks.gr3.cinema.ports.infrastructure.users.*;
 import pl.tks.gr3.cinema.ports.userinterface.AuthenticationServiceInterface;
 
 @Service
 public class AuthenticationService implements AuthenticationServiceInterface {
 
-    private final UserRepositoryAdapter userRepository;
+    private final CreateUserPort createUserPort;
+    private final ReadUserPort readUserPort;
+
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
 
+
     @Autowired
-    public AuthenticationService(UserRepositoryAdapter userRepository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager) {
-        this.userRepository = userRepository;
+    public AuthenticationService(CreateUserPort createUserPort,
+                                 ReadUserPort readUserPort,
+                                 PasswordEncoder passwordEncoder,
+                                 AuthenticationManager authenticationManager) {
+        this.createUserPort = createUserPort;
+        this.readUserPort = readUserPort;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
     }
@@ -35,7 +42,7 @@ public class AuthenticationService implements AuthenticationServiceInterface {
     @Override
     public Client registerClient(String clientUsername, String clientPassword) throws GeneralAuthenticationRegisterException {
         try {
-            return userRepository.createClient(clientUsername, passwordEncoder.encode(clientPassword));
+            return createUserPort.createClient(clientUsername, passwordEncoder.encode(clientPassword));
         } catch (UserRepositoryCreateUserDuplicateLoginException exception) {
             throw new AuthenticationServiceUserWithGivenLoginExistsException(exception.getMessage(), exception);
         } catch (UserRepositoryException exception) {
@@ -46,7 +53,7 @@ public class AuthenticationService implements AuthenticationServiceInterface {
     @Override
     public Admin registerAdmin(String adminUsername, String adminPassword) throws GeneralAuthenticationRegisterException {
         try {
-            return userRepository.createAdmin(adminUsername, passwordEncoder.encode(adminPassword));
+            return createUserPort.createAdmin(adminUsername, passwordEncoder.encode(adminPassword));
         } catch (UserRepositoryCreateUserDuplicateLoginException exception) {
             throw new AuthenticationServiceUserWithGivenLoginExistsException(exception.getMessage(), exception);
         } catch (UserRepositoryException exception) {
@@ -57,7 +64,7 @@ public class AuthenticationService implements AuthenticationServiceInterface {
     @Override
     public Staff registerStaff(String staffUsername, String staffPassword) throws GeneralAuthenticationRegisterException {
         try {
-            return userRepository.createStaff(staffUsername, passwordEncoder.encode(staffPassword));
+            return createUserPort.createStaff(staffUsername, passwordEncoder.encode(staffPassword));
         } catch (UserRepositoryCreateUserDuplicateLoginException exception) {
             throw new AuthenticationServiceUserWithGivenLoginExistsException(exception.getMessage(), exception);
         } catch (UserRepositoryException exception) {
@@ -69,7 +76,7 @@ public class AuthenticationService implements AuthenticationServiceInterface {
     public Client loginClient(String clientUsername, String clientPassword) throws GeneralAuthenticationLoginException {
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(clientUsername, clientPassword));
         try {
-            return userRepository.findClientByLogin(clientUsername);
+            return readUserPort.findClientByLogin(clientUsername);
         } catch (UserRepositoryException exception) {
             throw new AuthenticationServiceLoginClientException(exception.getMessage(), exception);
         }
@@ -79,7 +86,7 @@ public class AuthenticationService implements AuthenticationServiceInterface {
     public Admin loginAdmin(String adminUsername, String adminPassword) throws GeneralAuthenticationLoginException {
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(adminUsername, adminPassword));
         try {
-            return userRepository.findAdminByLogin(adminUsername);
+            return readUserPort.findAdminByLogin(adminUsername);
         } catch (UserRepositoryException exception) {
             throw new AuthenticationServiceLoginAdminException(exception.getMessage(), exception);
         }
@@ -89,7 +96,7 @@ public class AuthenticationService implements AuthenticationServiceInterface {
     public Staff loginStaff(String staffUsername, String staffPassword) throws GeneralAuthenticationLoginException {
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(staffUsername, staffPassword));
         try {
-            return userRepository.findStaffByLogin(staffUsername);
+            return readUserPort.findStaffByLogin(staffUsername);
         } catch (UserRepositoryException exception) {
             throw new AuthenticationServiceLoginStaffException(exception.getMessage(), exception);
         }

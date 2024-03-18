@@ -6,19 +6,16 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import pl.tks.gr3.cinema.adapters.aggregates.TicketRepositoryAdapter;
-import pl.tks.gr3.cinema.adapters.exceptions.MovieRepositoryException;
 import pl.tks.gr3.cinema.adapters.exceptions.TicketRepositoryException;
 import pl.tks.gr3.cinema.adapters.model.MovieEnt;
 import pl.tks.gr3.cinema.adapters.model.TicketEnt;
 import pl.tks.gr3.cinema.adapters.model.users.ClientEnt;
 import pl.tks.gr3.cinema.adapters.repositories.TicketRepository;
-import pl.tks.gr3.cinema.domain_model.Movie;
 import pl.tks.gr3.cinema.domain_model.Ticket;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;

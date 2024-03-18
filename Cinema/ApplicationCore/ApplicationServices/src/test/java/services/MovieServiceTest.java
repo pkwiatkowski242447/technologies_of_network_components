@@ -10,6 +10,10 @@ import pl.tks.gr3.cinema.adapters.exceptions.MovieRepositoryException;
 import pl.tks.gr3.cinema.application_services.exceptions.crud.movie.*;
 import pl.tks.gr3.cinema.application_services.services.MovieService;
 import pl.tks.gr3.cinema.domain_model.Movie;
+import pl.tks.gr3.cinema.ports.infrastructure.movies.CreateMoviePort;
+import pl.tks.gr3.cinema.ports.infrastructure.movies.DeleteMoviePort;
+import pl.tks.gr3.cinema.ports.infrastructure.movies.ReadMoviePort;
+import pl.tks.gr3.cinema.ports.infrastructure.movies.UpdateMoviePort;
 
 import java.util.Arrays;
 import java.util.List;
@@ -22,8 +26,18 @@ import static org.mockito.Mockito.*;
 public class MovieServiceTest {
 
     @Mock
-    private MovieRepositoryAdapter movieRepositoryAdapter;
+    private CreateMoviePort createMoviePort;
 
+    @Mock
+    private ReadMoviePort readMoviePort;
+
+    @Mock
+    private UpdateMoviePort updateMoviePort;
+
+    @Mock
+    private DeleteMoviePort deleteMoviePort;
+
+    @InjectMocks
     private MovieService movieService;
 
     @Captor
@@ -41,18 +55,17 @@ public class MovieServiceTest {
         movieNo1 = new Movie(UUID.randomUUID(), "UniqueMovieNameNo1", 10, 1, 10);
         movieNo2 = new Movie(UUID.randomUUID(), "UniqueMovieNameNo2", 20, 2, 20);
         movieNo3 = new Movie(UUID.randomUUID(), "UniqueMovieNameNo3", 30, 3, 30);
-        movieService = new MovieService(movieRepositoryAdapter, movieRepositoryAdapter, movieRepositoryAdapter, movieRepositoryAdapter);
     }
 
     @Test
     public void movieServiceAllArgsConstructorTestPositive() {
-        MovieService testMovieService = new MovieService(movieRepositoryAdapter, movieRepositoryAdapter, movieRepositoryAdapter, movieRepositoryAdapter);
+        MovieService testMovieService = new MovieService(createMoviePort, readMoviePort, updateMoviePort, deleteMoviePort);
         assertNotNull(testMovieService);
     }
 
     @Test
     public void movieServiceCreateMovieTestPositive() throws MovieServiceCreateException {
-        when(movieRepositoryAdapter.create(
+        when(createMoviePort.create(
                 Mockito.eq(movieNo1.getMovieTitle()),
                 Mockito.eq(movieNo1.getMovieBasePrice()), Mockito.eq(movieNo1.getScrRoomNumber()),
                 Mockito.eq(movieNo1.getNumberOfAvailableSeats()))
@@ -65,13 +78,13 @@ public class MovieServiceTest {
         assertEquals(movieNo1.getMovieBasePrice(), movie.getMovieBasePrice());
         assertEquals(movieNo1.getScrRoomNumber(), movie.getScrRoomNumber());
         assertEquals(movieNo1.getNumberOfAvailableSeats(), movie.getNumberOfAvailableSeats());
-        verify(movieRepositoryAdapter, times(1)).create(movieNo1.getMovieTitle(), movieNo1.getMovieBasePrice(),
+        verify(createMoviePort, times(1)).create(movieNo1.getMovieTitle(), movieNo1.getMovieBasePrice(),
                 movieNo1.getScrRoomNumber(), movieNo1.getNumberOfAvailableSeats());
     }
 
     @Test
     public void movieServiceCreateMovieExceptionThrown() {
-        when(movieRepositoryAdapter.create(
+        when(createMoviePort.create(
                 Mockito.eq(movieNo1.getMovieTitle()),
                 Mockito.eq(movieNo1.getMovieBasePrice()), Mockito.eq(movieNo1.getScrRoomNumber()),
                 Mockito.eq(movieNo1.getNumberOfAvailableSeats()))
@@ -80,7 +93,7 @@ public class MovieServiceTest {
         assertThrows(MovieServiceCreateException.class, () -> movieService.create(movieNo1.getMovieTitle(), movieNo1.getMovieBasePrice(),
                 movieNo1.getScrRoomNumber(), movieNo1.getNumberOfAvailableSeats()));
 
-        verify(movieRepositoryAdapter, times(1)).create(movieNo1.getMovieTitle(), movieNo1.getMovieBasePrice(),
+        verify(createMoviePort, times(1)).create(movieNo1.getMovieTitle(), movieNo1.getMovieBasePrice(),
                 movieNo1.getScrRoomNumber(), movieNo1.getNumberOfAvailableSeats());
     }
 
@@ -91,53 +104,53 @@ public class MovieServiceTest {
         int scrRoomNumber = 1;
         int numberOfSeats = 2;
 
-        when(movieRepositoryAdapter.create(Mockito.isNull(), Mockito.eq(movieBasePrice),
+        when(createMoviePort.create(Mockito.isNull(), Mockito.eq(movieBasePrice),
                 Mockito.eq(scrRoomNumber), Mockito.eq(numberOfSeats))).thenThrow(MovieServiceCreateException.class);
 
         assertThrows(MovieServiceCreateException.class, () -> movieService.create(movieTitle, movieBasePrice, scrRoomNumber, numberOfSeats));
 
-        verify(movieRepositoryAdapter, times(1)).create(movieTitle, movieBasePrice, scrRoomNumber, numberOfSeats);
+        verify(createMoviePort, times(1)).create(movieTitle, movieBasePrice, scrRoomNumber, numberOfSeats);
     }
 
     // Read tests
 
     @Test
     public void movieServiceFindMovieByIDTestPositive() throws MovieServiceReadException {
-        when(movieRepositoryAdapter.findByUUID(Mockito.eq(movieNo1.getMovieID()))).thenReturn(movieNo1);
+        when(readMoviePort.findByUUID(Mockito.eq(movieNo1.getMovieID()))).thenReturn(movieNo1);
 
         Movie foundMovie = movieService.findByUUID(movieNo1.getMovieID());
 
         assertNotNull(foundMovie);
         assertEquals(movieNo1, foundMovie);
 
-        verify(movieRepositoryAdapter, times(1)).findByUUID(Mockito.eq(movieNo1.getMovieID()));
+        verify(readMoviePort, times(1)).findByUUID(Mockito.eq(movieNo1.getMovieID()));
     }
 
     @Test
     public void movieServiceFindMovieByIDThatIsNotInTheDatabaseTestNegative() {
         UUID searchedUUID = UUID.randomUUID();
 
-        when(movieRepositoryAdapter.findByUUID(Mockito.eq(searchedUUID))).thenThrow(MovieServiceMovieNotFoundException.class);
+        when(readMoviePort.findByUUID(Mockito.eq(searchedUUID))).thenThrow(MovieServiceMovieNotFoundException.class);
 
         assertThrows(MovieServiceMovieNotFoundException.class, () -> movieService.findByUUID(searchedUUID));
 
-        verify(movieRepositoryAdapter, times(1)).findByUUID(Mockito.eq(searchedUUID));
+        verify(readMoviePort, times(1)).findByUUID(Mockito.eq(searchedUUID));
     }
 
     @Test
     public void movieServiceFindMovieByIDWhenMovieRepositoryExceptionIsThrownTestNegative() {
         UUID searchedUUID = UUID.randomUUID();
 
-        when(movieRepositoryAdapter.findByUUID(Mockito.eq(searchedUUID))).thenThrow(MovieServiceReadException.class);
+        when(readMoviePort.findByUUID(Mockito.eq(searchedUUID))).thenThrow(MovieServiceReadException.class);
 
         assertThrows(MovieServiceReadException.class, () -> movieService.findByUUID(searchedUUID));
 
-        verify(movieRepositoryAdapter, times(1)).findByUUID(searchedUUID);
+        verify(readMoviePort, times(1)).findByUUID(searchedUUID);
     }
 
     @Test
     public void movieServiceFindAllMoviesTestPositive() throws MovieServiceReadException {
-        when(movieRepositoryAdapter.findAll()).thenReturn(Arrays.asList(movieNo1, movieNo2, movieNo3));
+        when(readMoviePort.findAll()).thenReturn(Arrays.asList(movieNo1, movieNo2, movieNo3));
 
         List<Movie> listOfMovies = movieService.findAll();
 
@@ -145,16 +158,16 @@ public class MovieServiceTest {
         assertFalse(listOfMovies.isEmpty());
         assertEquals(3, listOfMovies.size());
 
-        verify(movieRepositoryAdapter, times(1)).findAll();
+        verify(readMoviePort, times(1)).findAll();
     }
 
     @Test
     public void movieServiceFindAllMoviesWhenMovieRepositoryExceptionIsThrownTestNegative() {
-        when(movieRepositoryAdapter.findAll()).thenThrow(MovieRepositoryException.class);
+        when(readMoviePort.findAll()).thenThrow(MovieRepositoryException.class);
 
         assertThrows(MovieServiceReadException.class, () -> movieService.findAll());
 
-        verify(movieRepositoryAdapter, times(1)).findAll();
+        verify(readMoviePort, times(1)).findAll();
     }
 
 //     Update tests
@@ -178,7 +191,7 @@ public class MovieServiceTest {
 
         movieService.update(movieNo1);
 
-        verify(movieRepositoryAdapter).update(movieArgumentCaptor.capture());
+        verify(updateMoviePort).update(movieArgumentCaptor.capture());
 
         Movie capturedMovie = movieArgumentCaptor.getValue();
 
@@ -198,7 +211,7 @@ public class MovieServiceTest {
         assertNotEquals(scrRoomBefore, scrRoomAfter);
         assertNotEquals(noOfSeatsBefore, noOfSeatsAfter);
 
-        verify(movieRepositoryAdapter, times(1)).update(movieNo1);
+        verify(updateMoviePort, times(1)).update(movieNo1);
     }
 
     @Test
@@ -213,11 +226,11 @@ public class MovieServiceTest {
         movieNo1.setScrRoomNumber(scrRoomNumber);
         movieNo1.setNumberOfAvailableSeats(numberOfSeats);
 
-        doThrow(MovieServiceUpdateException.class).when(movieRepositoryAdapter).update(movieArgumentCaptor.capture());
+        doThrow(MovieServiceUpdateException.class).when(updateMoviePort).update(movieArgumentCaptor.capture());
 
         assertThrows(MovieServiceUpdateException.class, () -> movieService.update(movieNo1));
 
-        verify(movieRepositoryAdapter, times(1)).update(movieNo1);
+        verify(updateMoviePort, times(1)).update(movieNo1);
     }
 
     // Delete tests
@@ -226,10 +239,10 @@ public class MovieServiceTest {
     public void movieServiceDeleteMovieTestPositive() throws MovieServiceReadException, MovieServiceDeleteException {
         UUID removedMovieUUID = movieNo1.getMovieID();
 
-        when(movieRepositoryAdapter.findByUUID(removedMovieUUID)).thenThrow(MovieServiceDeleteException.class);
+        when(readMoviePort.findByUUID(removedMovieUUID)).thenThrow(MovieServiceDeleteException.class);
 
         movieService.delete(removedMovieUUID);
-        verify(movieRepositoryAdapter).delete(uuidArgumentCaptor.capture());
+        verify(deleteMoviePort).delete(uuidArgumentCaptor.capture());
 
         UUID capturedMovieUUID = uuidArgumentCaptor.getValue();
 
@@ -237,22 +250,22 @@ public class MovieServiceTest {
         assertEquals(removedMovieUUID, capturedMovieUUID);
         assertThrows(MovieServiceDeleteException.class, () -> movieService.findByUUID(removedMovieUUID));
 
-        verify(movieRepositoryAdapter, times(1)).delete(Mockito.eq(removedMovieUUID));
-        verify(movieRepositoryAdapter, times(1)).findByUUID(removedMovieUUID);
+        verify(deleteMoviePort, times(1)).delete(Mockito.eq(removedMovieUUID));
+        verify(readMoviePort, times(1)).findByUUID(removedMovieUUID);
     }
 
     @Test
     public void movieServiceDeleteMovieThatIsNotInTheDatabaseTestNegative() {
         UUID exampleUUID = UUID.randomUUID();
 
-        doThrow(MovieRepositoryException.class).when(movieRepositoryAdapter).delete(uuidArgumentCaptor.capture());
+        doThrow(MovieRepositoryException.class).when(deleteMoviePort).delete(uuidArgumentCaptor.capture());
 
         assertThrows(MovieServiceDeleteException.class, () -> movieService.delete(exampleUUID));
 
         UUID capturedMovieUUID = uuidArgumentCaptor.getValue();
         assertEquals(exampleUUID, capturedMovieUUID);
 
-        verify(movieRepositoryAdapter, times(1)).delete(Mockito.eq(exampleUUID));
+        verify(deleteMoviePort, times(1)).delete(Mockito.eq(exampleUUID));
     }
 
     @Test
@@ -262,13 +275,13 @@ public class MovieServiceTest {
 
         MovieRepositoryException movieRepositoryException = new MovieRepositoryException(errorMessage, exception);
 
-        doThrow(movieRepositoryException).when(movieRepositoryAdapter).update(any(Movie.class));
+        doThrow(movieRepositoryException).when(updateMoviePort).update(any(Movie.class));
 
         MovieServiceUpdateException thrownException = assertThrows(MovieServiceUpdateException.class, () -> movieService.update(movieNo1));
 
         assertTrue(thrownException.getMessage().contains(errorMessage));
 
-        verify(movieRepositoryAdapter, times(1)).update(any(Movie.class));
+        verify(updateMoviePort, times(1)).update(any(Movie.class));
     }
 
 }

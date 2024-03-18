@@ -6,7 +6,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import pl.tks.gr3.cinema.adapters.aggregates.MovieRepositoryAdapter;
-import pl.tks.gr3.cinema.adapters.converters.MovieConverter;
 import pl.tks.gr3.cinema.adapters.exceptions.MovieRepositoryException;
 import pl.tks.gr3.cinema.adapters.model.MovieEnt;
 import pl.tks.gr3.cinema.adapters.model.TicketEnt;
@@ -14,7 +13,6 @@ import pl.tks.gr3.cinema.adapters.model.users.ClientEnt;
 import pl.tks.gr3.cinema.adapters.repositories.MovieRepository;
 import pl.tks.gr3.cinema.domain_model.Movie;
 import pl.tks.gr3.cinema.domain_model.Ticket;
-import pl.tks.gr3.cinema.domain_model.users.Admin;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
