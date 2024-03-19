@@ -104,7 +104,7 @@ public class StaffService implements UserServiceInterface<Staff> {
     @Override
     public void activate(UUID staffID) throws StaffServiceActivationException {
         try {
-            this.activateUserPort.activate(this.readUserPort.findByUUID(staffID));
+            this.activateUserPort.activate(this.readUserPort.findStaffByUUID(staffID));
         } catch (UserRepositoryException exception) {
             throw new StaffServiceActivationException(exception.getMessage(), exception);
         }
@@ -113,7 +113,7 @@ public class StaffService implements UserServiceInterface<Staff> {
     @Override
     public void deactivate(UUID staffID) throws StaffServiceDeactivationException {
         try {
-            this.deactivateUserPort.deactivate(this.readUserPort.findByUUID(staffID));
+            this.deactivateUserPort.deactivate(this.readUserPort.findStaffByUUID(staffID));
         } catch (UserRepositoryException exception) {
             throw new StaffServiceDeactivationException(exception.getMessage(), exception);
         }

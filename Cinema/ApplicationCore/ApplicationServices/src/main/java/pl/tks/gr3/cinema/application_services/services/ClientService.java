@@ -103,7 +103,7 @@ public class ClientService implements UserServiceInterface<Client> {
     @Override
     public void activate(UUID clientID) throws ClientServiceActivationException {
         try {
-            this.activateUserPort.activate(this.readUserPort.findByUUID(clientID));
+            this.activateUserPort.activate(this.readUserPort.findClientByUUID(clientID));
         } catch (UserRepositoryException exception) {
             throw new ClientServiceActivationException(exception.getMessage(), exception);
         }
@@ -112,7 +112,7 @@ public class ClientService implements UserServiceInterface<Client> {
     @Override
     public void deactivate(UUID clientID) throws ClientServiceDeactivationException {
         try {
-            this.deactivateUserPort.deactivate(this.readUserPort.findByUUID(clientID));
+            this.deactivateUserPort.deactivate(this.readUserPort.findClientByUUID(clientID));
         } catch (UserRepositoryException exception) {
             throw new ClientServiceDeactivationException(exception.getMessage(), exception);
         }

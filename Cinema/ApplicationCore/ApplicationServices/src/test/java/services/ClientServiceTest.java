@@ -186,7 +186,7 @@ public class ClientServiceTest {
     }
 
     @Test
-    public void clientServiceFindAllClientsWhenUserRepositoryExceptionIsThrownTestNegative() {
+    public void clientServiceFindAllClientsMatchingLoginWhenUserRepositoryExceptionIsThrownTestNegative() {
         String exampleLogin = "Example";
 
         when(readUserPort.findAllClientsMatchingLogin(Mockito.eq(exampleLogin))).thenThrow(UserRepositoryException.class);
@@ -205,6 +205,15 @@ public class ClientServiceTest {
         assertNotNull(listOfClients);
         assertFalse(listOfClients.isEmpty());
         assertEquals(3, listOfClients.size());
+
+        verify(readUserPort, times(1)).findAllClients();
+    }
+
+    @Test
+    public void clientServiceFindAllClientsWhenUserRepositoryExceptionIsThrownTestNegative() throws ClientServiceReadException {
+        when(readUserPort.findAllClients()).thenThrow(UserRepositoryException.class);
+
+        assertThrows(ClientServiceReadException.class, () -> clientService.findAll());
 
         verify(readUserPort, times(1)).findAllClients();
     }
@@ -289,84 +298,84 @@ public class ClientServiceTest {
 
     // Activate tests
 
-//    @Test
-//    public void clientServiceActivateClientTestPositive() {
-//        clientNo2.setUserStatusActive(false);
-//
-//        when(readUserPort.findClientByUUID(clientNo2.getUserID())).thenReturn(clientNo2);
-//
-//        clientService.activate(clientNo2.getUserID());
-//
-//        verify(activateUserPort).activate(clientArgumentCaptor.capture());
-//
-//        Client capturedClient = clientArgumentCaptor.getValue();
-//
-//        assertNotNull(capturedClient);
-//        assertEquals(clientNo2, capturedClient);
-//
-//        verify(activateUserPort, times(1)).activate(Mockito.eq(clientNo2));
-//        verify(readUserPort, times(1)).findClientByUUID(Mockito.eq(clientNo2.getUserID()));
-//    }
-//
-//    @Test
-//    public void clientServiceDeactivateClientThatIsNotInTheDatabaseTestNegative() {
-//        Client client = new Client(UUID.randomUUID(), "SomeOther", "SomeOtherC");
-//        assertNotNull(client);
-//
-//        when(readUserPort.findClientByUUID(client.getUserID())).thenReturn(client);
-//
-//        doThrow(UserRepositoryException.class).when(activateUserPort).activate(clientArgumentCaptor.capture());
-//
-//        assertThrows(ClientServiceActivationException.class, () -> clientService.activate(client.getUserID()));
-//
-//        Client capturedClient = clientArgumentCaptor.getValue();
-//
-//        assertNotNull(capturedClient);
-//        assertEquals(client, capturedClient);
-//
-//        verify(activateUserPort, times(1)).activate(client);
-//    }
+    @Test
+    public void clientServiceActivateClientTestPositive() {
+        clientNo2.setUserStatusActive(false);
+
+        when(readUserPort.findClientByUUID(clientNo2.getUserID())).thenReturn(clientNo2);
+
+        clientService.activate(clientNo2.getUserID());
+
+        verify(activateUserPort).activate(clientArgumentCaptor.capture());
+
+        Client capturedClient = clientArgumentCaptor.getValue();
+
+        assertNotNull(capturedClient);
+        assertEquals(clientNo2, capturedClient);
+
+        verify(activateUserPort, times(1)).activate(Mockito.eq(clientNo2));
+        verify(readUserPort, times(1)).findClientByUUID(Mockito.eq(clientNo2.getUserID()));
+    }
+
+    @Test
+    public void clientServiceDeactivateClientThatIsNotInTheDatabaseTestNegative() {
+        Client client = new Client(UUID.randomUUID(), "SomeOther", "SomeOtherC");
+        assertNotNull(client);
+
+        when(readUserPort.findClientByUUID(client.getUserID())).thenReturn(client);
+
+        doThrow(UserRepositoryException.class).when(activateUserPort).activate(clientArgumentCaptor.capture());
+
+        assertThrows(ClientServiceActivationException.class, () -> clientService.activate(client.getUserID()));
+
+        Client capturedClient = clientArgumentCaptor.getValue();
+
+        assertNotNull(capturedClient);
+        assertEquals(client, capturedClient);
+
+        verify(activateUserPort, times(1)).activate(client);
+    }
 
     // Deactivate tests
 
-//    @Test
-//    public void clientServiceDeactivateClientTestPositive() {
-//        clientNo3.setUserStatusActive(true);
-//
-//        when(readUserPort.findClientByUUID(clientNo3.getUserID())).thenReturn(clientNo3);
-//
-//        clientService.deactivate(clientNo3.getUserID());
-//
-//        verify(deactivateUserPort).deactivate(clientArgumentCaptor.capture());
-//
-//        Client capturedClient = clientArgumentCaptor.getValue();
-//
-//        assertNotNull(capturedClient);
-//        assertEquals(clientNo3, capturedClient);
-//
-//        verify(deactivateUserPort, times(1)).deactivate(Mockito.eq(clientNo3));
-//        verify(readUserPort, times(1)).findClientByUUID(clientNo3.getUserID());
-//    }
-//
-//    @Test
-//    public void clientServiceActivateClientThatIsNotInTheDatabaseTestNegative() {
-//        Client client = new Client(UUID.randomUUID(), "SomeOtherClientLoginNo3", "SomeOtherClientPasswordNo3");
-//        assertNotNull(client);
-//
-//        when(readUserPort.findClientByUUID(client.getUserID())).thenReturn(client);
-//
-//        doThrow(UserRepositoryException.class).when(deactivateUserPort).deactivate(clientArgumentCaptor.capture());
-//
-//        assertThrows(ClientServiceDeactivationException.class, () -> clientService.deactivate(client.getUserID()));
-//
-//        Client capturedClient = clientArgumentCaptor.getValue();
-//
-//        assertNotNull(capturedClient);
-//        assertEquals(client, capturedClient);
-//
-//        verify(deactivateUserPort, times(1)).deactivate(client);
-//        verify(readUserPort, times(1)).findClientByUUID(client.getUserID());
-//    }
+    @Test
+    public void clientServiceDeactivateClientTestPositive() {
+        clientNo3.setUserStatusActive(true);
+
+        when(readUserPort.findClientByUUID(clientNo3.getUserID())).thenReturn(clientNo3);
+
+        clientService.deactivate(clientNo3.getUserID());
+
+        verify(deactivateUserPort).deactivate(clientArgumentCaptor.capture());
+
+        Client capturedClient = clientArgumentCaptor.getValue();
+
+        assertNotNull(capturedClient);
+        assertEquals(clientNo3, capturedClient);
+
+        verify(deactivateUserPort, times(1)).deactivate(Mockito.eq(clientNo3));
+        verify(readUserPort, times(1)).findClientByUUID(clientNo3.getUserID());
+    }
+
+    @Test
+    public void clientServiceActivateClientThatIsNotInTheDatabaseTestNegative() {
+        Client client = new Client(UUID.randomUUID(), "SomeOtherClientLoginNo3", "SomeOtherClientPasswordNo3");
+        assertNotNull(client);
+
+        when(readUserPort.findClientByUUID(client.getUserID())).thenReturn(client);
+
+        doThrow(UserRepositoryException.class).when(deactivateUserPort).deactivate(clientArgumentCaptor.capture());
+
+        assertThrows(ClientServiceDeactivationException.class, () -> clientService.deactivate(client.getUserID()));
+
+        Client capturedClient = clientArgumentCaptor.getValue();
+
+        assertNotNull(capturedClient);
+        assertEquals(client, capturedClient);
+
+        verify(deactivateUserPort, times(1)).deactivate(client);
+        verify(readUserPort, times(1)).findClientByUUID(client.getUserID());
+    }
 
     @Test
     public void clientServiceUpdateClientWhenUserRepositoryExceptionIsThrownTestNegative() {

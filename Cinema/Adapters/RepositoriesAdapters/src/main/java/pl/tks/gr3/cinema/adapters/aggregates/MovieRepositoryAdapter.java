@@ -31,19 +31,19 @@ public class MovieRepositoryAdapter implements CreateMoviePort, ReadMoviePort, U
 
     @Override
     public Movie create(String movieTitle, double movieBasePrice, int scrRoomNumber, int numberOfAvailableSeats) throws MovieRepositoryException {
-        return MovieConverter.convertMovieEntToMovie(movieRepository.create(movieTitle, movieBasePrice, scrRoomNumber, numberOfAvailableSeats));
+        return MovieConverter.convertToMovie(movieRepository.create(movieTitle, movieBasePrice, scrRoomNumber, numberOfAvailableSeats));
     }
 
     // R
 
     @Override
     public List<Movie> findAll() throws MovieRepositoryException {
-        return movieRepository.findAll().stream().map(MovieConverter::convertMovieEntToMovie).toList();
+        return movieRepository.findAll().stream().map(MovieConverter::convertToMovie).toList();
     }
 
     @Override
     public Movie findByUUID(UUID movieID) throws MovieRepositoryException {
-        return MovieConverter.convertMovieEntToMovie(movieRepository.findByUUID(movieID));
+        return MovieConverter.convertToMovie(movieRepository.findByUUID(movieID));
     }
 
     @Override
@@ -55,7 +55,7 @@ public class MovieRepositoryAdapter implements CreateMoviePort, ReadMoviePort, U
 
     @Override
     public void update(Movie movie) throws MovieRepositoryException {
-        movieRepository.update(MovieConverter.convertMovieToMovieEnt(movie));
+        movieRepository.update(MovieConverter.convertToMovieEnt(movie));
     }
 
     // D
