@@ -1730,7 +1730,7 @@ public class AuthenticationControllerTest {
         RequestSpecification requestSpecification = RestAssured.given();
         requestSpecification.header("Authorization", "Bearer " + accessToken);
 
-        Response response = requestSpecification.post(TestConstants.staffsURL + "/" + adminUser.getUserID() + "/deactivate");
+        Response response = requestSpecification.post(TestConstants.adminsURL + "/" + adminUser.getUserID() + "/deactivate");
         logger.debug("Response: " + response.getBody().asString());
         ValidatableResponse validatableResponse = response.then();
         validatableResponse.statusCode(204);
