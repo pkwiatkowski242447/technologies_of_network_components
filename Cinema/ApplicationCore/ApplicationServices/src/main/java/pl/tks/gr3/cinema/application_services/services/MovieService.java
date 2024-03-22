@@ -11,13 +11,14 @@ import pl.tks.gr3.cinema.ports.infrastructure.movies.CreateMoviePort;
 import pl.tks.gr3.cinema.ports.infrastructure.movies.DeleteMoviePort;
 import pl.tks.gr3.cinema.ports.infrastructure.movies.ReadMoviePort;
 import pl.tks.gr3.cinema.ports.infrastructure.movies.UpdateMoviePort;
-import pl.tks.gr3.cinema.ports.userinterface.MovieServiceInterface;
+import pl.tks.gr3.cinema.ports.userinterface.movies.ReadMovieUseCase;
+import pl.tks.gr3.cinema.ports.userinterface.movies.WriteMovieUseCase;
 
 import java.util.List;
 import java.util.UUID;
 
 @Service
-public class MovieService implements MovieServiceInterface {
+public class MovieService implements ReadMovieUseCase, WriteMovieUseCase {
 
     private final CreateMoviePort createMoviePort;
     private final ReadMoviePort readMoviePort;

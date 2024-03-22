@@ -24,6 +24,8 @@ import pl.tks.gr3.cinema.domain_model.users.Admin;
 import pl.tks.gr3.cinema.domain_model.users.Client;
 import pl.tks.gr3.cinema.domain_model.users.Staff;
 import pl.tks.gr3.cinema.ports.infrastructure.users.*;
+import pl.tks.gr3.cinema.ports.userinterface.users.ReadUserUseCase;
+import pl.tks.gr3.cinema.ports.userinterface.users.WriteUserUseCase;
 import pl.tks.gr3.cinema.viewrest.input.UserInputDTO;
 import pl.tks.gr3.cinema.viewrest.output.UserOutputDTO;
 import pl.tks.gr3.cinema.viewrest.input.UserUpdateDTO;
@@ -40,7 +42,6 @@ public class AdminControllerTest {
     private static final Logger logger = LoggerFactory.getLogger(AdminControllerTest.class);
 
     private static UserRepository userRepository;
-    private static AdminService adminService;
     private static PasswordEncoder passwordEncoder;
 
     private static CreateUserPort createUserPort;
@@ -49,6 +50,9 @@ public class AdminControllerTest {
     private static ActivateUserPort activateUserPort;
     private static DeactivateUserPort deactivateUserPort;
     private static DeleteUserPort deleteUserPort;
+
+    private static ReadUserUseCase<Admin> readAdmin;
+    private static WriteUserUseCase<Admin> writeAdmin;
 
     private Client clientUser;
     private Staff staffUser;
@@ -68,7 +72,10 @@ public class AdminControllerTest {
         deactivateUserPort = userRepositoryAdapter;
         deleteUserPort = userRepositoryAdapter;
 
-        adminService = new AdminService(createUserPort, readUserPort, updateUserPort, activateUserPort, deactivateUserPort, deleteUserPort);
+        AdminService adminService = new AdminService(createUserPort, readUserPort, updateUserPort, activateUserPort, deactivateUserPort, deleteUserPort);
+
+        readAdmin = adminService;
+        writeAdmin = adminService;
 
         passwordEncoder = new BCryptPasswordEncoder();
 
@@ -319,7 +326,7 @@ public class AdminControllerTest {
 
     @Test
     public void adminControllerFindAllAdminsMatchingLoginAsUnauthenticatedUserTestNegative() {
-        adminService.create("ExtraAdminLogin", "ExtraAdminPassword");
+        writeAdmin.create("ExtraAdminLogin", "ExtraAdminPassword");
 
         String matchedLogin = "Extra";
         String path = TestConstants.adminsURL + "?match=" + matchedLogin;
@@ -336,7 +343,7 @@ public class AdminControllerTest {
 
     @Test
     public void adminControllerFindAllAdminsMatchingLoginAsAuthenticatedClientTestNegative() {
-        adminService.create("ExtraAdminLogin", "ExtraAdminPassword");
+        writeAdmin.create("ExtraAdminLogin", "ExtraAdminPassword");
 
         String accessToken = this.loginToAccount(new UserInputDTO(clientUser.getUserLogin(), passwordNotHashed), TestConstants.clientLoginURL);
 
@@ -356,7 +363,7 @@ public class AdminControllerTest {
 
     @Test
     public void adminControllerFindAllAdminsMatchingLoginAsAuthenticatedStaffTestNegative() {
-        adminService.create("ExtraAdminLogin", "ExtraAdminPassword");
+        writeAdmin.create("ExtraAdminLogin", "ExtraAdminPassword");
 
         String accessToken = this.loginToAccount(new UserInputDTO(staffUser.getUserLogin(), passwordNotHashed), TestConstants.staffLoginURL);
 
@@ -376,7 +383,7 @@ public class AdminControllerTest {
 
     @Test
     public void adminControllerFindAllAdminsMatchingLoginAsAuthenticatedAdminTestPositive() {
-        adminService.create("ExtraAdminLogin", "ExtraAdminPassword");
+        writeAdmin.create("ExtraAdminLogin", "ExtraAdminPassword");
 
         String accessToken = this.loginToAccount(new UserInputDTO(adminUserNo1.getUserLogin(), passwordNotHashed), TestConstants.adminLoginURL);
 
@@ -657,7 +664,7 @@ public class AdminControllerTest {
         validatableResponse = response.then();
         validatableResponse.statusCode(204);
 
-        Admin foundAdmin = adminService.findByUUID(adminUserNo1.getUserID());
+        Admin foundAdmin = readAdmin.findByUUID(adminUserNo1.getUserID());
 
         String adminPasswordAfter = foundAdmin.getUserPassword();
 
@@ -966,7 +973,7 @@ public class AdminControllerTest {
         ValidatableResponse validatableResponse = response.then();
         validatableResponse.statusCode(204);
 
-        Admin foundAdmin = adminService.findByUUID(activatedAdminID);
+        Admin foundAdmin = readAdmin.findByUUID(activatedAdminID);
         boolean adminStatusActiveAfter = foundAdmin.isUserStatusActive();
 
         assertTrue(adminStatusActiveAfter);
@@ -1046,7 +1053,7 @@ public class AdminControllerTest {
         ValidatableResponse validatableResponse = response.then();
         validatableResponse.statusCode(204);
 
-        Admin foundAdmin = adminService.findByUUID(deactivatedAdminID);
+        Admin foundAdmin = readAdmin.findByUUID(deactivatedAdminID);
         boolean adminStatusActiveAfter = foundAdmin.isUserStatusActive();
 
         assertFalse(adminStatusActiveAfter);

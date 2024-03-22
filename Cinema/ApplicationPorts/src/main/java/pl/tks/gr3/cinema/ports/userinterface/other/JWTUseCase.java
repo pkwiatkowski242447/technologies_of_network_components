@@ -1,9 +1,9 @@
-package pl.tks.gr3.cinema.ports.userinterface;
+package pl.tks.gr3.cinema.ports.userinterface.other;
 
 import org.springframework.security.core.userdetails.UserDetails;
 import pl.tks.gr3.cinema.domain_model.users.User;
 
-public interface JWTServiceInterface {
+public interface JWTUseCase {
 
     String extractUsername(String jwtToken);
     String generateJWTToken(User user);

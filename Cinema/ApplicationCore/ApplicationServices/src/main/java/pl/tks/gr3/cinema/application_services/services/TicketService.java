@@ -10,7 +10,8 @@ import pl.tks.gr3.cinema.ports.infrastructure.tickets.CreateTicketPort;
 import pl.tks.gr3.cinema.ports.infrastructure.tickets.DeleteTicketPort;
 import pl.tks.gr3.cinema.ports.infrastructure.tickets.ReadTicketPort;
 import pl.tks.gr3.cinema.ports.infrastructure.tickets.UpdateTicketPort;
-import pl.tks.gr3.cinema.ports.userinterface.TicketServiceInterface;
+import pl.tks.gr3.cinema.ports.userinterface.tickets.ReadTicketUseCase;
+import pl.tks.gr3.cinema.ports.userinterface.tickets.WriteTicketUseCase;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
@@ -18,7 +19,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
-public class TicketService implements TicketServiceInterface {
+public class TicketService implements ReadTicketUseCase, WriteTicketUseCase {
 
     private final CreateTicketPort createTicketPort;
     private final ReadTicketPort readTicketPort;

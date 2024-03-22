@@ -33,6 +33,8 @@ import pl.tks.gr3.cinema.ports.infrastructure.movies.DeleteMoviePort;
 import pl.tks.gr3.cinema.ports.infrastructure.movies.ReadMoviePort;
 import pl.tks.gr3.cinema.ports.infrastructure.movies.UpdateMoviePort;
 import pl.tks.gr3.cinema.ports.infrastructure.users.*;
+import pl.tks.gr3.cinema.ports.userinterface.movies.ReadMovieUseCase;
+import pl.tks.gr3.cinema.ports.userinterface.movies.WriteMovieUseCase;
 import pl.tks.gr3.cinema.viewrest.input.UserInputDTO;
 import pl.tks.gr3.cinema.viewrest.input.MovieInputDTO;
 import pl.tks.gr3.cinema.viewrest.output.MovieDTO;
@@ -64,7 +66,9 @@ public class MovieControllerTest {
     private static DeactivateUserPort deactivateUserPort;
     private static DeleteUserPort deleteUserPort;
 
-    private static MovieService movieService;
+    private static ReadMovieUseCase readMovie;
+    private static WriteMovieUseCase writeMovie;
+
     private static PasswordEncoder passwordEncoder;
 
     private Movie movieNo1;
@@ -94,7 +98,10 @@ public class MovieControllerTest {
         deactivateUserPort = userRepositoryAdapter;
         deleteUserPort = userRepositoryAdapter;
 
-        movieService = new MovieService(createMoviePort, readMoviePort, updateMoviePort, deleteMoviePort);
+        MovieService movieService = new MovieService(createMoviePort, readMoviePort, updateMoviePort, deleteMoviePort);
+
+        readMovie = movieService;
+        writeMovie = movieService;
 
         passwordEncoder = new BCryptPasswordEncoder();
 
@@ -125,8 +132,8 @@ public class MovieControllerTest {
         }
 
         try {
-            movieNo1 = movieService.create("ExampleMovieTitleNo1", 38.45, 5, 40);
-            movieNo2 = movieService.create("ExampleMovieTitleNo1", 32.60, 2, 75);
+            movieNo1 = writeMovie.create("ExampleMovieTitleNo1", 38.45, 5, 40);
+            movieNo2 = writeMovie.create("ExampleMovieTitleNo1", 32.60, 2, 75);
         } catch (MovieServiceCreateException exception) {
             throw new RuntimeException("Could not create sample movies with movieRepository object.", exception);
         }
@@ -158,9 +165,9 @@ public class MovieControllerTest {
         }
 
         try {
-            List<Movie> listOfMovies = movieService.findAll();
+            List<Movie> listOfMovies = readMovie.findAll();
             for (Movie movie : listOfMovies) {
-                movieService.delete(movie.getMovieID());
+                writeMovie.delete(movie.getMovieID());
             }
         } catch (MovieServiceReadException | MovieServiceDeleteException exception) {
             throw new RuntimeException("Could not delete sample movies with movieRepository object.", exception);
@@ -1075,7 +1082,7 @@ public class MovieControllerTest {
         validatableResponse = response.then();
         validatableResponse.statusCode(204);
 
-        Movie foundMovie = movieService.findByUUID(movieNo1.getMovieID());
+        Movie foundMovie = readMovie.findByUUID(movieNo1.getMovieID());
 
         String movieTitleAfter = foundMovie.getMovieTitle();
         double movieBasePriceAfter = foundMovie.getMovieBasePrice();
@@ -1393,7 +1400,7 @@ public class MovieControllerTest {
         validatableResponse = response.then();
         validatableResponse.statusCode(204);
 
-        Movie foundMovie = movieService.findByUUID(movieNo1.getMovieID());
+        Movie foundMovie = readMovie.findByUUID(movieNo1.getMovieID());
 
         String movieTitleAfter = foundMovie.getMovieTitle();
         double movieBasePriceAfter = foundMovie.getMovieBasePrice();
@@ -1453,7 +1460,7 @@ public class MovieControllerTest {
         validatableResponse = response.then();
         validatableResponse.statusCode(204);
 
-        Movie foundMovie = movieService.findByUUID(movieNo1.getMovieID());
+        Movie foundMovie = readMovie.findByUUID(movieNo1.getMovieID());
 
         String movieTitleAfter = foundMovie.getMovieTitle();
         double movieBasePriceAfter = foundMovie.getMovieBasePrice();
@@ -1589,7 +1596,7 @@ public class MovieControllerTest {
         validatableResponse = response.then();
         validatableResponse.statusCode(204);
 
-        Movie foundMovie = movieService.findByUUID(movieNo1.getMovieID());
+        Movie foundMovie = readMovie.findByUUID(movieNo1.getMovieID());
 
         String movieTitleAfter = foundMovie.getMovieTitle();
         double movieBasePriceAfter = foundMovie.getMovieBasePrice();
@@ -1649,7 +1656,7 @@ public class MovieControllerTest {
         validatableResponse = response.then();
         validatableResponse.statusCode(204);
 
-        Movie foundMovie = movieService.findByUUID(movieNo1.getMovieID());
+        Movie foundMovie = readMovie.findByUUID(movieNo1.getMovieID());
 
         String movieTitleAfter = foundMovie.getMovieTitle();
         double movieBasePriceAfter = foundMovie.getMovieBasePrice();
@@ -1785,7 +1792,7 @@ public class MovieControllerTest {
         validatableResponse = response.then();
         validatableResponse.statusCode(204);
 
-        Movie foundMovie = movieService.findByUUID(movieNo1.getMovieID());
+        Movie foundMovie = readMovie.findByUUID(movieNo1.getMovieID());
 
         String movieTitleAfter = foundMovie.getMovieTitle();
         double movieBasePriceAfter = foundMovie.getMovieBasePrice();
@@ -1845,7 +1852,7 @@ public class MovieControllerTest {
         validatableResponse = response.then();
         validatableResponse.statusCode(204);
 
-        Movie foundMovie = movieService.findByUUID(movieNo1.getMovieID());
+        Movie foundMovie = readMovie.findByUUID(movieNo1.getMovieID());
 
         String movieTitleAfter = foundMovie.getMovieTitle();
         double movieBasePriceAfter = foundMovie.getMovieBasePrice();
@@ -1981,7 +1988,7 @@ public class MovieControllerTest {
         validatableResponse = response.then();
         validatableResponse.statusCode(204);
 
-        Movie foundMovie = movieService.findByUUID(movieNo1.getMovieID());
+        Movie foundMovie = readMovie.findByUUID(movieNo1.getMovieID());
 
         String movieTitleAfter = foundMovie.getMovieTitle();
         double movieBasePriceAfter = foundMovie.getMovieBasePrice();
@@ -2041,7 +2048,7 @@ public class MovieControllerTest {
         validatableResponse = response.then();
         validatableResponse.statusCode(204);
 
-        Movie foundMovie = movieService.findByUUID(movieNo1.getMovieID());
+        Movie foundMovie = readMovie.findByUUID(movieNo1.getMovieID());
 
         String movieTitleAfter = foundMovie.getMovieTitle();
         double movieBasePriceAfter = foundMovie.getMovieBasePrice();
@@ -2066,7 +2073,7 @@ public class MovieControllerTest {
         UUID removedMovieID = movieNo1.getMovieID();
         String path = TestConstants.moviesURL + "/" + removedMovieID;
 
-        Movie foundMovie = movieService.findByUUID(removedMovieID);
+        Movie foundMovie = readMovie.findByUUID(removedMovieID);
 
         assertNotNull(foundMovie);
         assertEquals(movieNo1.getMovieTitle(), foundMovie.getMovieTitle());
@@ -2088,7 +2095,7 @@ public class MovieControllerTest {
         UUID removedMovieID = movieNo1.getMovieID();
         String path = TestConstants.moviesURL + "/" + removedMovieID;
 
-        Movie foundMovie = movieService.findByUUID(removedMovieID);
+        Movie foundMovie = readMovie.findByUUID(removedMovieID);
 
         assertNotNull(foundMovie);
         assertEquals(movieNo1.getMovieTitle(), foundMovie.getMovieTitle());
@@ -2111,7 +2118,7 @@ public class MovieControllerTest {
         UUID removedMovieID = movieNo1.getMovieID();
         String path = TestConstants.moviesURL + "/" + removedMovieID + "/delete";
 
-        Movie foundMovie = movieService.findByUUID(removedMovieID);
+        Movie foundMovie = readMovie.findByUUID(removedMovieID);
 
         assertNotNull(foundMovie);
         assertEquals(movieNo1.getMovieTitle(), foundMovie.getMovieTitle());
@@ -2126,7 +2133,7 @@ public class MovieControllerTest {
         ValidatableResponse validatableResponse = response.then();
         validatableResponse.statusCode(204);
 
-        assertThrows(MovieServiceReadException.class, () -> movieService.findByUUID(removedMovieID));
+        assertThrows(MovieServiceReadException.class, () -> readMovie.findByUUID(removedMovieID));
     }
 
     @Test
@@ -2136,7 +2143,7 @@ public class MovieControllerTest {
         UUID removedMovieID = movieNo1.getMovieID();
         String path = TestConstants.moviesURL + "/" + removedMovieID + "/delete";
 
-        Movie foundMovie = movieService.findByUUID(removedMovieID);
+        Movie foundMovie = readMovie.findByUUID(removedMovieID);
 
         assertNotNull(foundMovie);
         assertEquals(movieNo1.getMovieTitle(), foundMovie.getMovieTitle());
@@ -2159,7 +2166,7 @@ public class MovieControllerTest {
         UUID removedMovieID = UUID.randomUUID();
         String path = TestConstants.moviesURL + "/" + removedMovieID + "/delete";
 
-        assertThrows(MovieServiceReadException.class, () -> movieService.findByUUID(removedMovieID));
+        assertThrows(MovieServiceReadException.class, () -> readMovie.findByUUID(removedMovieID));
 
         RequestSpecification requestSpecification = RestAssured.given();
         requestSpecification.header("Authorization", "Bearer " + accessToken);

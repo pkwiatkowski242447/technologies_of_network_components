@@ -51,6 +51,12 @@ import pl.tks.gr3.cinema.ports.infrastructure.tickets.DeleteTicketPort;
 import pl.tks.gr3.cinema.ports.infrastructure.tickets.ReadTicketPort;
 import pl.tks.gr3.cinema.ports.infrastructure.tickets.UpdateTicketPort;
 import pl.tks.gr3.cinema.ports.infrastructure.users.*;
+import pl.tks.gr3.cinema.ports.userinterface.movies.ReadMovieUseCase;
+import pl.tks.gr3.cinema.ports.userinterface.movies.WriteMovieUseCase;
+import pl.tks.gr3.cinema.ports.userinterface.tickets.ReadTicketUseCase;
+import pl.tks.gr3.cinema.ports.userinterface.tickets.WriteTicketUseCase;
+import pl.tks.gr3.cinema.ports.userinterface.users.ReadUserUseCase;
+import pl.tks.gr3.cinema.ports.userinterface.users.WriteUserUseCase;
 import pl.tks.gr3.cinema.viewrest.input.UserInputDTO;
 import pl.tks.gr3.cinema.viewrest.input.TicketSelfInputDTO;
 import pl.tks.gr3.cinema.viewrest.output.TicketDTO;
@@ -91,11 +97,21 @@ public class TicketControllerTest {
     private static UpdateMoviePort updateMoviePort;
     private static DeleteMoviePort deleteMoviePort;
 
-    private static TicketService ticketService;
-    private static ClientService clientService;
-    private static AdminService adminService;
-    private static StaffService staffService;
-    private static MovieService movieService;
+    private static ReadTicketUseCase readTicket;
+    private static WriteTicketUseCase writeTicket;
+
+    private static ReadMovieUseCase readMovie;
+    private static WriteMovieUseCase writeMovie;
+
+    private static ReadUserUseCase<Client> readClient;
+    private static WriteUserUseCase<Client> writeClient;
+
+    private static ReadUserUseCase<Admin> readAdmin;
+    private static WriteUserUseCase<Admin> writeAdmin;
+
+    private static ReadUserUseCase<Staff> readStaff;
+    private static WriteUserUseCase<Staff> writeStaff;
+
     private static PasswordEncoder passwordEncoder;
 
     private Client clientNo1;
@@ -136,7 +152,10 @@ public class TicketControllerTest {
         updateTicketPort = ticketRepositoryAdapter;
         deleteTicketPort = ticketRepositoryAdapter;
 
-        ticketService = new TicketService(createTicketPort, readTicketPort, updateTicketPort, deleteTicketPort);
+        TicketService ticketService = new TicketService(createTicketPort, readTicketPort, updateTicketPort, deleteTicketPort);
+
+        readTicket = ticketService;
+        writeTicket = ticketService;
 
         createUserPort = userRepositoryAdapter;
         readUserPort = userRepositoryAdapter;
@@ -145,16 +164,28 @@ public class TicketControllerTest {
         deactivateUserPort = userRepositoryAdapter;
         deleteUserPort = userRepositoryAdapter;
 
-        clientService = new ClientService(createUserPort, readUserPort, updateUserPort, activateUserPort, deactivateUserPort, deleteUserPort);
-        adminService = new AdminService(createUserPort, readUserPort, updateUserPort, activateUserPort, deactivateUserPort, deleteUserPort);
-        staffService = new StaffService(createUserPort, readUserPort, updateUserPort, activateUserPort, deactivateUserPort, deleteUserPort);
+        ClientService clientService = new ClientService(createUserPort, readUserPort, updateUserPort, activateUserPort, deactivateUserPort, deleteUserPort);
+        AdminService adminService = new AdminService(createUserPort, readUserPort, updateUserPort, activateUserPort, deactivateUserPort, deleteUserPort);
+        StaffService staffService = new StaffService(createUserPort, readUserPort, updateUserPort, activateUserPort, deactivateUserPort, deleteUserPort);
+
+        readClient = clientService;
+        writeClient = clientService;
+
+        readStaff = staffService;
+        writeStaff = staffService;
+
+        readAdmin = adminService;
+        writeAdmin = adminService;
 
         createMoviePort = movieRepositoryAdapter;
         readMoviePort = movieRepositoryAdapter;
         updateMoviePort = movieRepositoryAdapter;
         deleteMoviePort = movieRepositoryAdapter;
 
-        movieService = new MovieService(createMoviePort, readMoviePort, updateMoviePort, deleteMoviePort);
+        MovieService movieService = new MovieService(createMoviePort, readMoviePort, updateMoviePort, deleteMoviePort);
+
+        readMovie = movieService;
+        writeMovie = movieService;
 
         passwordEncoder = new BCryptPasswordEncoder();
 
@@ -175,29 +206,29 @@ public class TicketControllerTest {
     @BeforeEach
     public void initializeSampleData() {
         try {
-            clientNo1 = clientService.create("ClientLoginNo1", passwordEncoder.encode(passwordNotHashed));
-            clientNo2 = clientService.create("ClientLoginNo2", passwordEncoder.encode(passwordNotHashed));
+            clientNo1 = writeClient.create("ClientLoginNo1", passwordEncoder.encode(passwordNotHashed));
+            clientNo2 = writeClient.create("ClientLoginNo2", passwordEncoder.encode(passwordNotHashed));
         } catch (ClientServiceCreateException exception) {
             logger.error(exception.getMessage());
         }
 
         try {
-            adminNo1 = adminService.create("AdminLoginNo1", passwordEncoder.encode(passwordNotHashed));
-            adminNo2 = adminService.create("AdminLoginNo2", passwordEncoder.encode(passwordNotHashed));
+            adminNo1 = writeAdmin.create("AdminLoginNo1", passwordEncoder.encode(passwordNotHashed));
+            adminNo2 = writeAdmin.create("AdminLoginNo2", passwordEncoder.encode(passwordNotHashed));
         } catch (AdminServiceCreateException exception) {
             logger.error(exception.getMessage());
         }
 
         try {
-            staffNo1 = staffService.create("StaffLoginNo1", passwordEncoder.encode(passwordNotHashed));
-            staffNo2 = staffService.create("StaffLoginNo2", passwordEncoder.encode(passwordNotHashed));
+            staffNo1 = writeStaff.create("StaffLoginNo1", passwordEncoder.encode(passwordNotHashed));
+            staffNo2 = writeStaff.create("StaffLoginNo2", passwordEncoder.encode(passwordNotHashed));
         } catch (StaffServiceCreateException exception) {
             logger.error(exception.getMessage());
         }
 
         try {
-            movieNo1 = movieService.create("ExampleMovieTitleNo1", 35.74, 4, 75);
-            movieNo2 = movieService.create("ExampleMovieTitleNo1", 28.60, 5, 50);
+            movieNo1 = writeMovie.create("ExampleMovieTitleNo1", 35.74, 4, 75);
+            movieNo2 = writeMovie.create("ExampleMovieTitleNo1", 28.60, 5, 50);
         } catch (MovieServiceCreateException exception) {
             logger.error(exception.getMessage());
         }
@@ -206,14 +237,14 @@ public class TicketControllerTest {
         movieTimeNo2 = LocalDateTime.now().plusDays(3).plusHours(6).truncatedTo(ChronoUnit.SECONDS);
 
         try {
-            ticketNo1 = ticketService.create(movieTimeNo1.toString(), clientNo1.getUserID(), movieNo1.getMovieID());
-            ticketNo2 = ticketService.create(movieTimeNo2.toString(), clientNo1.getUserID(), movieNo2.getMovieID());
+            ticketNo1 = writeTicket.create(movieTimeNo1.toString(), clientNo1.getUserID(), movieNo1.getMovieID());
+            ticketNo2 = writeTicket.create(movieTimeNo2.toString(), clientNo1.getUserID(), movieNo2.getMovieID());
 
-            ticketNo3 = ticketService.create(movieTimeNo1.toString(), clientNo1.getUserID(), movieNo1.getMovieID());
-            ticketNo4 = ticketService.create(movieTimeNo2.toString(), clientNo2.getUserID(), movieNo2.getMovieID());
+            ticketNo3 = writeTicket.create(movieTimeNo1.toString(), clientNo1.getUserID(), movieNo1.getMovieID());
+            ticketNo4 = writeTicket.create(movieTimeNo2.toString(), clientNo2.getUserID(), movieNo2.getMovieID());
 
-            ticketNo5 = ticketService.create(movieTimeNo1.toString(), clientNo1.getUserID(), movieNo1.getMovieID());
-            ticketNo6 = ticketService.create(movieTimeNo2.toString(), clientNo2.getUserID(), movieNo2.getMovieID());
+            ticketNo5 = writeTicket.create(movieTimeNo1.toString(), clientNo1.getUserID(), movieNo1.getMovieID());
+            ticketNo6 = writeTicket.create(movieTimeNo2.toString(), clientNo2.getUserID(), movieNo2.getMovieID());
         } catch (TicketServiceCreateException exception) {
             logger.error(exception.getMessage());
         }
@@ -222,45 +253,45 @@ public class TicketControllerTest {
     @AfterEach
     public void destroySampleData() {
         try {
-            List<Ticket> listOfTickets = ticketService.findAll();
+            List<Ticket> listOfTickets = readTicket.findAll();
             for (Ticket ticket : listOfTickets) {
-                ticketService.delete(ticket.getTicketID());
+                writeTicket.delete(ticket.getTicketID());
             }
         } catch (TicketServiceReadException | TicketServiceDeleteException exception) {
             logger.error(exception.getMessage());
         }
 
         try {
-            List<Movie> listOfMovies = movieService.findAll();
+            List<Movie> listOfMovies = readMovie.findAll();
             for (Movie movie : listOfMovies) {
-                movieService.delete(movie.getMovieID());
+                writeMovie.delete(movie.getMovieID());
             }
         } catch (MovieServiceReadException | MovieServiceDeleteException exception) {
             logger.error(exception.getMessage());
         }
 
         try {
-            List<Client> listOfClients = clientService.findAll();
+            List<Client> listOfClients = readClient.findAll();
             for (Client client : listOfClients) {
-                clientService.delete(client.getUserID());
+                writeClient.delete(client.getUserID());
             }
         } catch (ClientServiceReadException | ClientServiceDeleteException exception) {
             logger.error(exception.getMessage());
         }
 
         try {
-            List<Admin> listOfAdmins = adminService.findAll();
+            List<Admin> listOfAdmins = readAdmin.findAll();
             for (Admin admin : listOfAdmins) {
-                adminService.delete(admin.getUserID());
+                writeAdmin.delete(admin.getUserID());
             }
         } catch (AdminServiceReadException | AdminServiceDeleteException exception) {
             logger.error(exception.getMessage());
         }
 
         try {
-            List<Staff> listOfStaffs = staffService.findAll();
+            List<Staff> listOfStaffs = readStaff.findAll();
             for (Staff staff : listOfStaffs) {
-                staffService.delete(staff.getUserID());
+                writeStaff.delete(staff.getUserID());
             }
         } catch (StaffServiceReadException | StaffServiceDeleteException exception) {
             logger.error(exception.getMessage());
@@ -606,7 +637,7 @@ public class TicketControllerTest {
         validatableResponse = response.then();
         validatableResponse.statusCode(204);
 
-        Ticket foundTicket = ticketService.findByUUID(ticketNo1.getTicketID());
+        Ticket foundTicket = readTicket.findByUUID(ticketNo1.getTicketID());
 
         LocalDateTime movieTimeAfter = foundTicket.getMovieTime();
 
@@ -816,7 +847,7 @@ public class TicketControllerTest {
         UUID removedTicketID = ticketNo1.getTicketID();
         String path = TestConstants.ticketsURL + "/" + removedTicketID + "/delete";
 
-        Ticket foundTicket = ticketService.findByUUID(removedTicketID);
+        Ticket foundTicket = readTicket.findByUUID(removedTicketID);
         assertNotNull(foundTicket);
 
         RequestSpecification requestSpecification = RestAssured.given();
@@ -833,7 +864,7 @@ public class TicketControllerTest {
         UUID removedTicketID = ticketNo1.getTicketID();
         String path = TestConstants.ticketsURL + "/" + removedTicketID + "/delete";
 
-        Ticket foundTicket = ticketService.findByUUID(removedTicketID);
+        Ticket foundTicket = readTicket.findByUUID(removedTicketID);
         assertNotNull(foundTicket);
 
         RequestSpecification requestSpecification = RestAssured.given();
@@ -843,7 +874,7 @@ public class TicketControllerTest {
         ValidatableResponse validatableResponse = response.then();
         validatableResponse.statusCode(204);
 
-        assertThrows(TicketServiceReadException.class, () -> ticketService.findByUUID(removedTicketID));
+        assertThrows(TicketServiceReadException.class, () -> readTicket.findByUUID(removedTicketID));
     }
 
     @Test
@@ -853,7 +884,7 @@ public class TicketControllerTest {
         UUID removedTicketID = ticketNo1.getTicketID();
         String path = TestConstants.ticketsURL + "/" + removedTicketID + "/delete";
 
-        Ticket foundTicket = ticketService.findByUUID(removedTicketID);
+        Ticket foundTicket = readTicket.findByUUID(removedTicketID);
         assertNotNull(foundTicket);
 
         RequestSpecification requestSpecification = RestAssured.given();
@@ -871,7 +902,7 @@ public class TicketControllerTest {
         UUID removedTicketID = ticketNo1.getTicketID();
         String path = TestConstants.ticketsURL + "/" + removedTicketID + "/delete";
 
-        Ticket foundTicket = ticketService.findByUUID(removedTicketID);
+        Ticket foundTicket = readTicket.findByUUID(removedTicketID);
         assertNotNull(foundTicket);
 
         RequestSpecification requestSpecification = RestAssured.given();
@@ -889,7 +920,7 @@ public class TicketControllerTest {
         UUID removedTicketID = ticketNo1.getTicketID();
         String path = TestConstants.ticketsURL + "/" + removedTicketID + "/delete";
 
-        Ticket foundTicket = ticketService.findByUUID(removedTicketID);
+        Ticket foundTicket = readTicket.findByUUID(removedTicketID);
         assertNotNull(foundTicket);
 
         RequestSpecification requestSpecification = RestAssured.given();
@@ -907,7 +938,7 @@ public class TicketControllerTest {
         UUID removedTicketID = UUID.randomUUID();
         String path = TestConstants.ticketsURL + "/" + removedTicketID + "/delete";
 
-        assertThrows(TicketServiceReadException.class, () -> ticketService.findByUUID(removedTicketID));
+        assertThrows(TicketServiceReadException.class, () -> readTicket.findByUUID(removedTicketID));
 
         RequestSpecification requestSpecification = RestAssured.given();
         requestSpecification.header("Authorization", "Bearer " + accessToken);
@@ -922,7 +953,7 @@ public class TicketControllerTest {
     public void ticketControllerAllocateTwoTicketsOnePositiveAndOneNegativeTestPositive() {
         String accessToken = this.loginToAccount(new UserInputDTO(clientNo1.getUserLogin(), passwordNotHashed), TestConstants.clientLoginURL);
 
-        Movie testMovie = movieService.create("SomeMovieTitleNo1", 31.20, 3, 1);
+        Movie testMovie = writeMovie.create("SomeMovieTitleNo1", 31.20, 3, 1);
         TicketSelfInputDTO ticketSelfInputDTONo1 = new TicketSelfInputDTO(movieTimeNo1.toString(), testMovie.getMovieID());
         TicketSelfInputDTO ticketSelfInputDTONo2 = new TicketSelfInputDTO(movieTimeNo1.toString(), testMovie.getMovieID());
 
@@ -964,7 +995,7 @@ public class TicketControllerTest {
     public void ticketControllerAllocateTwoTicketsTwoPositiveTestPositive() {
         String accessToken = this.loginToAccount(new UserInputDTO(clientNo1.getUserLogin(), passwordNotHashed), TestConstants.clientLoginURL);
 
-        Movie testMovie = movieService.create("SomeMovieTitleNo1", 31.20, 3, 1);
+        Movie testMovie = writeMovie.create("SomeMovieTitleNo1", 31.20, 3, 1);
         TicketSelfInputDTO ticketSelfInputDTONo1 = new TicketSelfInputDTO(movieTimeNo1.toString(), testMovie.getMovieID());
         TicketSelfInputDTO ticketSelfInputDTONo2 = new TicketSelfInputDTO(movieTimeNo1.toString(), testMovie.getMovieID());
 
@@ -1178,7 +1209,7 @@ public class TicketControllerTest {
         UUID removedMovieID = movieNo1.getMovieID();
         String path = TestConstants.moviesURL + "/" + removedMovieID + "/delete";
 
-        List<Ticket> listOfTicketForMovie = movieService.getListOfTickets(removedMovieID);
+        List<Ticket> listOfTicketForMovie = readMovie.getListOfTickets(removedMovieID);
         assertNotNull(listOfTicketForMovie);
         assertFalse(listOfTicketForMovie.isEmpty());
         assertEquals(3, listOfTicketForMovie.size());
@@ -1199,7 +1230,7 @@ public class TicketControllerTest {
         UUID removedMovieID = movieNo1.getMovieID();
         String path = TestConstants.moviesURL + "/" + removedMovieID + "/delete";
 
-        List<Ticket> listOfTicketForMovie = movieService.getListOfTickets(removedMovieID);
+        List<Ticket> listOfTicketForMovie = readMovie.getListOfTickets(removedMovieID);
         assertNotNull(listOfTicketForMovie);
         assertFalse(listOfTicketForMovie.isEmpty());
         assertEquals(3, listOfTicketForMovie.size());
@@ -1221,7 +1252,7 @@ public class TicketControllerTest {
         UUID removedMovieID = movieNo1.getMovieID();
         String path = TestConstants.moviesURL + "/" + removedMovieID + "/delete";
 
-        List<Ticket> listOfTicketForMovie = movieService.getListOfTickets(removedMovieID);
+        List<Ticket> listOfTicketForMovie = readMovie.getListOfTickets(removedMovieID);
         assertNotNull(listOfTicketForMovie);
         assertFalse(listOfTicketForMovie.isEmpty());
         assertEquals(3, listOfTicketForMovie.size());
@@ -1243,7 +1274,7 @@ public class TicketControllerTest {
         UUID removedMovieID = movieNo1.getMovieID();
         String path = TestConstants.moviesURL + "/" + removedMovieID + "/delete";
 
-        List<Ticket> listOfTicketForMovie = movieService.getListOfTickets(removedMovieID);
+        List<Ticket> listOfTicketForMovie = readMovie.getListOfTickets(removedMovieID);
         assertNotNull(listOfTicketForMovie);
         assertFalse(listOfTicketForMovie.isEmpty());
         assertEquals(3, listOfTicketForMovie.size());

@@ -24,6 +24,8 @@ import pl.tks.gr3.cinema.domain_model.users.Admin;
 import pl.tks.gr3.cinema.domain_model.users.Client;
 import pl.tks.gr3.cinema.domain_model.users.Staff;
 import pl.tks.gr3.cinema.ports.infrastructure.users.*;
+import pl.tks.gr3.cinema.ports.userinterface.users.ReadUserUseCase;
+import pl.tks.gr3.cinema.ports.userinterface.users.WriteUserUseCase;
 import pl.tks.gr3.cinema.viewrest.input.UserInputDTO;
 import pl.tks.gr3.cinema.viewrest.output.UserOutputDTO;
 import pl.tks.gr3.cinema.viewrest.input.UserUpdateDTO;
@@ -40,8 +42,6 @@ public class StaffControllerTest {
     private static final Logger logger = LoggerFactory.getLogger(StaffControllerTest.class);
 
     private static UserRepository userRepository;
-
-    private static StaffService staffService;
     private static PasswordEncoder passwordEncoder;
 
     private static CreateUserPort createUserPort;
@@ -50,6 +50,9 @@ public class StaffControllerTest {
     private static ActivateUserPort activateUserPort;
     private static DeactivateUserPort deactivateUserPort;
     private static DeleteUserPort deleteUserPort;
+
+    private static ReadUserUseCase<Staff> readStaff;
+    private static WriteUserUseCase<Staff> writeStaff;
 
     private Client clientUser;
     private Staff staffUserNo1;
@@ -69,7 +72,10 @@ public class StaffControllerTest {
         deactivateUserPort = userRepositoryAdapter;
         deleteUserPort = userRepositoryAdapter;
 
-        staffService = new StaffService(createUserPort, readUserPort, updateUserPort, activateUserPort, deactivateUserPort, deleteUserPort);
+        StaffService staffService = new StaffService(createUserPort, readUserPort, updateUserPort, activateUserPort, deactivateUserPort, deleteUserPort);
+
+        readStaff = staffService;
+        writeStaff = staffService;
 
         passwordEncoder = new BCryptPasswordEncoder();
 
@@ -371,7 +377,7 @@ public class StaffControllerTest {
 
     @Test
     public void staffControllerFindFindStaffsMatchingLoginAsAnUnauthenticatedUserTestNegative() {
-        staffService.create("ExtraStaffLogin", "ExtraStaffPassword");
+        writeStaff.create("ExtraStaffLogin", "ExtraStaffPassword");
         String matchedLogin = "Extra";
         String path = TestConstants.staffsURL + "?match=" + matchedLogin;
 
@@ -389,7 +395,7 @@ public class StaffControllerTest {
     public void staffControllerFindFindStaffsMatchingLoginAsAnAuthenticatedClientTestNegative() {
         String accessToken = this.loginToAccount(new UserInputDTO(clientUser.getUserLogin(), passwordNotHashed), TestConstants.clientLoginURL);
 
-        staffService.create("ExtraStaffLogin", "ExtraStaffPassword");
+        writeStaff.create("ExtraStaffLogin", "ExtraStaffPassword");
         String matchedLogin = "Extra";
         String path = TestConstants.staffsURL + "?match=" + matchedLogin;
 
@@ -408,7 +414,7 @@ public class StaffControllerTest {
     public void staffControllerFindFindStaffsMatchingLoginAsAnAuthenticatedStaffTestNegative() {
         String accessToken = this.loginToAccount(new UserInputDTO(staffUserNo1.getUserLogin(), passwordNotHashed), TestConstants.staffLoginURL);
 
-        staffService.create("ExtraStaffLogin", "ExtraStaffPassword");
+        writeStaff.create("ExtraStaffLogin", "ExtraStaffPassword");
         String matchedLogin = "Extra";
         String path = TestConstants.staffsURL + "?match=" + matchedLogin;
 
@@ -431,7 +437,7 @@ public class StaffControllerTest {
     public void staffControllerFindFindStaffsMatchingLoginAsAnAuthenticatedStaffTestPositive() {
         String accessToken = this.loginToAccount(new UserInputDTO(adminUser.getUserLogin(), passwordNotHashed), TestConstants.adminLoginURL);
 
-        staffService.create("ExtraStaffLogin", "ExtraStaffPassword");
+        writeStaff.create("ExtraStaffLogin", "ExtraStaffPassword");
         String matchedLogin = "Extra";
         String path = TestConstants.staffsURL + "?match=" + matchedLogin;
 
@@ -641,7 +647,7 @@ public class StaffControllerTest {
         validatableResponse = response.then();
         validatableResponse.statusCode(204);
 
-        Staff foundStaff = staffService.findByUUID(staffUserNo1.getUserID());
+        Staff foundStaff = readStaff.findByUUID(staffUserNo1.getUserID());
 
         String staffPasswordAfter = foundStaff.getUserPassword();
 
@@ -948,7 +954,7 @@ public class StaffControllerTest {
 
         validatableResponse.statusCode(204);
 
-        Staff foundStaff = staffService.findByUUID(activatedStaffID);
+        Staff foundStaff = readStaff.findByUUID(activatedStaffID);
         boolean staffStatusActiveAfter = foundStaff.isUserStatusActive();
 
         assertTrue(staffStatusActiveAfter);
@@ -1031,7 +1037,7 @@ public class StaffControllerTest {
 
         validatableResponse.statusCode(204);
 
-        Staff foundStaff = staffService.findByUUID(deactivatedStaffID);
+        Staff foundStaff = readStaff.findByUUID(deactivatedStaffID);
         boolean staffStatusActiveAfter = foundStaff.isUserStatusActive();
 
         assertFalse(staffStatusActiveAfter);

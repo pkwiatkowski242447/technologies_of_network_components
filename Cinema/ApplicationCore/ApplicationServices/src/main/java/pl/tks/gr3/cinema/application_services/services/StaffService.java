@@ -10,14 +10,15 @@ import pl.tks.gr3.cinema.application_services.exceptions.crud.staff.*;
 import pl.tks.gr3.cinema.domain_model.Ticket;
 import pl.tks.gr3.cinema.domain_model.users.Staff;
 import pl.tks.gr3.cinema.ports.infrastructure.users.*;
-import pl.tks.gr3.cinema.ports.userinterface.UserServiceInterface;
+import pl.tks.gr3.cinema.ports.userinterface.users.ReadUserUseCase;
+import pl.tks.gr3.cinema.ports.userinterface.users.WriteUserUseCase;
 
 
 import java.util.List;
 import java.util.UUID;
 
 @Service
-public class StaffService implements UserServiceInterface<Staff> {
+public class StaffService implements ReadUserUseCase<Staff>, WriteUserUseCase<Staff> {
 
     private final CreateUserPort createUserPort;
     private final ReadUserPort readUserPort;

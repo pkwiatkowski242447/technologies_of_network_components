@@ -13,9 +13,10 @@ import pl.tks.gr3.cinema.application_services.exceptions.crud.client.ClientServi
 import pl.tks.gr3.cinema.application_services.exceptions.crud.ticket.TicketServiceTicketNotFoundException;
 import pl.tks.gr3.cinema.domain_model.Ticket;
 import pl.tks.gr3.cinema.domain_model.users.Client;
-import pl.tks.gr3.cinema.ports.userinterface.JWSServiceInterface;
-import pl.tks.gr3.cinema.ports.userinterface.TicketServiceInterface;
-import pl.tks.gr3.cinema.ports.userinterface.UserServiceInterface;
+import pl.tks.gr3.cinema.ports.userinterface.other.JWSUseCase;
+import pl.tks.gr3.cinema.ports.userinterface.tickets.ReadTicketUseCase;
+import pl.tks.gr3.cinema.ports.userinterface.tickets.WriteTicketUseCase;
+import pl.tks.gr3.cinema.ports.userinterface.users.ReadUserUseCase;
 import pl.tks.gr3.cinema.viewrest.input.TicketInputDTO;
 import pl.tks.gr3.cinema.viewrest.input.TicketSelfInputDTO;
 import pl.tks.gr3.cinema.viewrest.output.TicketDTO;
@@ -33,14 +34,19 @@ public class TicketController implements TicketControllerInterface {
 
     private static final Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
 
-    private final TicketServiceInterface ticketService;
-    private final UserServiceInterface<Client> clientService;
-    private final JWSServiceInterface jwsService;
+    private final ReadTicketUseCase readTicket;
+    private final WriteTicketUseCase writeTicket;
+    private final ReadUserUseCase<Client> readClient;
+    private final JWSUseCase jwsService;
 
     @Autowired
-    public TicketController(TicketServiceInterface ticketService, UserServiceInterface<Client> clientService, JWSServiceInterface jwsService) {
-        this.ticketService = ticketService;
-        this.clientService = clientService;
+    public TicketController(ReadTicketUseCase readTicket,
+                            WriteTicketUseCase writeTicket,
+                            ReadUserUseCase<Client> readClient,
+                            JWSUseCase jwsService) {
+        this.readTicket = readTicket;
+        this.writeTicket = writeTicket;
+        this.readClient = readClient;
         this.jwsService = jwsService;
     }
 
@@ -49,8 +55,8 @@ public class TicketController implements TicketControllerInterface {
     @Override
     public ResponseEntity<?> create(@RequestBody TicketInputDTO ticketInputDTO) {
         try {
-            Client client = this.clientService.findByUUID(ticketInputDTO.getClientID());
-            Ticket ticket = this.ticketService.create(ticketInputDTO.getMovieTime(), client.getUserID(), ticketInputDTO.getMovieID());
+            Client client = this.readClient.findByUUID(ticketInputDTO.getClientID());
+            Ticket ticket = this.writeTicket.create(ticketInputDTO.getMovieTime(), client.getUserID(), ticketInputDTO.getMovieID());
 
             Set<ConstraintViolation<Ticket>> violationSet = validator.validate(ticket);
             List<String> messages = violationSet.stream().map(ConstraintViolation::getMessage).toList();
@@ -69,8 +75,8 @@ public class TicketController implements TicketControllerInterface {
     @PostMapping(value = "/self", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> create(@RequestBody TicketSelfInputDTO ticketSelfInputDTO) {
         try {
-            Client client = this.clientService.findByLogin(SecurityContextHolder.getContext().getAuthentication().getName());
-            Ticket ticket = this.ticketService.create(ticketSelfInputDTO.getMovieTime(), client.getUserID(), ticketSelfInputDTO.getMovieID());
+            Client client = this.readClient.findByLogin(SecurityContextHolder.getContext().getAuthentication().getName());
+            Ticket ticket = this.writeTicket.create(ticketSelfInputDTO.getMovieTime(), client.getUserID(), ticketSelfInputDTO.getMovieID());
 
             Set<ConstraintViolation<Ticket>> violationSet = validator.validate(ticket);
             List<String> messages = violationSet.stream().map(ConstraintViolation::getMessage).toList();
@@ -90,9 +96,9 @@ public class TicketController implements TicketControllerInterface {
     @Override
     public ResponseEntity<?> findByUUID(@PathVariable("id") UUID ticketID) {
         try {
-            Ticket ticket = this.ticketService.findByUUID(ticketID);
+            Ticket ticket = this.readTicket.findByUUID(ticketID);
             try {
-                Client client = this.clientService.findByLogin(SecurityContextHolder.getContext().getAuthentication().getName());
+                Client client = this.readClient.findByLogin(SecurityContextHolder.getContext().getAuthentication().getName());
                 if (client.getUserID().equals(ticket.getUserID())) {
                     TicketDTO ticketDTO = new TicketDTO(ticket.getTicketID(), ticket.getMovieTime(), ticket.getTicketPrice(), ticket.getUserID(), ticket.getMovieID());
                     return ResponseEntity.ok().header(HttpHeaders.ETAG, jwsService.generateSignatureForTicket(ticket)).contentType(MediaType.APPLICATION_JSON).body(ticketDTO);
@@ -115,7 +121,7 @@ public class TicketController implements TicketControllerInterface {
     @Override
     public ResponseEntity<?> findAll() {
         try {
-            List<Ticket> listOfFoundTickets = this.ticketService.findAll();
+            List<Ticket> listOfFoundTickets = this.readTicket.findAll();
             List<TicketDTO> listOfDTOs = new ArrayList<>();
             for (Ticket ticket : listOfFoundTickets) {
                 listOfDTOs.add(new TicketDTO(ticket.getTicketID(), ticket.getMovieTime(), ticket.getTicketPrice(), ticket.getUserID(), ticket.getMovieID()));
@@ -135,8 +141,8 @@ public class TicketController implements TicketControllerInterface {
     @PutMapping(value = "/update", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> update(@RequestHeader(value = HttpHeaders.IF_MATCH) String ifMatch, @RequestBody TicketDTO ticketDTO) {
         try {
-            Client client = this.clientService.findByLogin(SecurityContextHolder.getContext().getAuthentication().getName());
-            Ticket ticket = this.ticketService.findByUUID(ticketDTO.getTicketID());
+            Client client = this.readClient.findByLogin(SecurityContextHolder.getContext().getAuthentication().getName());
+            Ticket ticket = this.readTicket.findByUUID(ticketDTO.getTicketID());
             if (!ticket.getUserID().equals(client.getUserID())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).contentType(MediaType.APPLICATION_JSON).body("This ticket belongs to other user.");
             }
@@ -150,7 +156,7 @@ public class TicketController implements TicketControllerInterface {
             }
 
             if (jwsService.verifyTicketSignature(ifMatch.replace("\"", ""), ticket)) {
-                this.ticketService.update(ticket);
+                this.writeTicket.update(ticket);
                 return ResponseEntity.noContent().build();
             } else {
                 return ResponseEntity.badRequest().contentType(MediaType.APPLICATION_JSON).body("Signature and given object does not match.");
@@ -165,12 +171,12 @@ public class TicketController implements TicketControllerInterface {
     @Override
     public ResponseEntity<?> delete(@PathVariable("id") UUID ticketID) {
         try {
-            Client client = this.clientService.findByLogin(SecurityContextHolder.getContext().getAuthentication().getName());
-            Ticket ticket =  this.ticketService.findByUUID(ticketID);
+            Client client = this.readClient.findByLogin(SecurityContextHolder.getContext().getAuthentication().getName());
+            Ticket ticket =  this.readTicket.findByUUID(ticketID);
             if (!ticket.getUserID().equals(client.getUserID())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).contentType(MediaType.APPLICATION_JSON).body("This ticket belongs to other user.");
             } else {
-                this.ticketService.delete(ticketID);
+                this.writeTicket.delete(ticketID);
                 return ResponseEntity.noContent().build();
             }
         } catch (GeneralServiceException exception) {

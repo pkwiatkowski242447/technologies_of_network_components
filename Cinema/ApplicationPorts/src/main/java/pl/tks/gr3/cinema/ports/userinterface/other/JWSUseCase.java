@@ -1,10 +1,10 @@
-package pl.tks.gr3.cinema.ports.userinterface;
+package pl.tks.gr3.cinema.ports.userinterface.other;
 
 import pl.tks.gr3.cinema.domain_model.Movie;
 import pl.tks.gr3.cinema.domain_model.Ticket;
 import pl.tks.gr3.cinema.domain_model.users.User;
 
-public interface JWSServiceInterface {
+public interface JWSUseCase {
 
     String generateSignatureForUser(User user);
     String generateSignatureForMovie(Movie movie);

@@ -10,13 +10,14 @@ import pl.tks.gr3.cinema.adapters.exceptions.crud.user.UserRepositoryCreateUserD
 import pl.tks.gr3.cinema.domain_model.Ticket;
 import pl.tks.gr3.cinema.domain_model.users.Admin;
 import pl.tks.gr3.cinema.ports.infrastructure.users.*;
-import pl.tks.gr3.cinema.ports.userinterface.UserServiceInterface;
+import pl.tks.gr3.cinema.ports.userinterface.users.ReadUserUseCase;
+import pl.tks.gr3.cinema.ports.userinterface.users.WriteUserUseCase;
 
 import java.util.List;
 import java.util.UUID;
 
 @Service
-public class AdminService implements UserServiceInterface<Admin> {
+public class AdminService implements ReadUserUseCase<Admin>, WriteUserUseCase<Admin> {
 
     private final CreateUserPort createUserPort;
     private final ReadUserPort readUserPort;

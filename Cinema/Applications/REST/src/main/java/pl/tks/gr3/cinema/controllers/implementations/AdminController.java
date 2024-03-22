@@ -12,7 +12,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-import pl.tks.gr3.cinema.ports.userinterface.JWSServiceInterface;
+import pl.tks.gr3.cinema.ports.userinterface.other.JWSUseCase;
+import pl.tks.gr3.cinema.ports.userinterface.users.ReadUserUseCase;
+import pl.tks.gr3.cinema.ports.userinterface.users.WriteUserUseCase;
 import pl.tks.gr3.cinema.viewrest.output.UserOutputDTO;
 import pl.tks.gr3.cinema.viewrest.input.UserUpdateDTO;
 import pl.tks.gr3.cinema.application_services.exceptions.GeneralServiceException;
@@ -20,7 +22,6 @@ import pl.tks.gr3.cinema.application_services.exceptions.crud.admin.AdminService
 import pl.tks.gr3.cinema.controllers.interfaces.UserControllerInterface;
 import pl.tks.gr3.cinema.domain_model.users.Admin;
 import pl.tks.gr3.cinema.domain_model.users.User;
-import pl.tks.gr3.cinema.ports.userinterface.UserServiceInterface;
 
 import java.util.*;
 
@@ -31,13 +32,18 @@ public class AdminController implements UserControllerInterface<Admin> {
 
     private final Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
 
-    private final UserServiceInterface<Admin> adminService;
-    private final JWSServiceInterface jwsService;
+    private final ReadUserUseCase<Admin> readAdmin;
+    private final WriteUserUseCase<Admin> writeAdmin;
+    private final JWSUseCase jwsService;
     private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public AdminController(UserServiceInterface<Admin> adminService, JWSServiceInterface jwsService, PasswordEncoder passwordEncoder) {
-        this.adminService = adminService;
+    public AdminController(ReadUserUseCase<Admin> readAdmin,
+                           WriteUserUseCase<Admin> writeAdmin,
+                           JWSUseCase jwsService,
+                           PasswordEncoder passwordEncoder) {
+        this.readAdmin = readAdmin;
+        this.writeAdmin = writeAdmin;
         this.jwsService = jwsService;
         this.passwordEncoder = passwordEncoder;
     }
@@ -47,7 +53,7 @@ public class AdminController implements UserControllerInterface<Admin> {
     @Override
     public ResponseEntity<?> findByUUID(@PathVariable("id") UUID adminID) {
         try {
-            Admin admin = this.adminService.findByUUID(adminID);
+            Admin admin = this.readAdmin.findByUUID(adminID);
             UserOutputDTO userOutputDTO = new UserOutputDTO(admin.getUserID(), admin.getUserLogin(), admin.isUserStatusActive());
             return this.generateResponseEntityForDTO(userOutputDTO);
         } catch (AdminServiceAdminNotFoundException exception) {
@@ -62,7 +68,7 @@ public class AdminController implements UserControllerInterface<Admin> {
     @Override
     public ResponseEntity<?> findByLogin(@PathVariable("login") String adminLogin) {
         try {
-            Admin admin = this.adminService.findByLogin(adminLogin);
+            Admin admin = this.readAdmin.findByLogin(adminLogin);
             UserOutputDTO userOutputDTO = new UserOutputDTO(admin.getUserID(), admin.getUserLogin(), admin.isUserStatusActive());
             return this.generateResponseEntityForDTO(userOutputDTO);
         } catch (AdminServiceAdminNotFoundException exception) {
@@ -75,7 +81,7 @@ public class AdminController implements UserControllerInterface<Admin> {
     @GetMapping(value = "/login/self", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> findByLogin() {
         try {
-            Admin admin = this.adminService.findByLogin(SecurityContextHolder.getContext().getAuthentication().getName());
+            Admin admin = this.readAdmin.findByLogin(SecurityContextHolder.getContext().getAuthentication().getName());
             UserOutputDTO userOutputDTO = new UserOutputDTO(admin.getUserID(), admin.getUserLogin(), admin.isUserStatusActive());
             String etagContent = jwsService.generateSignatureForUser(admin);
             return ResponseEntity.ok().header(HttpHeaders.ETAG, etagContent).contentType(MediaType.APPLICATION_JSON).body(userOutputDTO);
@@ -91,7 +97,7 @@ public class AdminController implements UserControllerInterface<Admin> {
     @Override
     public ResponseEntity<?> findAllWithMatchingLogin(@RequestParam("match") String adminLogin) {
         try {
-            List<UserOutputDTO> listOfDTOs = this.getListOfUserDTOs(this.adminService.findAllMatchingLogin(adminLogin));
+            List<UserOutputDTO> listOfDTOs = this.getListOfUserDTOs(this.readAdmin.findAllMatchingLogin(adminLogin));
             return this.generateResponseEntityForListOfDTOs(listOfDTOs);
         } catch (GeneralServiceException exception) {
             return ResponseEntity.badRequest().contentType(MediaType.APPLICATION_JSON).body(exception.getMessage());
@@ -103,7 +109,7 @@ public class AdminController implements UserControllerInterface<Admin> {
     @Override
     public ResponseEntity<?> findAll() {
         try {
-            List<Admin> listOfAdmins = this.adminService.findAll();
+            List<Admin> listOfAdmins = this.readAdmin.findAll();
             List<UserOutputDTO> listOfDTOs = this.getListOfUserDTOs(listOfAdmins);
             return this.generateResponseEntityForListOfDTOs(listOfDTOs);
         } catch (GeneralServiceException exception) {
@@ -123,7 +129,7 @@ public class AdminController implements UserControllerInterface<Admin> {
             }
 
             if (jwsService.verifyUserSignature(ifMatch.replace("\"", ""), admin)) {
-                this.adminService.update(admin);
+                this.writeAdmin.update(admin);
                 return ResponseEntity.noContent().build();
             } else {
                 return ResponseEntity.badRequest().contentType(MediaType.APPLICATION_JSON).body("Signature and given object does not match.");
@@ -138,7 +144,7 @@ public class AdminController implements UserControllerInterface<Admin> {
     @Override
     public ResponseEntity<?> activate(@PathVariable("id") UUID adminID) {
         try {
-            this.adminService.activate(adminID);
+            this.writeAdmin.activate(adminID);
             return ResponseEntity.noContent().build();
         } catch (GeneralServiceException exception) {
             return ResponseEntity.badRequest().contentType(MediaType.APPLICATION_JSON).body(exception.getMessage());
@@ -150,7 +156,7 @@ public class AdminController implements UserControllerInterface<Admin> {
     @Override
     public ResponseEntity<?> deactivate(@PathVariable("id") UUID adminID) {
         try {
-            this.adminService.deactivate(adminID);
+            this.writeAdmin.deactivate(adminID);
             return ResponseEntity.noContent().build();
         } catch (GeneralServiceException exception) {
             return ResponseEntity.badRequest().contentType(MediaType.APPLICATION_JSON).body(exception.getMessage());

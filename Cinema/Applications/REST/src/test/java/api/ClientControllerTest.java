@@ -24,6 +24,8 @@ import pl.tks.gr3.cinema.domain_model.users.Admin;
 import pl.tks.gr3.cinema.domain_model.users.Client;
 import pl.tks.gr3.cinema.domain_model.users.Staff;
 import pl.tks.gr3.cinema.ports.infrastructure.users.*;
+import pl.tks.gr3.cinema.ports.userinterface.users.ReadUserUseCase;
+import pl.tks.gr3.cinema.ports.userinterface.users.WriteUserUseCase;
 import pl.tks.gr3.cinema.viewrest.input.UserInputDTO;
 import pl.tks.gr3.cinema.viewrest.output.UserOutputDTO;
 import pl.tks.gr3.cinema.viewrest.input.UserUpdateDTO;
@@ -40,7 +42,6 @@ public class ClientControllerTest {
     private static final Logger logger = LoggerFactory.getLogger(ClientControllerTest.class);
 
     private static UserRepository userRepository;
-    private static ClientService clientService;
     private static PasswordEncoder passwordEncoder;
 
     private static CreateUserPort createUserPort;
@@ -49,6 +50,9 @@ public class ClientControllerTest {
     private static ActivateUserPort activateUserPort;
     private static DeactivateUserPort deactivateUserPort;
     private static DeleteUserPort deleteUserPort;
+
+    private static ReadUserUseCase<Client> readClient;
+    private static WriteUserUseCase<Client> writeClient;
 
     private Client clientUserNo1;
     private Client clientUserNo2;
@@ -68,7 +72,10 @@ public class ClientControllerTest {
         deactivateUserPort = userRepositoryAdapter;
         deleteUserPort = userRepositoryAdapter;
 
-        clientService = new ClientService(createUserPort, readUserPort, updateUserPort, activateUserPort, deactivateUserPort, deleteUserPort);
+        ClientService clientService = new ClientService(createUserPort, readUserPort, updateUserPort, activateUserPort, deactivateUserPort, deleteUserPort);
+
+        readClient = clientService;
+        writeClient = clientService;
 
         passwordEncoder = new BCryptPasswordEncoder();
 
@@ -369,7 +376,7 @@ public class ClientControllerTest {
 
     @Test
     public void clientControllerFindAllClientsMatchingLoginAsUnauthenticatedUserTestPositive() {
-        clientService.create("ExtraClientLogin", "ExtraClientPassword");
+        writeClient.create("ExtraClientLogin", "ExtraClientPassword");
         String matchedLogin = "Extra";
         String path = TestConstants.clientsURL + "?match=" + matchedLogin;
 
@@ -387,7 +394,7 @@ public class ClientControllerTest {
     public void clientControllerFindAllClientsMatchingLoginAsAuthenticatedClientTestPositive() {
         String accessToken = this.loginToAccount(new UserInputDTO(clientUserNo1.getUserLogin(), passwordNotHashed), TestConstants.clientLoginURL);
 
-        clientService.create("ExtraClientLogin", "ExtraClientPassword");
+        writeClient.create("ExtraClientLogin", "ExtraClientPassword");
         String matchedLogin = "Extra";
         String path = TestConstants.clientsURL + "?match=" + matchedLogin;
 
@@ -406,7 +413,7 @@ public class ClientControllerTest {
     public void clientControllerFindAllClientsMatchingLoginAsAuthenticatedStaffTestPositive() {
         String accessToken = this.loginToAccount(new UserInputDTO(staffUser.getUserLogin(), passwordNotHashed), TestConstants.staffLoginURL);
 
-        clientService.create("ExtraClientLogin", "ExtraClientPassword");
+        writeClient.create("ExtraClientLogin", "ExtraClientPassword");
         String matchedLogin = "Extra";
         String path = TestConstants.clientsURL + "?match=" + matchedLogin;
 
@@ -429,7 +436,7 @@ public class ClientControllerTest {
     public void clientControllerFindAllClientsMatchingLoginAsAuthenticatedAdminTestPositive() {
         String accessToken = this.loginToAccount(new UserInputDTO(adminUser.getUserLogin(), passwordNotHashed), TestConstants.adminLoginURL);
 
-        clientService.create("ExtraClientLogin", "ExtraClientPassword");
+        writeClient.create("ExtraClientLogin", "ExtraClientPassword");
         String matchedLogin = "Extra";
         String path = TestConstants.clientsURL + "?match=" + matchedLogin;
 
@@ -639,7 +646,7 @@ public class ClientControllerTest {
         validatableResponse = response.then();
         validatableResponse.statusCode(204);
 
-        Client foundClient = clientService.findByUUID(clientUserNo1.getUserID());
+        Client foundClient = readClient.findByUUID(clientUserNo1.getUserID());
 
         String clientPasswordAfter = foundClient.getUserPassword();
 
@@ -946,7 +953,7 @@ public class ClientControllerTest {
 
         validatableResponse.statusCode(204);
 
-        Client foundClient = clientService.findByUUID(activatedClientID);
+        Client foundClient = readClient.findByUUID(activatedClientID);
         boolean clientStatusActiveAfter = foundClient.isUserStatusActive();
 
         assertTrue(clientStatusActiveAfter);
@@ -1030,7 +1037,7 @@ public class ClientControllerTest {
 
         validatableResponse.statusCode(204);
 
-        Client foundClient = clientService.findByUUID(deactivatedClientID);
+        Client foundClient = readClient.findByUUID(deactivatedClientID);
         boolean clientStatusActiveAfter = foundClient.isUserStatusActive();
 
         assertFalse(clientStatusActiveAfter);

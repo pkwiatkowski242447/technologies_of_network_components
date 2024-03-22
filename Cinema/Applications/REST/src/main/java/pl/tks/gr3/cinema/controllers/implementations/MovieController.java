@@ -13,8 +13,9 @@ import pl.tks.gr3.cinema.application_services.exceptions.GeneralServiceException
 import pl.tks.gr3.cinema.application_services.exceptions.crud.movie.MovieServiceMovieNotFoundException;
 import pl.tks.gr3.cinema.domain_model.Movie;
 import pl.tks.gr3.cinema.domain_model.Ticket;
-import pl.tks.gr3.cinema.ports.userinterface.JWSServiceInterface;
-import pl.tks.gr3.cinema.ports.userinterface.MovieServiceInterface;
+import pl.tks.gr3.cinema.ports.userinterface.movies.ReadMovieUseCase;
+import pl.tks.gr3.cinema.ports.userinterface.movies.WriteMovieUseCase;
+import pl.tks.gr3.cinema.ports.userinterface.other.JWSUseCase;
 import pl.tks.gr3.cinema.viewrest.input.MovieInputDTO;
 import pl.tks.gr3.cinema.viewrest.output.MovieDTO;
 import pl.tks.gr3.cinema.viewrest.output.TicketDTO;
@@ -32,12 +33,16 @@ public class MovieController implements MovieControllerInterface {
 
     private final static Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
 
-    private final MovieServiceInterface movieService;
-    private final JWSServiceInterface jwsService;
+    private final ReadMovieUseCase readMovie;
+    private final WriteMovieUseCase writeMovie;
+    private final JWSUseCase jwsService;
 
     @Autowired
-    public MovieController(MovieServiceInterface movieService, JWSServiceInterface jwsService) {
-        this.movieService = movieService;
+    public MovieController(ReadMovieUseCase readMovie,
+                           WriteMovieUseCase writeMovie,
+                           JWSUseCase jwsService) {
+        this.readMovie = readMovie;
+        this.writeMovie = writeMovie;
         this.jwsService = jwsService;
     }
 
@@ -46,7 +51,7 @@ public class MovieController implements MovieControllerInterface {
     @Override
     public ResponseEntity<?> create(@RequestBody MovieInputDTO movieInputDTO) {
         try {
-            Movie movie = this.movieService.create(movieInputDTO.getMovieTitle(), movieInputDTO.getMovieBasePrice(), movieInputDTO.getScrRoomNumber(), movieInputDTO.getNumberOfAvailableSeats());
+            Movie movie = this.writeMovie.create(movieInputDTO.getMovieTitle(), movieInputDTO.getMovieBasePrice(), movieInputDTO.getScrRoomNumber(), movieInputDTO.getNumberOfAvailableSeats());
 
             Set<ConstraintViolation<Movie>> violationSet = validator.validate(movie);
             List<String> messages = violationSet.stream().map(ConstraintViolation::getMessage).toList();
@@ -66,7 +71,7 @@ public class MovieController implements MovieControllerInterface {
     @Override
     public ResponseEntity<?> findAll() {
         try {
-            List<Movie> listOfFoundMovies = this.movieService.findAll();
+            List<Movie> listOfFoundMovies = this.readMovie.findAll();
             List<MovieDTO> listOfDTOs = new ArrayList<>();
             for (Movie movie : listOfFoundMovies) {
                 listOfDTOs.add(new MovieDTO(movie.getMovieID(), movie.getMovieTitle(), movie.getMovieBasePrice(), movie.getScrRoomNumber(), movie.getNumberOfAvailableSeats()));
@@ -87,7 +92,7 @@ public class MovieController implements MovieControllerInterface {
     @Override
     public ResponseEntity<?> findByUUID(@PathVariable("id") UUID movieID) {
         try {
-            Movie movie = this.movieService.findByUUID(movieID);
+            Movie movie = this.readMovie.findByUUID(movieID);
             MovieDTO movieDTO = new MovieDTO(movie.getMovieID(), movie.getMovieTitle(), movie.getMovieBasePrice(), movie.getScrRoomNumber(), movie.getNumberOfAvailableSeats());
             return ResponseEntity.ok().header(HttpHeaders.ETAG, jwsService.generateSignatureForMovie(movie)).contentType(MediaType.APPLICATION_JSON).body(movieDTO);
         } catch (MovieServiceMovieNotFoundException exception) {
@@ -101,7 +106,7 @@ public class MovieController implements MovieControllerInterface {
     @GetMapping(value = "{id}/tickets", produces = MediaType.APPLICATION_JSON_VALUE)
     @Override
     public ResponseEntity<?> findAllTicketsForCertainMovie(@PathVariable("id") UUID movieID) {
-        List<Ticket> listOfTickets = this.movieService.getListOfTickets(movieID);
+        List<Ticket> listOfTickets = this.readMovie.getListOfTickets(movieID);
         List<TicketDTO> listOfDTOs = new ArrayList<>();
         for (Ticket ticket : listOfTickets) {
             listOfDTOs.add(new TicketDTO(ticket.getTicketID(), ticket.getMovieTime(), ticket.getTicketPrice(), ticket.getUserID(), ticket.getMovieID()));
@@ -127,7 +132,7 @@ public class MovieController implements MovieControllerInterface {
             }
 
             if (jwsService.verifyMovieSignature(ifMatch.replace("\"", ""), movie)) {
-                this.movieService.update(movie);
+                this.writeMovie.update(movie);
                 return ResponseEntity.noContent().build();
             } else {
                 return ResponseEntity.badRequest().contentType(MediaType.APPLICATION_JSON).body("Signature and given object does not match.");
@@ -142,7 +147,7 @@ public class MovieController implements MovieControllerInterface {
     @Override
     public ResponseEntity<?> delete(@PathVariable("id") UUID movieID) {
         try {
-            this.movieService.delete(movieID);
+            this.writeMovie.delete(movieID);
             return ResponseEntity.noContent().build();
         } catch (GeneralServiceException exception) {
             return ResponseEntity.badRequest().contentType(MediaType.APPLICATION_JSON).body(exception.getMessage());

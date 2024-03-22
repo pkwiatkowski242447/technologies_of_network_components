@@ -10,13 +10,14 @@ import pl.tks.gr3.cinema.application_services.exceptions.crud.client.*;
 import pl.tks.gr3.cinema.domain_model.Ticket;
 import pl.tks.gr3.cinema.domain_model.users.Client;
 import pl.tks.gr3.cinema.ports.infrastructure.users.*;
-import pl.tks.gr3.cinema.ports.userinterface.UserServiceInterface;
+import pl.tks.gr3.cinema.ports.userinterface.users.ReadUserUseCase;
+import pl.tks.gr3.cinema.ports.userinterface.users.WriteUserUseCase;
 
 import java.util.List;
 import java.util.UUID;
 
 @Service
-public class ClientService implements UserServiceInterface<Client> {
+public class ClientService implements ReadUserUseCase<Client>, WriteUserUseCase<Client> {
 
     private final CreateUserPort createUserPort;
     private final ReadUserPort readUserPort;

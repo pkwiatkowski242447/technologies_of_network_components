@@ -17,8 +17,9 @@ import pl.tks.gr3.cinema.application_services.exceptions.crud.staff.StaffService
 import pl.tks.gr3.cinema.controllers.interfaces.UserControllerInterface;
 import pl.tks.gr3.cinema.domain_model.users.Staff;
 import pl.tks.gr3.cinema.domain_model.users.User;
-import pl.tks.gr3.cinema.ports.userinterface.JWSServiceInterface;
-import pl.tks.gr3.cinema.ports.userinterface.UserServiceInterface;
+import pl.tks.gr3.cinema.ports.userinterface.other.JWSUseCase;
+import pl.tks.gr3.cinema.ports.userinterface.users.ReadUserUseCase;
+import pl.tks.gr3.cinema.ports.userinterface.users.WriteUserUseCase;
 import pl.tks.gr3.cinema.viewrest.output.UserOutputDTO;
 import pl.tks.gr3.cinema.viewrest.input.UserUpdateDTO;
 
@@ -33,13 +34,18 @@ public class StaffController implements UserControllerInterface<Staff> {
 
     private final static Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
 
-    private final UserServiceInterface<Staff> staffService;
-    private final JWSServiceInterface jwsService;
+    private final ReadUserUseCase<Staff> readStaff;
+    private final WriteUserUseCase<Staff> writeStaff;
+    private final JWSUseCase jwsService;
     private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public StaffController(UserServiceInterface<Staff> staffService, JWSServiceInterface jwsService, PasswordEncoder passwordEncoder) {
-        this.staffService = staffService;
+    public StaffController(ReadUserUseCase<Staff> readStaff,
+                           WriteUserUseCase<Staff> writeStaff,
+                           JWSUseCase jwsService,
+                           PasswordEncoder passwordEncoder) {
+        this.readStaff = readStaff;
+        this.writeStaff = writeStaff;
         this.jwsService = jwsService;
         this.passwordEncoder = passwordEncoder;
     }
@@ -49,7 +55,7 @@ public class StaffController implements UserControllerInterface<Staff> {
     @Override
     public ResponseEntity<?> findByUUID(@PathVariable("id") UUID staffID) {
         try {
-            Staff staff = this.staffService.findByUUID(staffID);
+            Staff staff = this.readStaff.findByUUID(staffID);
             UserOutputDTO userOutputDTO = new UserOutputDTO(staff.getUserID(), staff.getUserLogin(), staff.isUserStatusActive());
             return this.generateResponseForDTO(userOutputDTO);
         } catch (StaffServiceStaffNotFoundException exception) {
@@ -64,7 +70,7 @@ public class StaffController implements UserControllerInterface<Staff> {
     @Override
     public ResponseEntity<?> findByLogin(@PathVariable("login") String staffLogin) {
         try {
-            Staff staff = this.staffService.findByLogin(staffLogin);
+            Staff staff = this.readStaff.findByLogin(staffLogin);
             UserOutputDTO userOutputDTO = new UserOutputDTO(staff.getUserID(), staff.getUserLogin(), staff.isUserStatusActive());
             return this.generateResponseForDTO(userOutputDTO);
         } catch (StaffServiceStaffNotFoundException exception) {
@@ -77,7 +83,7 @@ public class StaffController implements UserControllerInterface<Staff> {
     @GetMapping(value = "/login/self", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> findByLogin() {
         try {
-            Staff staff = this.staffService.findByLogin(SecurityContextHolder.getContext().getAuthentication().getName());
+            Staff staff = this.readStaff.findByLogin(SecurityContextHolder.getContext().getAuthentication().getName());
             UserOutputDTO userOutputDTO = new UserOutputDTO(staff.getUserID(), staff.getUserLogin(), staff.isUserStatusActive());
             String etagContent = jwsService.generateSignatureForUser(staff);
             return ResponseEntity.ok().header(HttpHeaders.ETAG, etagContent).contentType(MediaType.APPLICATION_JSON).body(userOutputDTO);
@@ -93,7 +99,7 @@ public class StaffController implements UserControllerInterface<Staff> {
     @Override
     public ResponseEntity<?> findAllWithMatchingLogin(@RequestParam("match") String staffLogin) {
         try {
-            List<UserOutputDTO> listOfDTOs = this.getListOfUserDTOs(this.staffService.findAllMatchingLogin(staffLogin));
+            List<UserOutputDTO> listOfDTOs = this.getListOfUserDTOs(this.readStaff.findAllMatchingLogin(staffLogin));
             return this.generateResponseForListOfDTOs(listOfDTOs);
         } catch (GeneralServiceException exception) {
             return ResponseEntity.badRequest().contentType(MediaType.APPLICATION_JSON).body(exception.getMessage());
@@ -105,7 +111,7 @@ public class StaffController implements UserControllerInterface<Staff> {
     @Override
     public ResponseEntity<?> findAll() {
         try {
-            List<UserOutputDTO> listOfDTOs = this.getListOfUserDTOs(this.staffService.findAll());
+            List<UserOutputDTO> listOfDTOs = this.getListOfUserDTOs(this.readStaff.findAll());
             return this.generateResponseForListOfDTOs(listOfDTOs);
         } catch (GeneralServiceException exception) {
             return ResponseEntity.badRequest().contentType(MediaType.APPLICATION_JSON).body(exception.getMessage());
@@ -124,7 +130,7 @@ public class StaffController implements UserControllerInterface<Staff> {
             }
 
             if (jwsService.verifyUserSignature(ifMatch.replace("\"", ""), staff)) {
-                this.staffService.update(staff);
+                this.writeStaff.update(staff);
                 return ResponseEntity.noContent().build();
             } else {
                 return ResponseEntity.badRequest().contentType(MediaType.APPLICATION_JSON).body("Signature and given object does not match.");
@@ -139,7 +145,7 @@ public class StaffController implements UserControllerInterface<Staff> {
     @Override
     public ResponseEntity<?> activate(@PathVariable("id") UUID staffID) {
         try {
-            this.staffService.activate(staffID);
+            this.writeStaff.activate(staffID);
             return ResponseEntity.noContent().build();
         } catch (GeneralServiceException exception) {
             return ResponseEntity.badRequest().contentType(MediaType.APPLICATION_JSON).body(exception.getMessage());
@@ -151,7 +157,7 @@ public class StaffController implements UserControllerInterface<Staff> {
     @Override
     public ResponseEntity<?> deactivate(@PathVariable("id") UUID staffID) {
         try {
-            this.staffService.deactivate(staffID);
+            this.writeStaff.deactivate(staffID);
             return ResponseEntity.noContent().build();
         } catch (GeneralServiceException exception) {
             return ResponseEntity.badRequest().contentType(MediaType.APPLICATION_JSON).body(exception.getMessage());
