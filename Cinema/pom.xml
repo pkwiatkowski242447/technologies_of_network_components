@@ -58,6 +58,12 @@
         <slf4j.version>2.0.9</slf4j.version>
 
         <jakarta.xml.bind-api.version>2.3.2</jakarta.xml.bind-api.version>
+
+        <spring-ws-security.version>4.0.10</spring-ws-security.version>
+        <wsdl4j.version>1.6.3</wsdl4j.version>
+
+        <jaxb-runtime.version>4.0.5</jaxb-runtime.version>
+        <jaxb2-maven-plugin.version>3.1.0</jaxb2-maven-plugin.version>
     </properties>
 
     <dependencyManagement>
@@ -217,10 +223,55 @@
             <artifactId>jackson-databind</artifactId>
             <version>${jackson.version}</version>
         </dependency>
+
+        <!-- Soap definition -->
+
+        <dependency>
+            <groupId>org.springframework.ws</groupId>
+            <artifactId>spring-ws-security</artifactId>
+            <version>${spring-ws-security.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>wsdl4j</groupId>
+            <artifactId>wsdl4j</artifactId>
+            <version>${wsdl4j.version}</version>
+        </dependency>
+
+        <!-- XML Processing -->
+
+        <dependency>
+            <groupId>org.glassfish.jaxb</groupId>
+            <artifactId>jaxb-runtime</artifactId>
+            <version>${jaxb-runtime.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>jaxb2-maven-plugin</artifactId>
+                <version>${jaxb2-maven-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>schemagen</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>schemagen</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <sources>
+                        <source>${basedir}/Adapters/ViewSoap/src/main/java/pl/tks/gr3/cinema/viewsoap/dto/users</source>
+                        <source>${basedir}/Adapters/ViewSoap/src/main/java/pl/tks/gr3/cinema/viewsoap/dto/movies</source>
+                        <source>${basedir}/Adapters/ViewSoap/src/main/java/pl/tks/gr3/cinema/viewsoap/dto/tickets</source>
+                    </sources>
+                    <outputDirectory>${project.build.directory}/classes</outputDirectory>
+                </configuration>
+            </plugin>
+
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>

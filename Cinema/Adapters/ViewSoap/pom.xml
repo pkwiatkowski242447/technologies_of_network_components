@@ -9,9 +9,9 @@
         <version>1.0.0</version>
     </parent>
 
-    <groupId>pl.tks.gr3.viewrest</groupId>
-    <name>ViewRest</name>
-    <artifactId>ViewRest</artifactId>
+    <groupId>pl.tks.gr3.viewsoap</groupId>
+    <artifactId>ViewSoap</artifactId>
+    <name>ViewSoap</name>
 
     <dependencies>
         <dependency>
