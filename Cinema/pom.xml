@@ -57,13 +57,12 @@
         <commons-lang3.version>3.13.0</commons-lang3.version>
         <slf4j.version>2.0.9</slf4j.version>
 
-        <jakarta.xml.bind-api.version>2.3.2</jakarta.xml.bind-api.version>
+        <jakarta.xml.bind-api.version>4.0.2</jakarta.xml.bind-api.version>
+        <jaxb-runtime.version>4.0.5</jaxb-runtime.version>
+        <jaxb2-maven-plugin.version>3.1.0</jaxb2-maven-plugin.version>
 
         <spring-ws-security.version>4.0.10</spring-ws-security.version>
         <wsdl4j.version>1.6.3</wsdl4j.version>
-
-        <jaxb-runtime.version>4.0.5</jaxb-runtime.version>
-        <jaxb2-maven-plugin.version>3.1.0</jaxb2-maven-plugin.version>
     </properties>
 
     <dependencyManagement>
@@ -213,24 +212,41 @@
         </dependency>
 
         <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+
+        <!-- JAXB -->
+
+        <dependency>
             <groupId>jakarta.xml.bind</groupId>
             <artifactId>jakarta.xml.bind-api</artifactId>
             <version>${jakarta.xml.bind-api.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>${jackson.version}</version>
+            <groupId>com.sun.xml.bind</groupId>
+            <artifactId>jaxb-impl</artifactId>
+            <version>${jaxb-runtime.version}</version>
+            <scope>runtime</scope>
         </dependency>
 
-        <!-- Soap definition -->
+        <dependency>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>jaxb2-maven-plugin</artifactId>
+            <version>${jaxb2-maven-plugin.version}</version>
+        </dependency>
+
+        <!-- Spring WS -->
 
         <dependency>
             <groupId>org.springframework.ws</groupId>
             <artifactId>spring-ws-security</artifactId>
             <version>${spring-ws-security.version}</version>
         </dependency>
+
+        <!-- WSDL generation -->
 
         <dependency>
             <groupId>wsdl4j</groupId>
@@ -249,29 +265,6 @@
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>jaxb2-maven-plugin</artifactId>
-                <version>${jaxb2-maven-plugin.version}</version>
-                <executions>
-                    <execution>
-                        <id>schemagen</id>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>schemagen</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <sources>
-                        <source>${basedir}/Adapters/ViewSoap/src/main/java/pl/tks/gr3/cinema/viewsoap/dto/users</source>
-                        <source>${basedir}/Adapters/ViewSoap/src/main/java/pl/tks/gr3/cinema/viewsoap/dto/movies</source>
-                        <source>${basedir}/Adapters/ViewSoap/src/main/java/pl/tks/gr3/cinema/viewsoap/dto/tickets</source>
-                    </sources>
-                    <outputDirectory>${project.build.directory}/classes</outputDirectory>
-                </configuration>
-            </plugin>
-
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>

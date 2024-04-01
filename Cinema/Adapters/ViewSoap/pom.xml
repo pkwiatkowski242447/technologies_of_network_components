@@ -32,4 +32,37 @@
             <version>1.0.0</version>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>jaxb2-maven-plugin</artifactId>
+                <version>${jaxb2-maven-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>schemagen-login</id>
+                        <goals>
+                            <goal>schemagen</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <sources>
+                        <source>src/main/java/pl/tks/gr3/cinema/viewsoap/model/login</source>
+                        <source>src/main/java/pl/tks/gr3/cinema/viewsoap/model/register</source>
+                    </sources>
+                    <outputDirectory>src/main/resources</outputDirectory>
+                    <clearOutputDir>true</clearOutputDir>
+                    <transformSchemas>
+                        <transformSchema>
+                            <uri>http://viewsoap.adapters.cinema/users</uri>
+                            <toPrefix>usr</toPrefix>
+                            <toFile>users.xsd</toFile>
+                        </transformSchema>
+                    </transformSchemas>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>
