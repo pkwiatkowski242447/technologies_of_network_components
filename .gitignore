@@ -26,3 +26,6 @@ replay_pid*
 # IntellJ
 .idea
 target
+
+*.xsd
+META-INF

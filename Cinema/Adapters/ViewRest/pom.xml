@@ -12,4 +12,24 @@
     <groupId>pl.tks.gr3.viewrest</groupId>
     <name>ViewRest</name>
     <artifactId>ViewRest</artifactId>
+
+    <dependencies>
+        <dependency>
+            <groupId>pl.tks.gr3.domain_model</groupId>
+            <artifactId>DomainModel</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>pl.tks.gr3.application_ports</groupId>
+            <artifactId>ApplicationPorts</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>pl.tks.gr3.application_services</groupId>
+            <artifactId>ApplicationServices</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+    </dependencies>
 </project>

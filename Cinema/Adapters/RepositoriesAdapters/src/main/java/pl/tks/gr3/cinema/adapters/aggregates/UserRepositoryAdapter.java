@@ -161,8 +161,6 @@ public class UserRepositoryAdapter implements CreateUserPort, ReadUserPort, Upda
 
     // Other
 
-    // TODO: try to do it using switch
-
     @Override
     public void activate(User user) throws UserRepositoryException {
         if (user.getClass().equals(Client.class)) {
@@ -175,8 +173,6 @@ public class UserRepositoryAdapter implements CreateUserPort, ReadUserPort, Upda
             throw new UserTypeNotFoundException(MongoRepositoryMessages.USER_TYPE_NOT_FOUND);
         }
     }
-
-    // TODO: try doing it with switch
 
     @Override
     public void deactivate(User user) throws UserRepositoryException {

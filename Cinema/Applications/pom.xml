@@ -12,10 +12,35 @@
 
     <groupId>pl.tks.gr3.applications</groupId>
     <artifactId>Applications</artifactId>
+    <packaging>pom</packaging>
 
     <modules>
-        <module>REST</module>
+        <module>Bootstrap</module>
     </modules>
 
-    <packaging>pom</packaging>
+    <dependencies>
+        <dependency>
+            <groupId>pl.tks.gr3.repositories_adapters</groupId>
+            <artifactId>RepositoriesAdapters</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>pl.tks.gr3.application_services</groupId>
+            <artifactId>ApplicationServices</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>pl.tks.gr3.viewrest</groupId>
+            <artifactId>ViewRest</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>pl.tks.gr3.viewsoap</groupId>
+            <artifactId>ViewSoap</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+    </dependencies>
 </project>
