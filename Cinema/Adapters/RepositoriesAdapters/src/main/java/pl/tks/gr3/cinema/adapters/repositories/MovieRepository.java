@@ -32,7 +32,7 @@ import java.util.UUID;
 @Repository
 public class MovieRepository extends MongoRepository implements MovieRepositoryInterface {
 
-    private final String databaseName;
+    private String databaseName;
     private static final Logger logger = LoggerFactory.getLogger(MovieRepository.class);
     private final ValidationOptions validationOptions = new ValidationOptions().validator(
             Document.parse("""
@@ -130,7 +130,18 @@ public class MovieRepository extends MongoRepository implements MovieRepositoryI
     public MovieRepository(String databaseName) {
         this.databaseName = databaseName;
         super.initDBConnection(this.databaseName);
+
         mongoDatabase.getCollection(movieCollectionName).drop();
+
+        CreateCollectionOptions createCollectionOptions = new CreateCollectionOptions().validationOptions(this.validationOptions);
+        mongoDatabase.createCollection(movieCollectionName, createCollectionOptions);
+    }
+
+    public MovieRepository(String connectionString, String login, String password, String database) {
+        super.initDBConnection(connectionString, login, password, database);
+
+        mongoDatabase.getCollection(movieCollectionName).drop();
+
         CreateCollectionOptions createCollectionOptions = new CreateCollectionOptions().validationOptions(this.validationOptions);
         mongoDatabase.createCollection(movieCollectionName, createCollectionOptions);
     }

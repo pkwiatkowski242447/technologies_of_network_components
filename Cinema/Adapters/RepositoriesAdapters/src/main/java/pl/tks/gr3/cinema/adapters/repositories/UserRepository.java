@@ -35,7 +35,7 @@ import java.util.UUID;
 @Repository
 public class UserRepository extends MongoRepository implements UserRepositoryInterface {
 
-    private final String databaseName;
+    private String databaseName;
     private final static Logger logger = LoggerFactory.getLogger(UserRepository.class);
     private final ValidationOptions validationOptions = new ValidationOptions().validator(
             Document.parse("""
@@ -160,20 +160,21 @@ public class UserRepository extends MongoRepository implements UserRepositoryInt
 
         mongoDatabase.getCollection(userCollectionName).drop();
 
-        boolean collectionExists = false;
-        for (String collectionName : mongoDatabase.listCollectionNames()) {
-            if (collectionName.equals(userCollectionName)) {
-                collectionExists = true;
-                break;
-            }
-        }
+        CreateCollectionOptions createCollectionOptions = new CreateCollectionOptions().validationOptions(validationOptions);
+        mongoDatabase.createCollection(userCollectionName, createCollectionOptions);
+        IndexOptions indexOptions = new IndexOptions().unique(true);
+        mongoDatabase.getCollection(userCollectionName).createIndex(Indexes.ascending(UserEntConstants.USER_LOGIN), indexOptions);
+    }
 
-        if (!collectionExists) {
-            CreateCollectionOptions createCollectionOptions = new CreateCollectionOptions().validationOptions(validationOptions);
-            mongoDatabase.createCollection(userCollectionName, createCollectionOptions);
-            IndexOptions indexOptions = new IndexOptions().unique(true);
-            mongoDatabase.getCollection(userCollectionName).createIndex(Indexes.ascending(UserEntConstants.USER_LOGIN), indexOptions);
-        }
+    public UserRepository(String connectionString, String login, String password, String database) {
+        super.initDBConnection(connectionString, login, password, database);
+
+        mongoDatabase.getCollection(userCollectionName).drop();
+
+        CreateCollectionOptions createCollectionOptions = new CreateCollectionOptions().validationOptions(validationOptions);
+        mongoDatabase.createCollection(userCollectionName, createCollectionOptions);
+        IndexOptions indexOptions = new IndexOptions().unique(true);
+        mongoDatabase.getCollection(userCollectionName).createIndex(Indexes.ascending(UserEntConstants.USER_LOGIN), indexOptions);
     }
 
     // Create methods

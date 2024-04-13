@@ -42,7 +42,7 @@ import java.util.UUID;
 @Repository
 public class TicketRepository extends MongoRepository implements TicketRepositoryInterface {
 
-    private final String databaseName;
+    private String databaseName;
     private final static Logger logger = LoggerFactory.getLogger(TicketRepository.class);
     private final ValidationOptions validationOptions = new ValidationOptions().validator(
             Document.parse("""
@@ -187,7 +187,18 @@ public class TicketRepository extends MongoRepository implements TicketRepositor
     public TicketRepository(String databaseName) {
         this.databaseName = databaseName;
         super.initDBConnection(this.databaseName);
+
         mongoDatabase.getCollection(ticketCollectionName).drop();
+
+        CreateCollectionOptions createCollectionOptions = new CreateCollectionOptions().validationOptions(validationOptions);
+        mongoDatabase.createCollection(ticketCollectionName, createCollectionOptions);
+    }
+
+    public TicketRepository(String connectionString, String login, String password, String databaseName) {
+        super.initDBConnection(connectionString, login, password, databaseName);
+
+        mongoDatabase.getCollection(ticketCollectionName).drop();
+
         CreateCollectionOptions createCollectionOptions = new CreateCollectionOptions().validationOptions(validationOptions);
         mongoDatabase.createCollection(ticketCollectionName, createCollectionOptions);
     }

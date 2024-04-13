@@ -94,6 +94,33 @@ public abstract class MongoRepository implements AutoCloseable {
         mongoClient = MongoClients.create(mongoClientSettings);
         mongoDatabase = mongoClient.getDatabase(databaseName);
     }
+
+    protected void initDBConnection(String connectionString, String login, String password, String databaseName) {
+        MongoDBConnector.readConnectionData();
+
+        MongoCredential mongoCredentials = MongoCredential.createCredential(
+                login,
+                MongoDBConnector.getMongoDatabase(),
+                password.toCharArray()
+        );
+
+        MongoClientSettings mongoClientSettings = MongoClientSettings.builder()
+                .credential(mongoCredentials)
+                .readConcern(ReadConcern.MAJORITY)
+                .readPreference(ReadPreference.primary())
+                .writeConcern(WriteConcern.MAJORITY)
+                .applyConnectionString(new ConnectionString(connectionString))
+                .uuidRepresentation(UuidRepresentation.STANDARD)
+                .codecRegistry(CodecRegistries.fromRegistries(
+                        MongoClientSettings.getDefaultCodecRegistry(),
+                        pojoCodecRegistry
+                ))
+                .build();
+
+        mongoClient = MongoClients.create(mongoClientSettings);
+        mongoDatabase = mongoClient.getDatabase(databaseName);
+    }
+
     protected MongoCollection<UserEnt> getClientCollection() {
         return mongoDatabase.getCollection(userCollectionName, clientCollectionType);
     }
