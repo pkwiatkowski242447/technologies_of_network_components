@@ -16,10 +16,11 @@ import pl.tks.gr3.cinema.domain_model.users.Admin;
 import pl.tks.gr3.cinema.domain_model.users.Client;
 import pl.tks.gr3.cinema.domain_model.users.Staff;
 import pl.tks.gr3.cinema.ports.infrastructure.users.*;
-import pl.tks.gr3.cinema.ports.userinterface.AuthenticationServiceInterface;
+import pl.tks.gr3.cinema.ports.userinterface.other.LoginUserUseCase;
+import pl.tks.gr3.cinema.ports.userinterface.other.RegisterUserUseCase;
 
 @Service
-public class AuthenticationService implements AuthenticationServiceInterface {
+public class AuthenticationService implements RegisterUserUseCase, LoginUserUseCase {
 
     private final CreateUserPort createUserPort;
     private final ReadUserPort readUserPort;

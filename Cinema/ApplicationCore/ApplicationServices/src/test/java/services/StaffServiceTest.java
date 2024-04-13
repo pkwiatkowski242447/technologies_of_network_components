@@ -305,84 +305,84 @@ public class StaffServiceTest {
 
     // Activate tests
 
-//    @Test
-//    public void adminServiceActivateAdminTestPositive() throws GeneralAdminServiceException {
-//        staffNo2.setUserStatusActive(false);
-//
-//        when(readUserPort.findStaffByUUID(staffNo2.getUserID())).thenReturn(staffNo2);
-//
-//        staffService.activate(staffNo2.getUserID());
-//
-//        verify(activateUserPort).activate(staffArgumentCaptor.capture());
-//
-//        Staff capturedStaff = staffArgumentCaptor.getValue();
-//
-//        assertNotNull(capturedStaff);
-//        assertEquals(staffNo2, capturedStaff);
-//
-//        verify(activateUserPort, times(1)).activate(Mockito.eq(staffNo2));
-//        verify(readUserPort, times(1)).findAdminByUUID(Mockito.eq(staffNo2.getUserID()));
-//    }
-//
-//    @Test
-//    public void staffServiceDeactivateStaffThatIsNotInTheDatabaseTestNegative() {
-//        Staff staff = new Staff(UUID.randomUUID(), "SomeOtherStaffLoginNo3", "SomeOtherStaffPasswordNo3");
-//        assertNotNull(staff);
-//
-//        when(readUserPort.findStaffByUUID(staff.getUserID())).thenReturn(staff);
-//
-//        doThrow(UserRepositoryException.class).when(activateUserPort).activate(staffArgumentCaptor.capture());
-//
-//        assertThrows(StaffServiceActivationException.class, () -> staffService.activate(staff.getUserID()));
-//
-//        Staff capturedStaff = staffArgumentCaptor.getValue();
-//
-//        assertNotNull(capturedStaff);
-//        assertEquals(staff, capturedStaff);
-//
-//        verify(activateUserPort, times(1)).activate(staff);
-//    }
+    @Test
+    public void adminServiceActivateAdminTestPositive() {
+        staffNo2.setUserStatusActive(false);
+
+        when(readUserPort.findStaffByUUID(staffNo2.getUserID())).thenReturn(staffNo2);
+
+        staffService.activate(staffNo2.getUserID());
+
+        verify(activateUserPort).activate(staffArgumentCaptor.capture());
+
+        Staff capturedStaff = staffArgumentCaptor.getValue();
+
+        assertNotNull(capturedStaff);
+        assertEquals(staffNo2, capturedStaff);
+
+        verify(activateUserPort, times(1)).activate(Mockito.eq(staffNo2));
+        verify(readUserPort, times(1)).findStaffByUUID(Mockito.eq(staffNo2.getUserID()));
+    }
+
+    @Test
+    public void staffServiceDeactivateStaffThatIsNotInTheDatabaseTestNegative() {
+        Staff staff = new Staff(UUID.randomUUID(), "SomeOtherStaffLoginNo3", "SomeOtherStaffPasswordNo3");
+        assertNotNull(staff);
+
+        when(readUserPort.findStaffByUUID(staff.getUserID())).thenReturn(staff);
+
+        doThrow(UserRepositoryException.class).when(activateUserPort).activate(staffArgumentCaptor.capture());
+
+        assertThrows(StaffServiceActivationException.class, () -> staffService.activate(staff.getUserID()));
+
+        Staff capturedStaff = staffArgumentCaptor.getValue();
+
+        assertNotNull(capturedStaff);
+        assertEquals(staff, capturedStaff);
+
+        verify(activateUserPort, times(1)).activate(staff);
+    }
 
     // Deactivate tests
 
-//    @Test
-//    public void staffServiceDeactivateStaffTestPositive() throws GeneralStaffServiceException {
-//        staffNo3.setUserStatusActive(true);
-//
-//        when(readUserPort.findStaffByUUID(Mockito.eq(staffNo3.getUserID()))).thenReturn(staffNo3);
-//
-//        staffService.deactivate(staffNo3.getUserID());
-//
-//        verify(deactivateUserPort).deactivate(staffArgumentCaptor.capture());
-//
-//        Staff capturedStaff = staffArgumentCaptor.getValue();
-//
-//        assertNotNull(capturedStaff);
-//        assertEquals(staffNo3, capturedStaff);
-//
-//        verify(deactivateUserPort, times(1)).deactivate(Mockito.eq(staffNo3));
-//        verify(readUserPort, times(1)).findStaffByUUID(staffNo3.getUserID());
-//    }
-//
-//    @Test
-//    public void staffServiceActivateStaffThatIsNotInTheDatabaseTestNegative() {
-//        Staff staff = new Staff(UUID.randomUUID(), "SomeOtherStaffLoginNo3", "SomeOtherStaffPasswordNo3");
-//        assertNotNull(staff);
-//
-//        when(readUserPort.findStaffByUUID(staff.getUserID())).thenReturn(staff);
-//
-//        doThrow(UserRepositoryException.class).when(deactivateUserPort).deactivate(staffArgumentCaptor.capture());
-//
-//        assertThrows(StaffServiceDeactivationException.class, () -> staffService.deactivate(staff.getUserID()));
-//
-//        Staff capturedStaff = staffArgumentCaptor.getValue();
-//
-//        assertNotNull(capturedStaff);
-//        assertEquals(staff, capturedStaff);
-//
-//        verify(deactivateUserPort, times(1)).deactivate(staff);
-//        verify(readUserPort, times(1)).findStaffByUUID(staff.getUserID());
-//    }
+    @Test
+    public void staffServiceDeactivateStaffTestPositive() {
+        staffNo3.setUserStatusActive(true);
+
+        when(readUserPort.findStaffByUUID(Mockito.eq(staffNo3.getUserID()))).thenReturn(staffNo3);
+
+        staffService.deactivate(staffNo3.getUserID());
+
+        verify(deactivateUserPort).deactivate(staffArgumentCaptor.capture());
+
+        Staff capturedStaff = staffArgumentCaptor.getValue();
+
+        assertNotNull(capturedStaff);
+        assertEquals(staffNo3, capturedStaff);
+
+        verify(deactivateUserPort, times(1)).deactivate(Mockito.eq(staffNo3));
+        verify(readUserPort, times(1)).findStaffByUUID(staffNo3.getUserID());
+    }
+
+    @Test
+    public void staffServiceActivateStaffThatIsNotInTheDatabaseTestNegative() {
+        Staff staff = new Staff(UUID.randomUUID(), "SomeOtherStaffLoginNo3", "SomeOtherStaffPasswordNo3");
+        assertNotNull(staff);
+
+        when(readUserPort.findStaffByUUID(staff.getUserID())).thenReturn(staff);
+
+        doThrow(UserRepositoryException.class).when(deactivateUserPort).deactivate(staffArgumentCaptor.capture());
+
+        assertThrows(StaffServiceDeactivationException.class, () -> staffService.deactivate(staff.getUserID()));
+
+        Staff capturedStaff = staffArgumentCaptor.getValue();
+
+        assertNotNull(capturedStaff);
+        assertEquals(staff, capturedStaff);
+
+        verify(deactivateUserPort, times(1)).deactivate(staff);
+        verify(readUserPort, times(1)).findStaffByUUID(staff.getUserID());
+    }
 
     @Test
     public void staffServiceUpdateStaffWhenUserRepositoryExceptionIsThrownTestNegative() {

@@ -13,10 +13,8 @@ import pl.tks.gr3.cinema.adapters.exceptions.crud.user.UserRepositoryCreateUserD
 import pl.tks.gr3.cinema.application_services.exceptions.GeneralAdminServiceException;
 import pl.tks.gr3.cinema.application_services.exceptions.crud.admin.*;
 import pl.tks.gr3.cinema.application_services.services.AdminService;
-import pl.tks.gr3.cinema.adapters.aggregates.UserRepositoryAdapter;
 import pl.tks.gr3.cinema.domain_model.users.Admin;
 import pl.tks.gr3.cinema.ports.infrastructure.users.*;
-import pl.tks.gr3.cinema.ports.userinterface.UserServiceInterface;
 
 import java.util.Arrays;
 import java.util.List;

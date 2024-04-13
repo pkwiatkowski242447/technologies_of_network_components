@@ -35,7 +35,7 @@ import java.util.UUID;
 @Repository
 public class UserRepository extends MongoRepository implements UserRepositoryInterface {
 
-    private final String databaseName;
+    private String databaseName;
     private final static Logger logger = LoggerFactory.getLogger(UserRepository.class);
     private final ValidationOptions validationOptions = new ValidationOptions().validator(
             Document.parse("""
@@ -160,20 +160,21 @@ public class UserRepository extends MongoRepository implements UserRepositoryInt
 
         mongoDatabase.getCollection(userCollectionName).drop();
 
-        boolean collectionExists = false;
-        for (String collectionName : mongoDatabase.listCollectionNames()) {
-            if (collectionName.equals(userCollectionName)) {
-                collectionExists = true;
-                break;
-            }
-        }
+        CreateCollectionOptions createCollectionOptions = new CreateCollectionOptions().validationOptions(validationOptions);
+        mongoDatabase.createCollection(userCollectionName, createCollectionOptions);
+        IndexOptions indexOptions = new IndexOptions().unique(true);
+        mongoDatabase.getCollection(userCollectionName).createIndex(Indexes.ascending(UserEntConstants.USER_LOGIN), indexOptions);
+    }
 
-        if (!collectionExists) {
-            CreateCollectionOptions createCollectionOptions = new CreateCollectionOptions().validationOptions(validationOptions);
-            mongoDatabase.createCollection(userCollectionName, createCollectionOptions);
-            IndexOptions indexOptions = new IndexOptions().unique(true);
-            mongoDatabase.getCollection(userCollectionName).createIndex(Indexes.ascending(UserEntConstants.USER_LOGIN), indexOptions);
-        }
+    public UserRepository(String connectionString, String login, String password, String database) {
+        super.initDBConnection(connectionString, login, password, database);
+
+        mongoDatabase.getCollection(userCollectionName).drop();
+
+        CreateCollectionOptions createCollectionOptions = new CreateCollectionOptions().validationOptions(validationOptions);
+        mongoDatabase.createCollection(userCollectionName, createCollectionOptions);
+        IndexOptions indexOptions = new IndexOptions().unique(true);
+        mongoDatabase.getCollection(userCollectionName).createIndex(Indexes.ascending(UserEntConstants.USER_LOGIN), indexOptions);
     }
 
     // Create methods
@@ -263,7 +264,7 @@ public class UserRepository extends MongoRepository implements UserRepositoryInt
                     Aggregates.match(Filters.eq(UserEntConstants.GENERAL_IDENTIFIER, clientID)));
             UserEnt foundClientUser = getClientCollection().aggregate(aggregate).first();
             if (foundClientUser != null) {
-                client = UserMapper.toClient(foundClientUser);
+                client = UserMapper.toClientEnt(foundClientUser);
             } else {
                 throw new UserNullReferenceException(MongoRepositoryMessages.CLIENT_DOC_OBJECT_NOT_FOUND);
             }
@@ -282,7 +283,7 @@ public class UserRepository extends MongoRepository implements UserRepositoryInt
                     Aggregates.match(Filters.eq(UserEntConstants.GENERAL_IDENTIFIER, adminID)));
             UserEnt foundAdminUser = getClientCollection().aggregate(aggregate).first();
             if (foundAdminUser != null) {
-                admin = UserMapper.toAdmin(foundAdminUser);
+                admin = UserMapper.toAdminEnt(foundAdminUser);
             } else {
                 throw new UserNullReferenceException(MongoRepositoryMessages.ADMIN_DOC_OBJECT_NOT_FOUND);
             }
@@ -301,7 +302,7 @@ public class UserRepository extends MongoRepository implements UserRepositoryInt
                     Aggregates.match(Filters.eq(UserEntConstants.GENERAL_IDENTIFIER, staffID)));
             UserEnt foundStaffUser = getClientCollection().aggregate(aggregate).first();
             if (foundStaffUser != null) {
-                staff = UserMapper.toStaff(foundStaffUser);
+                staff = UserMapper.toStaffEnt(foundStaffUser);
             } else {
                 throw new UserNullReferenceException(MongoRepositoryMessages.STAFF_DOC_OBJECT_NOT_FOUND);
             }
@@ -323,7 +324,7 @@ public class UserRepository extends MongoRepository implements UserRepositoryInt
             Bson filter = Filters.eq(UserEntConstants.USER_DISCRIMINATOR_NAME, UserEntConstants.CLIENT_DISCRIMINATOR);
             List<UserEnt> listOfClientUsers = getClientCollection().find(filter).into(new ArrayList<>());
             for (UserEnt clientUser : listOfClientUsers) {
-                listOfAllClients.add(UserMapper.toClient(clientUser));
+                listOfAllClients.add(UserMapper.toClientEnt(clientUser));
             }
             clientSession.commitTransaction();
         } catch (MongoException exception) {
@@ -340,7 +341,7 @@ public class UserRepository extends MongoRepository implements UserRepositoryInt
             Bson filter = Filters.eq(UserEntConstants.USER_DISCRIMINATOR_NAME, UserEntConstants.ADMIN_DISCRIMINATOR);
             List<UserEnt> listOfAdminUsers = getClientCollection().find(filter).into(new ArrayList<>());
             for (UserEnt adminUser : listOfAdminUsers) {
-                listOfAllAdmins.add(UserMapper.toAdmin(adminUser));
+                listOfAllAdmins.add(UserMapper.toAdminEnt(adminUser));
             }
             clientSession.commitTransaction();
         } catch (MongoException exception) {
@@ -357,7 +358,7 @@ public class UserRepository extends MongoRepository implements UserRepositoryInt
             Bson filter = Filters.eq(UserEntConstants.USER_DISCRIMINATOR_NAME, UserEntConstants.STAFF_DISCRIMINATOR);
             List<UserEnt> listOfStaffUsers = getClientCollection().find(filter).into(new ArrayList<>());
             for (UserEnt staffUser : listOfStaffUsers) {
-                listOfAllStaff.add(UserMapper.toStaff(staffUser));
+                listOfAllStaff.add(UserMapper.toStaffEnt(staffUser));
             }
             clientSession.commitTransaction();
         } catch (MongoException exception) {
@@ -376,7 +377,7 @@ public class UserRepository extends MongoRepository implements UserRepositoryInt
                     Aggregates.match(Filters.eq(UserEntConstants.USER_LOGIN, loginValue)));
             UserEnt foundClientUser = getClientCollection().aggregate(listOfFilters).first();
             if (foundClientUser != null) {
-                client = UserMapper.toClient(foundClientUser);
+                client = UserMapper.toClientEnt(foundClientUser);
             } else {
                 throw new UserNullReferenceException(MongoRepositoryMessages.CLIENT_DOC_OBJECT_NOT_FOUND);
             }
@@ -396,7 +397,7 @@ public class UserRepository extends MongoRepository implements UserRepositoryInt
                     Aggregates.match(Filters.eq(UserEntConstants.USER_LOGIN, loginValue)));
             UserEnt foundAdminUser = getClientCollection().aggregate(listOfFilters).first();
             if (foundAdminUser != null) {
-                admin = UserMapper.toAdmin(foundAdminUser);
+                admin = UserMapper.toAdminEnt(foundAdminUser);
             } else {
                 throw new UserNullReferenceException(MongoRepositoryMessages.ADMIN_DOC_OBJECT_NOT_FOUND);
             }
@@ -416,7 +417,7 @@ public class UserRepository extends MongoRepository implements UserRepositoryInt
                     Aggregates.match(Filters.eq(UserEntConstants.USER_LOGIN, loginValue)));
             UserEnt foundStaffUser = getClientCollection().aggregate(listOfFilters).first();
             if (foundStaffUser != null) {
-                staff = UserMapper.toStaff(foundStaffUser);
+                staff = UserMapper.toStaffEnt(foundStaffUser);
             } else {
                 throw new UserNullReferenceException(MongoRepositoryMessages.STAFF_DOC_OBJECT_NOT_FOUND);
             }
@@ -438,7 +439,7 @@ public class UserRepository extends MongoRepository implements UserRepositoryInt
             List<Bson> listOfFilters = List.of(Aggregates.match(Filters.eq(UserEntConstants.USER_DISCRIMINATOR_NAME, UserEntConstants.CLIENT_DISCRIMINATOR)),
                     Aggregates.match(Filters.regex(UserEntConstants.USER_LOGIN, "^" + loginValue + ".*$")));
             for (UserEnt user : getClientCollection().aggregate(listOfFilters)) {
-                listOfMatchingClients.add(UserMapper.toClient(user));
+                listOfMatchingClients.add(UserMapper.toClientEnt(user));
             }
             clientSession.commitTransaction();
         } catch (MongoException exception) {
@@ -455,7 +456,7 @@ public class UserRepository extends MongoRepository implements UserRepositoryInt
             List<Bson> listOfFilters = List.of(Aggregates.match(Filters.eq(UserEntConstants.USER_DISCRIMINATOR_NAME, UserEntConstants.ADMIN_DISCRIMINATOR)),
                     Aggregates.match(Filters.regex(UserEntConstants.USER_LOGIN, "^" + loginValue + ".*$")));
             for (UserEnt user : getClientCollection().aggregate(listOfFilters)) {
-                listOfMatchingAdmins.add(UserMapper.toAdmin(user));
+                listOfMatchingAdmins.add(UserMapper.toAdminEnt(user));
             }
             clientSession.commitTransaction();
         } catch (MongoException exception) {
@@ -472,7 +473,7 @@ public class UserRepository extends MongoRepository implements UserRepositoryInt
             List<Bson> listOfFilters = List.of(Aggregates.match(Filters.eq(UserEntConstants.USER_DISCRIMINATOR_NAME, UserEntConstants.STAFF_DISCRIMINATOR)),
                     Aggregates.match(Filters.regex(UserEntConstants.USER_LOGIN, "^" + loginValue + ".*$")));
             for (UserEnt user : getClientCollection().aggregate(listOfFilters)) {
-                listOfMatchingStaff.add(UserMapper.toStaff(user));
+                listOfMatchingStaff.add(UserMapper.toStaffEnt(user));
             }
             clientSession.commitTransaction();
         } catch (MongoException exception) {
@@ -584,9 +585,9 @@ public class UserRepository extends MongoRepository implements UserRepositoryInt
     private void updateCertainUserBasedOnType(UserEnt user, String name) throws UserRepositoryException {
         try {
             switch (name) {
-                case UserEntConstants.ADMIN_DISCRIMINATOR -> this.updateAdmin(UserMapper.toAdmin(user));
-                case UserEntConstants.STAFF_DISCRIMINATOR -> this.updateStaff(UserMapper.toStaff(user));
-                case UserEntConstants.CLIENT_DISCRIMINATOR -> this.updateClient(UserMapper.toClient(user));
+                case UserEntConstants.ADMIN_DISCRIMINATOR -> this.updateAdmin(UserMapper.toAdminEnt(user));
+                case UserEntConstants.STAFF_DISCRIMINATOR -> this.updateStaff(UserMapper.toStaffEnt(user));
+                case UserEntConstants.CLIENT_DISCRIMINATOR -> this.updateClient(UserMapper.toClientEnt(user));
                 default -> throw new UserTypeNotFoundException(MongoRepositoryMessages.USER_TYPE_NOT_FOUND);
             }
         } catch (UserRepositoryException exception) {

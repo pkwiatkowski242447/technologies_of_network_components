@@ -10,14 +10,15 @@ import pl.tks.gr3.cinema.application_services.exceptions.crud.staff.*;
 import pl.tks.gr3.cinema.domain_model.Ticket;
 import pl.tks.gr3.cinema.domain_model.users.Staff;
 import pl.tks.gr3.cinema.ports.infrastructure.users.*;
-import pl.tks.gr3.cinema.ports.userinterface.UserServiceInterface;
+import pl.tks.gr3.cinema.ports.userinterface.users.ReadUserUseCase;
+import pl.tks.gr3.cinema.ports.userinterface.users.WriteUserUseCase;
 
 
 import java.util.List;
 import java.util.UUID;
 
 @Service
-public class StaffService implements UserServiceInterface<Staff> {
+public class StaffService implements ReadUserUseCase<Staff>, WriteUserUseCase<Staff> {
 
     private final CreateUserPort createUserPort;
     private final ReadUserPort readUserPort;
@@ -104,7 +105,7 @@ public class StaffService implements UserServiceInterface<Staff> {
     @Override
     public void activate(UUID staffID) throws StaffServiceActivationException {
         try {
-            this.activateUserPort.activate(this.readUserPort.findByUUID(staffID));
+            this.activateUserPort.activate(this.readUserPort.findStaffByUUID(staffID));
         } catch (UserRepositoryException exception) {
             throw new StaffServiceActivationException(exception.getMessage(), exception);
         }
@@ -113,7 +114,7 @@ public class StaffService implements UserServiceInterface<Staff> {
     @Override
     public void deactivate(UUID staffID) throws StaffServiceDeactivationException {
         try {
-            this.deactivateUserPort.deactivate(this.readUserPort.findByUUID(staffID));
+            this.deactivateUserPort.deactivate(this.readUserPort.findStaffByUUID(staffID));
         } catch (UserRepositoryException exception) {
             throw new StaffServiceDeactivationException(exception.getMessage(), exception);
         }
