@@ -23,7 +23,10 @@ import pl.tks.gr3.cinema.adapters.exceptions.UserRepositoryException;
 import pl.tks.gr3.cinema.application_services.exceptions.crud.movie.MovieServiceCreateException;
 import pl.tks.gr3.cinema.application_services.exceptions.crud.movie.MovieServiceDeleteException;
 import pl.tks.gr3.cinema.application_services.exceptions.crud.movie.MovieServiceReadException;
+import pl.tks.gr3.cinema.application_services.exceptions.crud.ticket.TicketServiceDeleteException;
+import pl.tks.gr3.cinema.application_services.exceptions.crud.ticket.TicketServiceReadException;
 import pl.tks.gr3.cinema.domain_model.Movie;
+import pl.tks.gr3.cinema.domain_model.Ticket;
 import pl.tks.gr3.cinema.domain_model.users.Admin;
 import pl.tks.gr3.cinema.domain_model.users.Client;
 import pl.tks.gr3.cinema.domain_model.users.Staff;
@@ -31,6 +34,8 @@ import pl.tks.gr3.cinema.ports.infrastructure.movies.CreateMoviePort;
 import pl.tks.gr3.cinema.ports.infrastructure.movies.DeleteMoviePort;
 import pl.tks.gr3.cinema.ports.infrastructure.movies.ReadMoviePort;
 import pl.tks.gr3.cinema.ports.infrastructure.movies.UpdateMoviePort;
+import pl.tks.gr3.cinema.ports.infrastructure.tickets.DeleteTicketPort;
+import pl.tks.gr3.cinema.ports.infrastructure.tickets.ReadTicketPort;
 import pl.tks.gr3.cinema.ports.infrastructure.users.*;
 import pl.tks.gr3.cinema.ports.userinterface.movies.ReadMovieUseCase;
 import pl.tks.gr3.cinema.ports.userinterface.movies.WriteMovieUseCase;
@@ -50,6 +55,12 @@ import static org.junit.jupiter.api.Assertions.*;
 public class MovieControllerTest extends TestContainerSetup {
 
     private static final Logger logger = LoggerFactory.getLogger(MovieControllerTest.class);
+
+    @Autowired
+    private ReadTicketPort readTicketPort;
+
+    @Autowired
+    private DeleteTicketPort deleteTicketPort;
 
     @Autowired
     private CreateMoviePort createMoviePort;
@@ -156,6 +167,15 @@ public class MovieControllerTest extends TestContainerSetup {
             }
         } catch (UserRepositoryException exception) {
             throw new RuntimeException("Could not delete sample users with userRepository object.", exception);
+        }
+
+        try {
+            List<Ticket> listOfTickets = readTicketPort.findAll();
+            for (Ticket ticket : listOfTickets) {
+                deleteTicketPort.delete(ticket.getTicketID());
+            }
+        } catch (TicketServiceReadException | TicketServiceDeleteException exception) {
+            throw new RuntimeException("Could not delete sample tickets with ticketRepository object.", exception);
         }
 
         try {

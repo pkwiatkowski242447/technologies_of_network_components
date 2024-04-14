@@ -12,7 +12,13 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class ClientRegisterResponseTest {
 
     @Test
-    public void adminRegisterResponseAllArgsConstructorAndGettersTestPositive() {
+    public void clientRegisterResponseNoArgsConstructorTestPositive() {
+        ClientRegisterResponse clientRegisterResponse = new ClientRegisterResponse();
+        assertNotNull(clientRegisterResponse);
+    }
+
+    @Test
+    public void clientRegisterResponseAllArgsConstructorAndGettersTestPositive() {
         UserOutputElement client = new UserOutputElement(UUID.randomUUID().toString(), "exampleLogin", true);
         String accessToken = "ExampleAccessToken";
 

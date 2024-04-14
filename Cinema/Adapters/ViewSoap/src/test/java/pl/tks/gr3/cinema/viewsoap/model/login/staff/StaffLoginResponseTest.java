@@ -9,7 +9,13 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class StaffLoginResponseTest {
 
     @Test
-    public void adminLoginResponseAllArgsConstructorAndGettersTestPositive() {
+    public void staffLoginResponseNoArgsConstructorTestPositive() {
+        StaffLoginResponse staffLoginResponse = new StaffLoginResponse();
+        assertNotNull(staffLoginResponse);
+    }
+
+    @Test
+    public void staffLoginResponseAllArgsConstructorAndGettersTestPositive() {
         String accessToken = "ExampleAccessToken";
 
         StaffLoginResponse staffLoginResponse = new StaffLoginResponse(accessToken);

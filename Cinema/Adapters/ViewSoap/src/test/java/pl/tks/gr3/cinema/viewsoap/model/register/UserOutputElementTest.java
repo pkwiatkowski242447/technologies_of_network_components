@@ -23,6 +23,12 @@ public class UserOutputElementTest {
     }
 
     @Test
+    public void userOutputElementNoArgsConstructorTestPositive() {
+        UserOutputElement userOutputElement = new UserOutputElement();
+        assertNotNull(userOutputElement);
+    }
+
+    @Test
     public void userOutputElementAllArgsConstructorTestPositive() {
         String id = UUID.randomUUID().toString();
         String login = "ExampleLogin";
@@ -63,7 +69,7 @@ public class UserOutputElementTest {
     @Test
     public void userOutputElementEqualsTestWithObjectOfTheSameClassButDifferentTestNegative() {
         boolean result = userOutputElementNo1.equals(userOutputElementNo3);
-        assertTrue(result);
+        assertFalse(result);
     }
 
     @Test

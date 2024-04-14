@@ -8,6 +8,12 @@ import static org.junit.jupiter.api.Assertions.*;
 public class AdminLoginResponseTest {
 
     @Test
+    public void adminLoginRequestNoArgsConstructorTestPositive() {
+        AdminLoginResponse adminLoginResponse = new AdminLoginResponse();
+        assertNotNull(adminLoginResponse);
+    }
+
+    @Test
     public void adminLoginResponseAllArgsConstructorAndGettersTestPositive() {
         String accessToken = "ExampleAccessToken";
 
