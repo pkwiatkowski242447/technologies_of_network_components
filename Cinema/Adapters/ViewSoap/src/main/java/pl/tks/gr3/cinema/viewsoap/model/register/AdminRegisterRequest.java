@@ -11,8 +11,7 @@ import pl.tks.gr3.cinema.utils.validation.UserValidationMessages;
 import pl.tks.gr3.cinema.viewsoap.consts.WebServiceConsts;
 
 @Getter
-@NoArgsConstructor
-@AllArgsConstructor
+@NoArgsConstructor @AllArgsConstructor
 @XmlRootElement(name = WebServiceConsts.ADMIN_REGISTER_INPUT)
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(propOrder = {"login", "password"})

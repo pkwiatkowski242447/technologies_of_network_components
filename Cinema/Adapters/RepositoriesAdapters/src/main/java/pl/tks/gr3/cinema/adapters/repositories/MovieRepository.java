@@ -10,7 +10,10 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Repository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.PropertySource;
+import org.springframework.stereotype.Component;
+import pl.tks.gr3.cinema.adapters.connection.DatabaseConfig;
 import pl.tks.gr3.cinema.adapters.consts.model.MovieEntConstants;
 import pl.tks.gr3.cinema.adapters.consts.model.TicketEntConstants;
 import pl.tks.gr3.cinema.adapters.exceptions.MovieRepositoryException;
@@ -29,7 +32,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-@Repository
+@Component
+@PropertySource("classpath:mongo.properties")
 public class MovieRepository extends MongoRepository implements MovieRepositoryInterface {
 
     private String databaseName;
@@ -75,56 +79,15 @@ public class MovieRepository extends MongoRepository implements MovieRepositoryI
                             }
                             """));
 
-    public MovieRepository() {
-        this.databaseName = "default";
-        super.initDBConnection(this.databaseName);
+    @Autowired
+    public MovieRepository(DatabaseConfig dbConfig) {
+        String connectionString = "mongodb://%s:%s".formatted(dbConfig.getHostName(), dbConfig.getPortNumber());
+        super.initDBConnection(connectionString, dbConfig.getUserName(), dbConfig.getPassword(), dbConfig.getDbName(), dbConfig.getAuthDatabase());
 
         mongoDatabase.getCollection(movieCollectionName).drop();
 
-        boolean collectionExists = false;
-        for (String collectionName : mongoDatabase.listCollectionNames()) {
-            if (collectionName.equals(movieCollectionName)) {
-                collectionExists = true;
-                break;
-            }
-        }
-
-        if (!collectionExists) {
-            CreateCollectionOptions createCollectionOptions = new CreateCollectionOptions().validationOptions(this.validationOptions);
-            mongoDatabase.createCollection(movieCollectionName, createCollectionOptions);
-        }
-    }
-
-    @PostConstruct
-    private void initializeDatabaseState() {
-        UUID movieNo1ID = UUID.fromString("f3e66584-f793-4f5e-9dec-904ca00e2dd6");
-        UUID movieNo2ID = UUID.fromString("9b9e1de2-099b-415d-96b4-f7cfc8897318");
-        UUID movieNo3ID = UUID.fromString("b69b4714-e307-4ebf-b491-e3720f963f53");
-
-        MovieEnt movieNo1 = new MovieEnt(movieNo1ID, "Pulp Fiction", 45.75, 1, 100);
-        MovieEnt movieNo2 = new MovieEnt(movieNo2ID, "Cars", 30.50, 2, 50);
-        MovieEnt movieNo3 = new MovieEnt(movieNo3ID, "Joker", 50.00, 3, 75);
-
-        List<MovieEnt> listOfMovies = List.of(movieNo1, movieNo2, movieNo3);
-        for (MovieEnt movie : listOfMovies) {
-            Bson filter = Filters.eq(MovieEntConstants.GENERAL_IDENTIFIER, movie.getMovieID());
-            if (this.getMovieCollection().find(filter).first() == null) {
-                this.getMovieCollection().insertOne(movie);
-            }
-        }
-    }
-
-    @PreDestroy
-    private void restoreDatabaseState() {
-        try {
-            List<MovieEnt> listOfAllMovies = this.findAll();
-            for (MovieEnt movie : listOfAllMovies) {
-                this.delete(movie.getMovieID());
-            }
-        } catch (MovieRepositoryException exception) {
-            logger.debug(exception.getMessage());
-        }
-        this.close();
+        CreateCollectionOptions createCollectionOptions = new CreateCollectionOptions().validationOptions(this.validationOptions);
+        mongoDatabase.createCollection(movieCollectionName, createCollectionOptions);
     }
 
     public MovieRepository(String databaseName) {
@@ -144,6 +107,25 @@ public class MovieRepository extends MongoRepository implements MovieRepositoryI
 
         CreateCollectionOptions createCollectionOptions = new CreateCollectionOptions().validationOptions(this.validationOptions);
         mongoDatabase.createCollection(movieCollectionName, createCollectionOptions);
+    }
+
+    @PostConstruct
+    private void initializeDatabaseState() {
+        UUID movieNo1ID = UUID.fromString("f3e66584-f793-4f5e-9dec-904ca00e2dd6");
+        UUID movieNo2ID = UUID.fromString("9b9e1de2-099b-415d-96b4-f7cfc8897318");
+        UUID movieNo3ID = UUID.fromString("b69b4714-e307-4ebf-b491-e3720f963f53");
+
+        MovieEnt movieNo1 = new MovieEnt(movieNo1ID, "Pulp Fiction", 45.75, 1, 100);
+        MovieEnt movieNo2 = new MovieEnt(movieNo2ID, "Cars", 30.50, 2, 50);
+        MovieEnt movieNo3 = new MovieEnt(movieNo3ID, "Joker", 50.00, 3, 75);
+
+        List<MovieEnt> listOfMovies = List.of(movieNo1, movieNo2, movieNo3);
+        for (MovieEnt movie : listOfMovies) {
+            Bson filter = Filters.eq(MovieEntConstants.GENERAL_IDENTIFIER, movie.getMovieID());
+            if (this.getMovieCollection().find(filter).first() == null) {
+                this.getMovieCollection().insertOne(movie);
+            }
+        }
     }
 
     // Create methods

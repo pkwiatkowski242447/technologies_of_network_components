@@ -1,4 +1,4 @@
-package pl.tks.gr3.cinema.api;
+package pl.tks.gr3.cinema.integration;
 
 import io.restassured.RestAssured;
 import io.restassured.config.RestAssuredConfig;
@@ -8,16 +8,18 @@ import io.restassured.response.Response;
 import io.restassured.response.ValidatableResponse;
 import io.restassured.specification.RequestSpecification;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import pl.tks.gr3.cinema.CinemaApplication;
-import pl.tks.gr3.cinema.adapters.aggregates.UserRepositoryAdapter;
+import pl.tks.gr3.cinema.TestContainerSetup;
 import pl.tks.gr3.cinema.adapters.consts.model.UserEntConstants;
 import pl.tks.gr3.cinema.adapters.exceptions.UserRepositoryException;
-import pl.tks.gr3.cinema.adapters.repositories.UserRepository;
 import pl.tks.gr3.cinema.domain_model.users.Admin;
 import pl.tks.gr3.cinema.domain_model.users.Client;
 import pl.tks.gr3.cinema.domain_model.users.Staff;
@@ -30,40 +32,46 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@ExtendWith(SpringExtension.class)
 @SpringBootTest(classes = {CinemaApplication.class}, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
-public class AuthenticationControllerTest {
+@TestPropertySource(locations = "classpath:mongo-test.properties")
+public class AuthenticationControllerTest extends TestContainerSetup {
 
     private final static Logger logger = LoggerFactory.getLogger(AuthenticationControllerTest.class);
 
-    private static UserRepository userRepository;
 
-    private static CreateUserPort createUserPort;
-    private static ReadUserPort readUserPort;
-    private static UpdateUserPort updateUserPort;
-    private static ActivateUserPort activateUserPort;
-    private static DeactivateUserPort deactivateUserPort;
-    private static DeleteUserPort deleteUserPort;
+    @Autowired
+    private CreateUserPort createUserPort;
 
-    private static PasswordEncoder passwordEncoder;
+    @Autowired
+    private ReadUserPort readUserPort;
+
+    @Autowired
+    private UpdateUserPort updateUserPort;
+
+    @Autowired
+    private ActivateUserPort activateUserPort;
+
+    @Autowired
+    private DeactivateUserPort deactivateUserPort;
+
+    @Autowired
+    private DeleteUserPort deleteUserPort;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     private static Client clientUser;
     private static Admin adminUser;
     private static Staff staffUser;
     private static String passwordNotHashed;
 
-    @BeforeAll
-    public static void init() {
-        userRepository = new UserRepository(TestConstants.databaseName);
-        UserRepositoryAdapter userRepositoryAdapter = new UserRepositoryAdapter(userRepository);
 
-        createUserPort = userRepositoryAdapter;
-        readUserPort = userRepositoryAdapter;
-        updateUserPort = userRepositoryAdapter;
-        activateUserPort = userRepositoryAdapter;
-        deactivateUserPort = userRepositoryAdapter;
-        deleteUserPort = userRepositoryAdapter;
+    @BeforeEach
+    public void initializeSampleData() {
+        passwordNotHashed = "password";
 
-        passwordEncoder = new BCryptPasswordEncoder();
+        // Configure RestAssured so that it can perform HTTPS requests
 
         ClassLoader classLoader = AuthenticationControllerTest.class.getClassLoader();
         URL resourceURL = classLoader.getResource("pas-truststore.jks");
@@ -76,11 +84,7 @@ public class AuthenticationControllerTest {
                         .allowAllHostnames()
         );
 
-        passwordNotHashed = "password";
-    }
-
-    @BeforeEach
-    public void initializeSampleData() {
+        // Initialize sample data
         this.clearCollection();
         try {
             clientUser = createUserPort.createClient("ClientLoginX", passwordEncoder.encode(passwordNotHashed));
@@ -97,29 +101,25 @@ public class AuthenticationControllerTest {
     }
 
     private void clearCollection() {
+        // Remove sample data
         try {
             List<Client> listOfClients = readUserPort.findAllClients();
             for (Client client : listOfClients) {
-                userRepository.delete(client.getUserID(), UserEntConstants.CLIENT_DISCRIMINATOR);
+                deleteUserPort.delete(client.getUserID(), UserEntConstants.CLIENT_DISCRIMINATOR);
             }
 
             List<Admin> listOfAdmins = readUserPort.findAllAdmins();
             for (Admin admin : listOfAdmins) {
-                userRepository.delete(admin.getUserID(), UserEntConstants.ADMIN_DISCRIMINATOR);
+                deleteUserPort.delete(admin.getUserID(), UserEntConstants.ADMIN_DISCRIMINATOR);
             }
 
             List<Staff> listOfStaffs = readUserPort.findAllStaffs();
             for (Staff staff : listOfStaffs) {
-                userRepository.delete(staff.getUserID(), UserEntConstants.STAFF_DISCRIMINATOR);
+                deleteUserPort.delete(staff.getUserID(), UserEntConstants.STAFF_DISCRIMINATOR);
             }
         } catch (UserRepositoryException exception) {
             throw new RuntimeException("Could not delete sample users with userRepository object.", exception);
         }
-    }
-
-    @AfterAll
-    public static void destroy() {
-        userRepository.close();
     }
 
     // Register methods

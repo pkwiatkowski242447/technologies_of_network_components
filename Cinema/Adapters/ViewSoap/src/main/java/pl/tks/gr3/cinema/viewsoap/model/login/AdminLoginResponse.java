@@ -7,8 +7,7 @@ import lombok.NoArgsConstructor;
 import pl.tks.gr3.cinema.viewsoap.consts.WebServiceConsts;
 
 @Getter
-@NoArgsConstructor
-@AllArgsConstructor
+@NoArgsConstructor @AllArgsConstructor
 @XmlRootElement(name = WebServiceConsts.ADMIN_LOGIN_OUTPUT)
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(propOrder = {"accessToken"})
