@@ -1,4 +1,4 @@
-package pl.tks.gr3.cinema.api;
+package pl.tks.gr3.cinema.integration;
 
 public class TestConstants {
 

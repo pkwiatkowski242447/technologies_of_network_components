@@ -1,5 +1,5 @@
 
-package pl.tks.gr3.cinema.api;
+package pl.tks.gr3.cinema.integration;
 
 import io.restassured.RestAssured;
 import io.restassured.common.mapper.TypeRef;
@@ -10,18 +10,17 @@ import io.restassured.response.Response;
 import io.restassured.response.ValidatableResponse;
 import io.restassured.specification.RequestSpecification;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import pl.tks.gr3.cinema.CinemaApplication;
-import pl.tks.gr3.cinema.adapters.aggregates.MovieRepositoryAdapter;
-import pl.tks.gr3.cinema.adapters.aggregates.TicketRepositoryAdapter;
-import pl.tks.gr3.cinema.adapters.aggregates.UserRepositoryAdapter;
+import pl.tks.gr3.cinema.TestContainerSetup;
 import pl.tks.gr3.cinema.adapters.repositories.MovieRepository;
-import pl.tks.gr3.cinema.adapters.repositories.TicketRepository;
-import pl.tks.gr3.cinema.adapters.repositories.UserRepository;
 import pl.tks.gr3.cinema.application_services.exceptions.crud.admin.AdminServiceCreateException;
 import pl.tks.gr3.cinema.application_services.exceptions.crud.admin.AdminServiceDeleteException;
 import pl.tks.gr3.cinema.application_services.exceptions.crud.admin.AdminServiceReadException;
@@ -37,7 +36,6 @@ import pl.tks.gr3.cinema.application_services.exceptions.crud.staff.StaffService
 import pl.tks.gr3.cinema.application_services.exceptions.crud.ticket.TicketServiceCreateException;
 import pl.tks.gr3.cinema.application_services.exceptions.crud.ticket.TicketServiceDeleteException;
 import pl.tks.gr3.cinema.application_services.exceptions.crud.ticket.TicketServiceReadException;
-import pl.tks.gr3.cinema.application_services.services.*;
 import pl.tks.gr3.cinema.domain_model.Movie;
 import pl.tks.gr3.cinema.domain_model.Ticket;
 import pl.tks.gr3.cinema.domain_model.users.Admin;
@@ -70,50 +68,90 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@ExtendWith(SpringExtension.class)
 @SpringBootTest(classes = {CinemaApplication.class}, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
-public class TicketControllerTest {
+@TestPropertySource(locations = "classpath:mongo-test.properties")
+public class TicketControllerTest extends TestContainerSetup {
 
     private static final Logger logger = LoggerFactory.getLogger(TicketControllerTest.class);
 
-    private static TicketRepository ticketRepository;
+    @Autowired
+    private CreateTicketPort createTicketPort;
 
-    private static CreateTicketPort createTicketPort;
-    private static ReadTicketPort readTicketPort;
-    private static UpdateTicketPort updateTicketPort;
-    private static DeleteTicketPort deleteTicketPort;
+    @Autowired
+    private ReadTicketPort readTicketPort;
 
-    private static UserRepository userRepository;
+    @Autowired
+    private UpdateTicketPort updateTicketPort;
 
-    private static CreateUserPort createUserPort;
-    private static ReadUserPort readUserPort;
-    private static UpdateUserPort updateUserPort;
-    private static ActivateUserPort activateUserPort;
-    private static DeactivateUserPort deactivateUserPort;
-    private static DeleteUserPort deleteUserPort;
+    @Autowired
+    private DeleteTicketPort deleteTicketPort;
 
-    private static MovieRepository movieRepository;
+    @Autowired
+    private CreateUserPort createUserPort;
 
-    private static CreateMoviePort createMoviePort;
-    private static ReadMoviePort readMoviePort;
-    private static UpdateMoviePort updateMoviePort;
-    private static DeleteMoviePort deleteMoviePort;
+    @Autowired
+    private ReadUserPort readUserPort;
 
-    private static ReadTicketUseCase readTicket;
-    private static WriteTicketUseCase writeTicket;
+    @Autowired
+    private UpdateUserPort updateUserPort;
 
-    private static ReadMovieUseCase readMovie;
-    private static WriteMovieUseCase writeMovie;
+    @Autowired
+    private ActivateUserPort activateUserPort;
 
-    private static ReadUserUseCase<Client> readClient;
-    private static WriteUserUseCase<Client> writeClient;
+    @Autowired
+    private DeactivateUserPort deactivateUserPort;
 
-    private static ReadUserUseCase<Admin> readAdmin;
-    private static WriteUserUseCase<Admin> writeAdmin;
+    @Autowired
+    private DeleteUserPort deleteUserPort;
 
-    private static ReadUserUseCase<Staff> readStaff;
-    private static WriteUserUseCase<Staff> writeStaff;
+    @Autowired
+    private MovieRepository movieRepository;
 
-    private static PasswordEncoder passwordEncoder;
+    @Autowired
+    private CreateMoviePort createMoviePort;
+
+    @Autowired
+    private ReadMoviePort readMoviePort;
+
+    @Autowired
+    private UpdateMoviePort updateMoviePort;
+
+    @Autowired
+    private DeleteMoviePort deleteMoviePort;
+
+    @Autowired
+    private ReadTicketUseCase readTicket;
+
+    @Autowired
+    private WriteTicketUseCase writeTicket;
+
+    @Autowired
+    private ReadMovieUseCase readMovie;
+
+    @Autowired
+    private WriteMovieUseCase writeMovie;
+
+    @Autowired
+    private ReadUserUseCase<Client> readClient;
+
+    @Autowired
+    private WriteUserUseCase<Client> writeClient;
+
+    @Autowired
+    private ReadUserUseCase<Admin> readAdmin;
+
+    @Autowired
+    private WriteUserUseCase<Admin> writeAdmin;
+
+    @Autowired
+    private ReadUserUseCase<Staff> readStaff;
+
+    @Autowired
+    private WriteUserUseCase<Staff> writeStaff;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     private Client clientNo1;
     private Client clientNo2;
@@ -138,57 +176,12 @@ public class TicketControllerTest {
     private LocalDateTime movieTimeNo2;
     private static String passwordNotHashed;
 
-    @BeforeAll
-    public static void init() {
-        ticketRepository = new TicketRepository(TestConstants.databaseName);
-        userRepository = new UserRepository(TestConstants.databaseName);
-        movieRepository = new MovieRepository(TestConstants.databaseName);
 
-        TicketRepositoryAdapter ticketRepositoryAdapter = new TicketRepositoryAdapter(ticketRepository);
-        UserRepositoryAdapter userRepositoryAdapter = new UserRepositoryAdapter(userRepository);
-        MovieRepositoryAdapter movieRepositoryAdapter = new MovieRepositoryAdapter(movieRepository);
+    @BeforeEach
+    public void initializeSampleData() {
+        passwordNotHashed = "password";
 
-        createTicketPort = ticketRepositoryAdapter;
-        readTicketPort = ticketRepositoryAdapter;
-        updateTicketPort = ticketRepositoryAdapter;
-        deleteTicketPort = ticketRepositoryAdapter;
-
-        TicketService ticketService = new TicketService(createTicketPort, readTicketPort, updateTicketPort, deleteTicketPort);
-
-        readTicket = ticketService;
-        writeTicket = ticketService;
-
-        createUserPort = userRepositoryAdapter;
-        readUserPort = userRepositoryAdapter;
-        updateUserPort = userRepositoryAdapter;
-        activateUserPort = userRepositoryAdapter;
-        deactivateUserPort = userRepositoryAdapter;
-        deleteUserPort = userRepositoryAdapter;
-
-        ClientService clientService = new ClientService(createUserPort, readUserPort, updateUserPort, activateUserPort, deactivateUserPort, deleteUserPort);
-        AdminService adminService = new AdminService(createUserPort, readUserPort, updateUserPort, activateUserPort, deactivateUserPort, deleteUserPort);
-        StaffService staffService = new StaffService(createUserPort, readUserPort, updateUserPort, activateUserPort, deactivateUserPort, deleteUserPort);
-
-        readClient = clientService;
-        writeClient = clientService;
-
-        readStaff = staffService;
-        writeStaff = staffService;
-
-        readAdmin = adminService;
-        writeAdmin = adminService;
-
-        createMoviePort = movieRepositoryAdapter;
-        readMoviePort = movieRepositoryAdapter;
-        updateMoviePort = movieRepositoryAdapter;
-        deleteMoviePort = movieRepositoryAdapter;
-
-        MovieService movieService = new MovieService(createMoviePort, readMoviePort, updateMoviePort, deleteMoviePort);
-
-        readMovie = movieService;
-        writeMovie = movieService;
-
-        passwordEncoder = new BCryptPasswordEncoder();
+        // Configure RestAssured so that it can perform HTTPS requests
 
         ClassLoader classLoader = AuthenticationControllerTest.class.getClassLoader();
         URL resourceURL = classLoader.getResource("pas-truststore.jks");
@@ -201,11 +194,7 @@ public class TicketControllerTest {
                         .allowAllHostnames()
         );
 
-        passwordNotHashed = "password";
-    }
-
-    @BeforeEach
-    public void initializeSampleData() {
+        // Initialize sample data
         try {
             clientNo1 = writeClient.create("ClientLoginNo1", passwordEncoder.encode(passwordNotHashed));
             clientNo2 = writeClient.create("ClientLoginNo2", passwordEncoder.encode(passwordNotHashed));
@@ -253,6 +242,7 @@ public class TicketControllerTest {
 
     @AfterEach
     public void destroySampleData() {
+        // Remove sample data
         try {
             List<Ticket> listOfTickets = readTicket.findAll();
             for (Ticket ticket : listOfTickets) {
@@ -297,13 +287,6 @@ public class TicketControllerTest {
         } catch (StaffServiceReadException | StaffServiceDeleteException exception) {
             logger.error(exception.getMessage());
         }
-    }
-
-    @AfterAll
-    public static void destroy() {
-        ticketRepository.close();
-        userRepository.close();
-        movieRepository.close();
     }
 
     // Create tests

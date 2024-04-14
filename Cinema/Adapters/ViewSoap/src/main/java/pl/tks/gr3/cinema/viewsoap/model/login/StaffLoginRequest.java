@@ -7,8 +7,7 @@ import lombok.NoArgsConstructor;
 import pl.tks.gr3.cinema.viewsoap.consts.WebServiceConsts;
 
 @Getter
-@NoArgsConstructor
-@AllArgsConstructor
+@NoArgsConstructor @AllArgsConstructor
 @XmlRootElement(name = WebServiceConsts.STAFF_LOGIN_INPUT)
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(propOrder = {"login", "password"})
