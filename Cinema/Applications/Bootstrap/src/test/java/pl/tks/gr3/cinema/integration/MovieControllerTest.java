@@ -1,4 +1,4 @@
-package pl.tks.gr3.cinema.api;
+package pl.tks.gr3.cinema.integration;
 
 import io.restassured.RestAssured;
 import io.restassured.config.RestAssuredConfig;
@@ -8,22 +8,21 @@ import io.restassured.response.Response;
 import io.restassured.response.ValidatableResponse;
 import io.restassured.specification.RequestSpecification;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import pl.tks.gr3.cinema.CinemaApplication;
-import pl.tks.gr3.cinema.adapters.aggregates.MovieRepositoryAdapter;
-import pl.tks.gr3.cinema.adapters.aggregates.UserRepositoryAdapter;
+import pl.tks.gr3.cinema.TestContainerSetup;
 import pl.tks.gr3.cinema.adapters.consts.model.UserEntConstants;
 import pl.tks.gr3.cinema.adapters.exceptions.UserRepositoryException;
-import pl.tks.gr3.cinema.adapters.repositories.MovieRepository;
-import pl.tks.gr3.cinema.adapters.repositories.UserRepository;
 import pl.tks.gr3.cinema.application_services.exceptions.crud.movie.MovieServiceCreateException;
 import pl.tks.gr3.cinema.application_services.exceptions.crud.movie.MovieServiceDeleteException;
 import pl.tks.gr3.cinema.application_services.exceptions.crud.movie.MovieServiceReadException;
-import pl.tks.gr3.cinema.application_services.services.MovieService;
 import pl.tks.gr3.cinema.domain_model.Movie;
 import pl.tks.gr3.cinema.domain_model.users.Admin;
 import pl.tks.gr3.cinema.domain_model.users.Client;
@@ -45,31 +44,51 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@ExtendWith(SpringExtension.class)
 @SpringBootTest(classes = {CinemaApplication.class}, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
-public class MovieControllerTest {
+@TestPropertySource(locations = "classpath:mongo-test.properties")
+public class MovieControllerTest extends TestContainerSetup {
 
     private static final Logger logger = LoggerFactory.getLogger(MovieControllerTest.class);
 
-    private static MovieRepository movieRepository;
+    @Autowired
+    private CreateMoviePort createMoviePort;
 
-    private static CreateMoviePort createMoviePort;
-    private static ReadMoviePort readMoviePort;
-    private static UpdateMoviePort updateMoviePort;
-    private static DeleteMoviePort deleteMoviePort;
+    @Autowired
+    private ReadMoviePort readMoviePort;
 
-    private static UserRepository userRepository;
+    @Autowired
+    private UpdateMoviePort updateMoviePort;
 
-    private static CreateUserPort createUserPort;
-    private static ReadUserPort readUserPort;
-    private static UpdateUserPort updateUserPort;
-    private static ActivateUserPort activateUserPort;
-    private static DeactivateUserPort deactivateUserPort;
-    private static DeleteUserPort deleteUserPort;
+    @Autowired
+    private DeleteMoviePort deleteMoviePort;
 
-    private static ReadMovieUseCase readMovie;
-    private static WriteMovieUseCase writeMovie;
+    @Autowired
+    private CreateUserPort createUserPort;
 
-    private static PasswordEncoder passwordEncoder;
+    @Autowired
+    private ReadUserPort readUserPort;
+
+    @Autowired
+    private UpdateUserPort updateUserPort;
+
+    @Autowired
+    private ActivateUserPort activateUserPort;
+
+    @Autowired
+    private DeactivateUserPort deactivateUserPort;
+
+    @Autowired
+    private DeleteUserPort deleteUserPort;
+
+    @Autowired
+    private ReadMovieUseCase readMovie;
+
+    @Autowired
+    private WriteMovieUseCase writeMovie;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     private Movie movieNo1;
     private Movie movieNo2;
@@ -78,32 +97,11 @@ public class MovieControllerTest {
     private Staff staffUser;
     private static String passwordNotHashed;
 
-    @BeforeAll
-    public static void init() {
-        movieRepository = new MovieRepository(TestConstants.databaseName);
-        MovieRepositoryAdapter movieRepositoryAdapter = new MovieRepositoryAdapter(movieRepository);
+    @BeforeEach
+    public void initializeSampleData() {
+        passwordNotHashed = "password";
 
-        createMoviePort = movieRepositoryAdapter;
-        readMoviePort = movieRepositoryAdapter;
-        updateMoviePort = movieRepositoryAdapter;
-        deleteMoviePort = movieRepositoryAdapter;
-
-        userRepository = new UserRepository(TestConstants.databaseName);
-        UserRepositoryAdapter userRepositoryAdapter = new UserRepositoryAdapter(userRepository);
-
-        createUserPort = userRepositoryAdapter;
-        readUserPort = userRepositoryAdapter;
-        updateUserPort = userRepositoryAdapter;
-        activateUserPort = userRepositoryAdapter;
-        deactivateUserPort = userRepositoryAdapter;
-        deleteUserPort = userRepositoryAdapter;
-
-        MovieService movieService = new MovieService(createMoviePort, readMoviePort, updateMoviePort, deleteMoviePort);
-
-        readMovie = movieService;
-        writeMovie = movieService;
-
-        passwordEncoder = new BCryptPasswordEncoder();
+        // Configure RestAssured so that it can perform HTTPS requests
 
         ClassLoader classLoader = AuthenticationControllerTest.class.getClassLoader();
         URL resourceURL = classLoader.getResource("pas-truststore.jks");
@@ -116,13 +114,8 @@ public class MovieControllerTest {
                         .allowAllHostnames()
         );
 
-        passwordNotHashed = "password";
-    }
-
-    @BeforeEach
-    public void initializeSampleData() {
+        // Initialize sample data
         this.clearCollection();
-
         try {
             clientUser = createUserPort.createClient("ClientLoginX", passwordEncoder.encode(passwordNotHashed));
             staffUser = createUserPort.createStaff("StaffLoginX", passwordEncoder.encode(passwordNotHashed));
@@ -145,20 +138,21 @@ public class MovieControllerTest {
     }
 
     private void clearCollection() {
+        // Remove sample data
         try {
             List<Client> listOfClients = readUserPort.findAllClients();
             for (Client client : listOfClients) {
-                userRepository.delete(client.getUserID(), UserEntConstants.CLIENT_DISCRIMINATOR);
+                deleteUserPort.delete(client.getUserID(), UserEntConstants.CLIENT_DISCRIMINATOR);
             }
 
             List<Admin> listOfAdmins = readUserPort.findAllAdmins();
             for (Admin admin : listOfAdmins) {
-                userRepository.delete(admin.getUserID(), UserEntConstants.ADMIN_DISCRIMINATOR);
+                deleteUserPort.delete(admin.getUserID(), UserEntConstants.ADMIN_DISCRIMINATOR);
             }
 
             List<Staff> listOfStaffs = readUserPort.findAllStaffs();
             for (Staff staff : listOfStaffs) {
-                userRepository.delete(staff.getUserID(), UserEntConstants.STAFF_DISCRIMINATOR);
+                deleteUserPort.delete(staff.getUserID(), UserEntConstants.STAFF_DISCRIMINATOR);
             }
         } catch (UserRepositoryException exception) {
             throw new RuntimeException("Could not delete sample users with userRepository object.", exception);
@@ -172,12 +166,6 @@ public class MovieControllerTest {
         } catch (MovieServiceReadException | MovieServiceDeleteException exception) {
             throw new RuntimeException("Could not delete sample movies with movieRepository object.", exception);
         }
-    }
-
-    @AfterAll
-    public static void destroy() {
-        movieRepository.close();
-        userRepository.close();
     }
 
     // Create tests

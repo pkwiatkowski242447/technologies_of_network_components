@@ -15,7 +15,7 @@ import pl.tks.gr3.cinema.ports.userinterface.other.JWSUseCase;
 
 import java.util.Base64;
 
-@Service
+@Service(value = "JWSService")
 public class JWSService implements JWSUseCase {
 
     private final static String SECRET_KEY = "256970464e4d29792c4d2d24317256534d2d3039332a2b2e383929635f";

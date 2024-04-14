@@ -1,5 +1,4 @@
-
-package pl.tks.gr3.cinema.api;
+package pl.tks.gr3.cinema.integration;
 
 import io.restassured.RestAssured;
 import io.restassured.common.mapper.TypeRef;
@@ -10,17 +9,18 @@ import io.restassured.response.Response;
 import io.restassured.response.ValidatableResponse;
 import io.restassured.specification.RequestSpecification;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import pl.tks.gr3.cinema.CinemaApplication;
-import pl.tks.gr3.cinema.adapters.aggregates.UserRepositoryAdapter;
+import pl.tks.gr3.cinema.TestContainerSetup;
 import pl.tks.gr3.cinema.adapters.consts.model.UserEntConstants;
 import pl.tks.gr3.cinema.adapters.exceptions.UserRepositoryException;
-import pl.tks.gr3.cinema.adapters.repositories.UserRepository;
-import pl.tks.gr3.cinema.application_services.services.StaffService;
 import pl.tks.gr3.cinema.domain_model.users.Admin;
 import pl.tks.gr3.cinema.domain_model.users.Client;
 import pl.tks.gr3.cinema.domain_model.users.Staff;
@@ -37,48 +37,51 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@ExtendWith(SpringExtension.class)
 @SpringBootTest(classes = {CinemaApplication.class}, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
-public class StaffControllerTest {
+@TestPropertySource(locations = "classpath:mongo-test.properties")
+public class ClientControllerTest extends TestContainerSetup {
 
-    private static final Logger logger = LoggerFactory.getLogger(StaffControllerTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(ClientControllerTest.class);
 
-    private static UserRepository userRepository;
-    private static PasswordEncoder passwordEncoder;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
-    private static CreateUserPort createUserPort;
-    private static ReadUserPort readUserPort;
-    private static UpdateUserPort updateUserPort;
-    private static ActivateUserPort activateUserPort;
-    private static DeactivateUserPort deactivateUserPort;
-    private static DeleteUserPort deleteUserPort;
+    @Autowired
+    private CreateUserPort createUserPort;
 
-    private static ReadUserUseCase<Staff> readStaff;
-    private static WriteUserUseCase<Staff> writeStaff;
+    @Autowired
+    private ReadUserPort readUserPort;
 
-    private Client clientUser;
-    private Staff staffUserNo1;
-    private Staff staffUserNo2;
+    @Autowired
+    private UpdateUserPort updateUserPort;
+
+    @Autowired
+    private ActivateUserPort activateUserPort;
+
+    @Autowired
+    private DeactivateUserPort deactivateUserPort;
+
+    @Autowired
+    private DeleteUserPort deleteUserPort;
+
+    @Autowired
+    private ReadUserUseCase<Client> readClient;
+
+    @Autowired
+    private WriteUserUseCase<Client> writeClient;
+
+    private Client clientUserNo1;
+    private Client clientUserNo2;
+    private Staff staffUser;
     private Admin adminUser;
     private static String passwordNotHashed;
 
-    @BeforeAll
-    public static void init() {
-        userRepository = new UserRepository(TestConstants.databaseName);
-        UserRepositoryAdapter userRepositoryAdapter = new UserRepositoryAdapter(userRepository);
+    @BeforeEach
+    public void initializeSampleData() {
+        passwordNotHashed = "password";
 
-        createUserPort = userRepositoryAdapter;
-        readUserPort = userRepositoryAdapter;
-        updateUserPort = userRepositoryAdapter;
-        activateUserPort = userRepositoryAdapter;
-        deactivateUserPort = userRepositoryAdapter;
-        deleteUserPort = userRepositoryAdapter;
-
-        StaffService staffService = new StaffService(createUserPort, readUserPort, updateUserPort, activateUserPort, deactivateUserPort, deleteUserPort);
-
-        readStaff = staffService;
-        writeStaff = staffService;
-
-        passwordEncoder = new BCryptPasswordEncoder();
+        // Configure RestAssured so that it can perform HTTPS requests
 
         ClassLoader classLoader = AuthenticationControllerTest.class.getClassLoader();
         URL resourceURL = classLoader.getResource("pas-truststore.jks");
@@ -91,19 +94,15 @@ public class StaffControllerTest {
                         .allowAllHostnames()
         );
 
-        passwordNotHashed = "password";
-    }
-
-    @BeforeEach
-    public void initializeSampleData() {
+        // Initialize sample data
         this.clearCollection();
         try {
-            clientUser = createUserPort.createClient("ClientLoginX", passwordEncoder.encode(passwordNotHashed));
-            staffUserNo1 = createUserPort.createStaff("StaffLoginX1", passwordEncoder.encode(passwordNotHashed));
-            staffUserNo2 = createUserPort.createStaff("StaffLoginX2", passwordEncoder.encode(passwordNotHashed));
+            clientUserNo1 = createUserPort.createClient("ClientLoginX1", passwordEncoder.encode(passwordNotHashed));
+            clientUserNo2 = createUserPort.createClient("ClientLoginX2", passwordEncoder.encode(passwordNotHashed));
+            staffUser = createUserPort.createStaff("StaffLoginX", passwordEncoder.encode(passwordNotHashed));
             adminUser = createUserPort.createAdmin("AdminLoginX", passwordEncoder.encode(passwordNotHashed));
         } catch (UserRepositoryException exception) {
-            logger.debug(exception.getMessage());
+            throw new RuntimeException("Could not create sample users with userRepository object.", exception);
         }
     }
 
@@ -113,40 +112,37 @@ public class StaffControllerTest {
     }
 
     private void clearCollection() {
+        // Remove sample data
         try {
             List<Client> listOfClients = readUserPort.findAllClients();
             for (Client client : listOfClients) {
-                userRepository.delete(client.getUserID(), UserEntConstants.CLIENT_DISCRIMINATOR);
+                deleteUserPort.delete(client.getUserID(), UserEntConstants.CLIENT_DISCRIMINATOR);
             }
 
             List<Admin> listOfAdmins = readUserPort.findAllAdmins();
             for (Admin admin : listOfAdmins) {
-                userRepository.delete(admin.getUserID(), UserEntConstants.ADMIN_DISCRIMINATOR);
+                deleteUserPort.delete(admin.getUserID(), UserEntConstants.ADMIN_DISCRIMINATOR);
             }
 
             List<Staff> listOfStaffs = readUserPort.findAllStaffs();
             for (Staff staff : listOfStaffs) {
-                userRepository.delete(staff.getUserID(), UserEntConstants.STAFF_DISCRIMINATOR);
+                deleteUserPort.delete(staff.getUserID(), UserEntConstants.STAFF_DISCRIMINATOR);
             }
         } catch (UserRepositoryException exception) {
             throw new RuntimeException("Could not delete sample users with userRepository object.", exception);
         }
     }
 
-    @AfterAll
-    public static void destroy() {
-        userRepository.close();
-    }
-
     // Read tests
 
     @Test
-    public void staffControllerFindStaffByIDAsAnUnauthenticatedUserTestNegative() {
-        UUID searchedStaffID = staffUserNo1.getUserID();
-        String path = TestConstants.staffsURL + "/" + searchedStaffID;
+    public void clientControllerFindClientByIDAsUnauthenticatedUserTestNegative() {
+        UUID searchedClientID = clientUserNo1.getUserID();
+        String path = TestConstants.clientsURL + "/" + searchedClientID;
 
         RequestSpecification requestSpecification = RestAssured.given();
         requestSpecification.accept(ContentType.JSON);
+        requestSpecification.get(path);
 
         Response response = requestSpecification.get(path);
         logger.debug("Response: " + response.asString());
@@ -156,11 +152,11 @@ public class StaffControllerTest {
     }
 
     @Test
-    public void staffControllerFindStaffByIDAsAnAuthenticatedClientTestNegative() {
-        String accessToken = this.loginToAccount(new UserInputDTO(clientUser.getUserLogin(), passwordNotHashed), TestConstants.clientLoginURL);
+    public void clientControllerFindClientByIDAsAuthenticatedClientTestNegative() {
+        String accessToken = this.loginToAccount(new UserInputDTO(clientUserNo1.getUserLogin(), passwordNotHashed), TestConstants.clientLoginURL);
 
-        UUID searchedStaffID = staffUserNo1.getUserID();
-        String path = TestConstants.staffsURL + "/" + searchedStaffID;
+        UUID searchedClientID = clientUserNo1.getUserID();
+        String path = TestConstants.clientsURL + "/" + searchedClientID;
 
         RequestSpecification requestSpecification = RestAssured.given();
         requestSpecification.accept(ContentType.JSON);
@@ -174,11 +170,11 @@ public class StaffControllerTest {
     }
 
     @Test
-    public void staffControllerFindStaffByIDAsAnAuthenticatedStaffTestNegative() {
-        String accessToken = this.loginToAccount(new UserInputDTO(staffUserNo1.getUserLogin(), passwordNotHashed), TestConstants.staffLoginURL);
+    public void clientControllerFindClientByIDAsAuthenticatedStaffTestPositive() {
+        String accessToken = this.loginToAccount(new UserInputDTO(adminUser.getUserLogin(), passwordNotHashed), TestConstants.adminLoginURL);
 
-        UUID searchedStaffID = staffUserNo1.getUserID();
-        String path = TestConstants.staffsURL + "/" + searchedStaffID;
+        UUID searchedClientID = clientUserNo1.getUserID();
+        String path = TestConstants.clientsURL + "/" + searchedClientID;
 
         RequestSpecification requestSpecification = RestAssured.given();
         requestSpecification.accept(ContentType.JSON);
@@ -192,17 +188,17 @@ public class StaffControllerTest {
 
         UserOutputDTO userOutputDTO = response.getBody().as(UserOutputDTO.class);
 
-        assertEquals(staffUserNo1.getUserID(), userOutputDTO.getUserID());
-        assertEquals(staffUserNo1.getUserLogin(), userOutputDTO.getUserLogin());
-        assertEquals(staffUserNo1.isUserStatusActive(), userOutputDTO.isUserStatusActive());
+        assertEquals(clientUserNo1.getUserID(), userOutputDTO.getUserID());
+        assertEquals(clientUserNo1.getUserLogin(), userOutputDTO.getUserLogin());
+        assertEquals(clientUserNo1.isUserStatusActive(), userOutputDTO.isUserStatusActive());
     }
 
     @Test
-    public void staffControllerFindStaffByIDAsAnAuthenticatedAdminTestPositive() {
+    public void clientControllerFindClientByIDAsAuthenticatedAdminTestPositive() {
         String accessToken = this.loginToAccount(new UserInputDTO(adminUser.getUserLogin(), passwordNotHashed), TestConstants.adminLoginURL);
 
-        UUID searchedStaffID = staffUserNo1.getUserID();
-        String path = TestConstants.staffsURL + "/" + searchedStaffID;
+        UUID searchedClientID = clientUserNo1.getUserID();
+        String path = TestConstants.clientsURL + "/" + searchedClientID;
 
         RequestSpecification requestSpecification = RestAssured.given();
         requestSpecification.accept(ContentType.JSON);
@@ -216,18 +212,17 @@ public class StaffControllerTest {
 
         UserOutputDTO userOutputDTO = response.getBody().as(UserOutputDTO.class);
 
-        assertEquals(staffUserNo1.getUserID(), userOutputDTO.getUserID());
-        assertEquals(staffUserNo1.getUserLogin(), userOutputDTO.getUserLogin());
-        assertEquals(staffUserNo1.isUserStatusActive(), userOutputDTO.isUserStatusActive());
+        assertEquals(clientUserNo1.getUserID(), userOutputDTO.getUserID());
+        assertEquals(clientUserNo1.getUserLogin(), userOutputDTO.getUserLogin());
+        assertEquals(clientUserNo1.isUserStatusActive(), userOutputDTO.isUserStatusActive());
     }
 
     @Test
-    public void staffControllerFindStaffByIDThatIsNotInTheDatabaseAsAnAuthenticatedStaffTestNegative() {
-        String accessToken = this.loginToAccount(new UserInputDTO(staffUserNo1.getUserLogin(), passwordNotHashed), TestConstants.staffLoginURL);
+    public void clientControllerFindClientByIDThatIsNotInTheDatabaseAsAnAuthenticatedStaffTestNegative() {
+        String accessToken = this.loginToAccount(new UserInputDTO(staffUser.getUserLogin(), passwordNotHashed), TestConstants.staffLoginURL);
 
-        UUID searchedStaffID = UUID.randomUUID();
-
-        String path = TestConstants.staffsURL + "/" + searchedStaffID;
+        UUID searchedClientID = UUID.randomUUID();
+        String path = TestConstants.clientsURL + "/" + searchedClientID;
 
         RequestSpecification requestSpecification = RestAssured.given();
         requestSpecification.header("Authorization", "Bearer " + accessToken);
@@ -241,12 +236,11 @@ public class StaffControllerTest {
     }
 
     @Test
-    public void staffControllerFindStaffByIDThatIsNotInTheDatabaseAsAnAuthenticatedAdminTestNegative() {
+    public void clientControllerFindClientByIDThatIsNotInTheDatabaseAsAnAuthenticatedAdminTestNegative() {
         String accessToken = this.loginToAccount(new UserInputDTO(adminUser.getUserLogin(), passwordNotHashed), TestConstants.adminLoginURL);
 
-        UUID searchedStaffID = UUID.randomUUID();
-
-        String path = TestConstants.staffsURL + "/" + searchedStaffID;
+        UUID searchedClientID = UUID.randomUUID();
+        String path = TestConstants.clientsURL + "/" + searchedClientID;
 
         RequestSpecification requestSpecification = RestAssured.given();
         requestSpecification.header("Authorization", "Bearer " + accessToken);
@@ -260,92 +254,92 @@ public class StaffControllerTest {
     }
 
     @Test
-    public void staffControllerFindStaffByLoginAsAnUnauthenticatedUserTestNegative() {
-        String searchedStaffLogin = staffUserNo1.getUserLogin();
-        String path = TestConstants.staffsURL + "/login/" + searchedStaffLogin;
+    public void clientControllerFindClientByLoginTestAsAnUnauthenticatedUserTestNegative() {
+        String searchedClientLogin = clientUserNo1.getUserLogin();
+        String path = TestConstants.clientsURL + "/login/" + searchedClientLogin;
 
         RequestSpecification requestSpecification = RestAssured.given();
         requestSpecification.accept(ContentType.JSON);
 
         Response response = requestSpecification.get(path);
-        logger.info("Response: " + response.getBody().asString());
+        logger.debug("Response: " + response.asString());
         ValidatableResponse validatableResponse = response.then();
 
         validatableResponse.statusCode(403);
     }
 
     @Test
-    public void staffControllerFindStaffByLoginAsAnAuthenticatedClientTestNegative() {
-        String accessToken = this.loginToAccount(new UserInputDTO(clientUser.getUserLogin(), passwordNotHashed), TestConstants.clientLoginURL);
+    public void clientControllerFindClientByLoginTestAsAnAuthenticatedClientTestNegative() {
+        String accessToken = this.loginToAccount(new UserInputDTO(clientUserNo1.getUserLogin(), passwordNotHashed), TestConstants.clientLoginURL);
 
-        String searchedStaffLogin = staffUserNo1.getUserLogin();
-        String path = TestConstants.staffsURL + "/login/" + searchedStaffLogin;
+        String searchedClientLogin = clientUserNo1.getUserLogin();
+        String path = TestConstants.clientsURL + "/login/" + searchedClientLogin;
 
         RequestSpecification requestSpecification = RestAssured.given();
         requestSpecification.header("Authorization", "Bearer " + accessToken);
         requestSpecification.accept(ContentType.JSON);
 
         Response response = requestSpecification.get(path);
-        logger.info("Response: " + response.getBody().asString());
+        logger.debug("Response: " + response.asString());
         ValidatableResponse validatableResponse = response.then();
 
         validatableResponse.statusCode(403);
     }
 
     @Test
-    public void staffControllerFindStaffByLoginAsAnAuthenticatedStaffTestNegative() {
-        String accessToken = this.loginToAccount(new UserInputDTO(staffUserNo1.getUserLogin(), passwordNotHashed), TestConstants.staffLoginURL);
+    public void clientControllerFindClientByLoginTestAsAnAuthenticatedStaffTestPositive() {
+        String accessToken = this.loginToAccount(new UserInputDTO(staffUser.getUserLogin(), passwordNotHashed), TestConstants.staffLoginURL);
 
-        String searchedStaffLogin = staffUserNo1.getUserLogin();
-        String path = TestConstants.staffsURL + "/login/" + searchedStaffLogin;
+        String searchedClientLogin = clientUserNo1.getUserLogin();
+        String path = TestConstants.clientsURL + "/login/" + searchedClientLogin;
 
         RequestSpecification requestSpecification = RestAssured.given();
         requestSpecification.header("Authorization", "Bearer " + accessToken);
         requestSpecification.accept(ContentType.JSON);
 
         Response response = requestSpecification.get(path);
-        logger.info("Response: " + response.getBody().asString());
+        logger.debug("Response: " + response.asString());
         ValidatableResponse validatableResponse = response.then();
 
         validatableResponse.statusCode(200);
 
         UserOutputDTO userOutputDTO = response.getBody().as(UserOutputDTO.class);
 
-        assertEquals(staffUserNo1.getUserID(), userOutputDTO.getUserID());
-        assertEquals(staffUserNo1.getUserLogin(), userOutputDTO.getUserLogin());
-        assertEquals(staffUserNo1.isUserStatusActive(), userOutputDTO.isUserStatusActive());
+        assertEquals(clientUserNo1.getUserID(), userOutputDTO.getUserID());
+        assertEquals(clientUserNo1.getUserLogin(), userOutputDTO.getUserLogin());
+        assertEquals(clientUserNo1.isUserStatusActive(), userOutputDTO.isUserStatusActive());
     }
 
     @Test
-    public void staffControllerFindStaffByLoginAsAnAuthenticatedAdminTestPositive() {
+    public void clientControllerFindClientByLoginTestAsAnAuthenticatedAdminTestPositive() {
         String accessToken = this.loginToAccount(new UserInputDTO(adminUser.getUserLogin(), passwordNotHashed), TestConstants.adminLoginURL);
 
-        String searchedStaffLogin = staffUserNo1.getUserLogin();
-        String path = TestConstants.staffsURL + "/login/" + searchedStaffLogin;
+        String searchedClientLogin = clientUserNo1.getUserLogin();
+        String path = TestConstants.clientsURL + "/login/" + searchedClientLogin;
 
         RequestSpecification requestSpecification = RestAssured.given();
         requestSpecification.header("Authorization", "Bearer " + accessToken);
         requestSpecification.accept(ContentType.JSON);
 
         Response response = requestSpecification.get(path);
-        logger.info("Response: " + response.getBody().asString());
+        logger.debug("Response: " + response.asString());
         ValidatableResponse validatableResponse = response.then();
 
         validatableResponse.statusCode(200);
 
         UserOutputDTO userOutputDTO = response.getBody().as(UserOutputDTO.class);
 
-        assertEquals(staffUserNo1.getUserID(), userOutputDTO.getUserID());
-        assertEquals(staffUserNo1.getUserLogin(), userOutputDTO.getUserLogin());
-        assertEquals(staffUserNo1.isUserStatusActive(), userOutputDTO.isUserStatusActive());
+        assertEquals(clientUserNo1.getUserID(), userOutputDTO.getUserID());
+        assertEquals(clientUserNo1.getUserLogin(), userOutputDTO.getUserLogin());
+        assertEquals(clientUserNo1.isUserStatusActive(), userOutputDTO.isUserStatusActive());
     }
 
     @Test
-    public void staffControllerFindStaffByLoginThatIsNotInTheDatabaseAsAnAuthenticatedStaffTestNegative() {
-        String accessToken = this.loginToAccount(new UserInputDTO(staffUserNo1.getUserLogin(), passwordNotHashed), TestConstants.staffLoginURL);
+    public void clientControllerFindClientByLoginThatIsNotInTheDatabaseAsAuthenticatedStaffTestNegative() {
+        String accessToken = this.loginToAccount(new UserInputDTO(staffUser.getUserLogin(), passwordNotHashed), TestConstants.staffLoginURL);
 
-        String searchedStaffLogin = "SomeNonExistentLogin";
-        String path = TestConstants.staffsURL + "/login/" + searchedStaffLogin;
+        String searchedClientLogin = "SomeNonExistentLogin";
+        String path = TestConstants.clientsURL + "/login/" + searchedClientLogin;
 
         RequestSpecification requestSpecification = RestAssured.given();
         requestSpecification.header("Authorization", "Bearer " + accessToken);
@@ -359,11 +353,11 @@ public class StaffControllerTest {
     }
 
     @Test
-    public void staffControllerFindStaffByLoginThatIsNotInTheDatabaseAsAnAuthenticatedAdminTestNegative() {
+    public void clientControllerFindClientByLoginThatIsNotInTheDatabaseAsAuthenticatedAdminTestNegative() {
         String accessToken = this.loginToAccount(new UserInputDTO(adminUser.getUserLogin(), passwordNotHashed), TestConstants.adminLoginURL);
 
-        String searchedStaffLogin = "SomeNonExistentLogin";
-        String path = TestConstants.staffsURL + "/login/" + searchedStaffLogin;
+        String searchedClientLogin = "SomeNonExistentLogin";
+        String path = TestConstants.clientsURL + "/login/" + searchedClientLogin;
 
         RequestSpecification requestSpecification = RestAssured.given();
         requestSpecification.header("Authorization", "Bearer " + accessToken);
@@ -377,10 +371,10 @@ public class StaffControllerTest {
     }
 
     @Test
-    public void staffControllerFindFindStaffsMatchingLoginAsAnUnauthenticatedUserTestNegative() {
-        writeStaff.create("ExtraStaffLogin", "ExtraStaffPassword");
+    public void clientControllerFindAllClientsMatchingLoginAsUnauthenticatedUserTestPositive() {
+        writeClient.create("ExtraClientLogin", "ExtraClientPassword");
         String matchedLogin = "Extra";
-        String path = TestConstants.staffsURL + "?match=" + matchedLogin;
+        String path = TestConstants.clientsURL + "?match=" + matchedLogin;
 
         RequestSpecification requestSpecification = RestAssured.given();
         requestSpecification.accept(ContentType.JSON);
@@ -393,12 +387,12 @@ public class StaffControllerTest {
     }
 
     @Test
-    public void staffControllerFindFindStaffsMatchingLoginAsAnAuthenticatedClientTestNegative() {
-        String accessToken = this.loginToAccount(new UserInputDTO(clientUser.getUserLogin(), passwordNotHashed), TestConstants.clientLoginURL);
+    public void clientControllerFindAllClientsMatchingLoginAsAuthenticatedClientTestPositive() {
+        String accessToken = this.loginToAccount(new UserInputDTO(clientUserNo1.getUserLogin(), passwordNotHashed), TestConstants.clientLoginURL);
 
-        writeStaff.create("ExtraStaffLogin", "ExtraStaffPassword");
+        writeClient.create("ExtraClientLogin", "ExtraClientPassword");
         String matchedLogin = "Extra";
-        String path = TestConstants.staffsURL + "?match=" + matchedLogin;
+        String path = TestConstants.clientsURL + "?match=" + matchedLogin;
 
         RequestSpecification requestSpecification = RestAssured.given();
         requestSpecification.header("Authorization", "Bearer " + accessToken);
@@ -412,12 +406,12 @@ public class StaffControllerTest {
     }
 
     @Test
-    public void staffControllerFindFindStaffsMatchingLoginAsAnAuthenticatedStaffTestNegative() {
-        String accessToken = this.loginToAccount(new UserInputDTO(staffUserNo1.getUserLogin(), passwordNotHashed), TestConstants.staffLoginURL);
+    public void clientControllerFindAllClientsMatchingLoginAsAuthenticatedStaffTestPositive() {
+        String accessToken = this.loginToAccount(new UserInputDTO(staffUser.getUserLogin(), passwordNotHashed), TestConstants.staffLoginURL);
 
-        writeStaff.create("ExtraStaffLogin", "ExtraStaffPassword");
+        writeClient.create("ExtraClientLogin", "ExtraClientPassword");
         String matchedLogin = "Extra";
-        String path = TestConstants.staffsURL + "?match=" + matchedLogin;
+        String path = TestConstants.clientsURL + "?match=" + matchedLogin;
 
         RequestSpecification requestSpecification = RestAssured.given();
         requestSpecification.header("Authorization", "Bearer " + accessToken);
@@ -429,18 +423,18 @@ public class StaffControllerTest {
 
         validatableResponse.statusCode(200);
 
-        List<UserOutputDTO> listOfStaffs = response.getBody().as(new TypeRef<>() {
+        List<UserOutputDTO> listOfClients = response.getBody().as(new TypeRef<>() {
         });
-        assertEquals(1, listOfStaffs.size());
+        assertEquals(1, listOfClients.size());
     }
 
     @Test
-    public void staffControllerFindFindStaffsMatchingLoginAsAnAuthenticatedStaffTestPositive() {
+    public void clientControllerFindAllClientsMatchingLoginAsAuthenticatedAdminTestPositive() {
         String accessToken = this.loginToAccount(new UserInputDTO(adminUser.getUserLogin(), passwordNotHashed), TestConstants.adminLoginURL);
 
-        writeStaff.create("ExtraStaffLogin", "ExtraStaffPassword");
+        writeClient.create("ExtraClientLogin", "ExtraClientPassword");
         String matchedLogin = "Extra";
-        String path = TestConstants.staffsURL + "?match=" + matchedLogin;
+        String path = TestConstants.clientsURL + "?match=" + matchedLogin;
 
         RequestSpecification requestSpecification = RestAssured.given();
         requestSpecification.header("Authorization", "Bearer " + accessToken);
@@ -452,14 +446,14 @@ public class StaffControllerTest {
 
         validatableResponse.statusCode(200);
 
-        List<UserOutputDTO> listOfStaffs = response.getBody().as(new TypeRef<>() {
+        List<UserOutputDTO> listOfClients = response.getBody().as(new TypeRef<>() {
         });
-        assertEquals(1, listOfStaffs.size());
+        assertEquals(1, listOfClients.size());
     }
 
     @Test
-    public void staffControllerFindFindStaffsAsAnUnauthenticatedUserTestNegative() {
-        String path = TestConstants.staffsURL + "/all";
+    public void clientControllerFindAllClientsAsAnUnauthenticatedUserTestNegative() {
+        String path = TestConstants.clientsURL + "/all";
 
         RequestSpecification requestSpecification = RestAssured.given();
         requestSpecification.accept(ContentType.JSON);
@@ -472,10 +466,10 @@ public class StaffControllerTest {
     }
 
     @Test
-    public void staffControllerFindFindStaffsAsAnAuthenticatedClientTestNegative() {
-        String accessToken = this.loginToAccount(new UserInputDTO(clientUser.getUserLogin(), passwordNotHashed), TestConstants.clientLoginURL);
+    public void clientControllerFindAllClientsAsAnAuthenticatedClientTestNegative() {
+        String accessToken = this.loginToAccount(new UserInputDTO(clientUserNo1.getUserLogin(), passwordNotHashed), TestConstants.clientLoginURL);
 
-        String path = TestConstants.staffsURL + "/all";
+        String path = TestConstants.clientsURL + "/all";
 
         RequestSpecification requestSpecification = RestAssured.given();
         requestSpecification.header("Authorization", "Bearer " + accessToken);
@@ -489,10 +483,10 @@ public class StaffControllerTest {
     }
 
     @Test
-    public void staffControllerFindFindStaffsAsAnAuthenticatedStaffTestNegative() {
-        String accessToken = this.loginToAccount(new UserInputDTO(staffUserNo1.getUserLogin(), passwordNotHashed), TestConstants.staffLoginURL);
+    public void clientControllerFindAllClientsAsAnAuthenticatedStaffTestPositive() {
+        String accessToken = this.loginToAccount(new UserInputDTO(staffUser.getUserLogin(), passwordNotHashed), TestConstants.staffLoginURL);
 
-        String path = TestConstants.staffsURL + "/all";
+        String path = TestConstants.clientsURL + "/all";
 
         RequestSpecification requestSpecification = RestAssured.given();
         requestSpecification.header("Authorization", "Bearer " + accessToken);
@@ -504,16 +498,16 @@ public class StaffControllerTest {
 
         validatableResponse.statusCode(200);
 
-        List<UserOutputDTO> listOfStaffs = response.getBody().as(new TypeRef<>() {
+        List<UserOutputDTO> listOfClients = response.getBody().as(new TypeRef<>() {
         });
-        assertEquals(2, listOfStaffs.size());
+        assertEquals(2, listOfClients.size());
     }
 
     @Test
-    public void staffControllerFindFindStaffsAsAnAuthenticatedAdminTestPositive() {
+    public void clientControllerFindAllClientsAsAnAuthenticatedAdminTestPositive() {
         String accessToken = this.loginToAccount(new UserInputDTO(adminUser.getUserLogin(), passwordNotHashed), TestConstants.adminLoginURL);
 
-        String path = TestConstants.staffsURL + "/all";
+        String path = TestConstants.clientsURL + "/all";
 
         RequestSpecification requestSpecification = RestAssured.given();
         requestSpecification.header("Authorization", "Bearer " + accessToken);
@@ -525,27 +519,27 @@ public class StaffControllerTest {
 
         validatableResponse.statusCode(200);
 
-        List<UserOutputDTO> listOfStaffs = response.getBody().as(new TypeRef<>() {
+        List<UserOutputDTO> listOfClients = response.getBody().as(new TypeRef<>() {
         });
-        assertEquals(2, listOfStaffs.size());
+        assertEquals(2, listOfClients.size());
     }
 
     // Update tests
 
     @Test
-    public void staffControllerUpdateStaffAsAnUnauthenticatedUserTestNegative() {
-        // Login to staff (owner) account
-        String accessToken = this.loginToAccount(new UserInputDTO(staffUserNo1.getUserLogin(), passwordNotHashed), TestConstants.staffLoginURL);
+    public void clientControllerUpdateClientTestAsAnUnauthenticatedUserTestNegative() {
+        // Login to client owner account
+        String accessToken = this.loginToAccount(new UserInputDTO(clientUserNo1.getUserLogin(), passwordNotHashed), TestConstants.clientLoginURL);
 
         // Get current user account by login
-        String path = TestConstants.staffsURL + "/login/self";
+        String path = TestConstants.clientsURL + "/login/self";
 
         RequestSpecification requestSpecification = RestAssured.given();
         requestSpecification.header("Authorization", "Bearer " + accessToken);
         requestSpecification.accept(ContentType.JSON);
 
         Response response = requestSpecification.get(path);
-        logger.debug("Response: " + response.getBody().asString());
+        logger.debug("Response: " + response.asString());
         ValidatableResponse validatableResponse = response.then();
 
         validatableResponse.statusCode(200);
@@ -553,35 +547,35 @@ public class StaffControllerTest {
         UserOutputDTO userOutputDTO = response.getBody().as(UserOutputDTO.class);
         String etagContent = response.header("ETag");
 
-        String newStaffPassword = "SomeNewStaffPasswordNo1";
+        String newClientPassword = "SomeNewClientPasswordNo1";
 
-        UserUpdateDTO userUpdateDTO = new UserUpdateDTO(userOutputDTO.getUserID(), userOutputDTO.getUserLogin(), newStaffPassword, userOutputDTO.isUserStatusActive());
+        UserUpdateDTO userUpdateDTO = new UserUpdateDTO(userOutputDTO.getUserID(), userOutputDTO.getUserLogin(), newClientPassword, userOutputDTO.isUserStatusActive());
 
         requestSpecification = RestAssured.given();
         requestSpecification.contentType(ContentType.JSON);
         requestSpecification.header("If-Match", etagContent);
         requestSpecification.body(userUpdateDTO);
 
-        response = requestSpecification.put(TestConstants.staffsURL + "/update");
-        logger.debug("Response: " + response.getBody().asString());
+        response = requestSpecification.put(TestConstants.clientsURL + "/update");
+        logger.debug("Response: " + response.asString());
         validatableResponse = response.then();
         validatableResponse.statusCode(403);
     }
 
     @Test
-    public void staffControllerUpdateStaffAsAnAuthenticatedClientTestNegative() {
-        // Login to staff (owner) account
-        String accessToken = this.loginToAccount(new UserInputDTO(staffUserNo1.getUserLogin(), passwordNotHashed), TestConstants.staffLoginURL);
+    public void clientControllerUpdateClientTestAsAnAuthenticatedClientThatIsNotTheOwnerOfTheAccountTestNegative() {
+        // Login to client owner account
+        String accessToken = this.loginToAccount(new UserInputDTO(clientUserNo1.getUserLogin(), passwordNotHashed), TestConstants.clientLoginURL);
 
         // Get current user account by login
-        String path = TestConstants.staffsURL + "/login/self";
+        String path = TestConstants.clientsURL + "/login/self";
 
         RequestSpecification requestSpecification = RestAssured.given();
         requestSpecification.header("Authorization", "Bearer " + accessToken);
         requestSpecification.accept(ContentType.JSON);
 
         Response response = requestSpecification.get(path);
-        logger.debug("Response: " + response.getBody().asString());
+        logger.debug("Response: " + response.asString());
         ValidatableResponse validatableResponse = response.then();
 
         validatableResponse.statusCode(200);
@@ -589,12 +583,12 @@ public class StaffControllerTest {
         UserOutputDTO userOutputDTO = response.getBody().as(UserOutputDTO.class);
         String etagContent = response.header("ETag");
 
-        // Login to admin (not owner) account
-        accessToken = this.loginToAccount(new UserInputDTO(clientUser.getUserLogin(), passwordNotHashed), TestConstants.clientLoginURL);
+        // Login to client account (owner)
+        accessToken = this.loginToAccount(new UserInputDTO(clientUserNo2.getUserLogin(), passwordNotHashed), TestConstants.clientLoginURL);
 
-        String newStaffPassword = "SomeNewStaffPasswordNo1";
+        String newClientPassword = "SomeNewClientPasswordNo1";
 
-        UserUpdateDTO userUpdateDTO = new UserUpdateDTO(userOutputDTO.getUserID(), userOutputDTO.getUserLogin(), newStaffPassword, userOutputDTO.isUserStatusActive());
+        UserUpdateDTO userUpdateDTO = new UserUpdateDTO(userOutputDTO.getUserID(), userOutputDTO.getUserLogin(), newClientPassword, userOutputDTO.isUserStatusActive());
 
         requestSpecification = RestAssured.given();
         requestSpecification.contentType(ContentType.JSON);
@@ -602,26 +596,26 @@ public class StaffControllerTest {
         requestSpecification.header("If-Match", etagContent);
         requestSpecification.body(userUpdateDTO);
 
-        response = requestSpecification.put(TestConstants.staffsURL + "/update");
-        logger.debug("Response: " + response.getBody().asString());
+        response = requestSpecification.put(TestConstants.clientsURL + "/update");
+        logger.debug("Response: " + response.asString());
         validatableResponse = response.then();
         validatableResponse.statusCode(403);
     }
 
     @Test
-    public void staffControllerUpdateStaffAsAnAuthenticatedStaffThatIsOwnerOfTheAccountTestPositive() {
-        // Login to staff (owner) account
-        String accessToken = this.loginToAccount(new UserInputDTO(staffUserNo1.getUserLogin(), passwordNotHashed), TestConstants.staffLoginURL);
+    public void clientControllerUpdateClientTestAsAnAuthenticatedClientThatIsOwnerOfTheAccountTestNegative() {
+        // Login to client owner account
+        String accessToken = this.loginToAccount(new UserInputDTO(clientUserNo1.getUserLogin(), passwordNotHashed), TestConstants.clientLoginURL);
 
         // Get current user account by login
-        String path = TestConstants.staffsURL + "/login/self";
+        String path = TestConstants.clientsURL + "/login/self";
 
         RequestSpecification requestSpecification = RestAssured.given();
         requestSpecification.header("Authorization", "Bearer " + accessToken);
         requestSpecification.accept(ContentType.JSON);
 
         Response response = requestSpecification.get(path);
-        logger.debug("Response: " + response.getBody().asString());
+        logger.debug("Response: " + response.asString());
         ValidatableResponse validatableResponse = response.then();
 
         validatableResponse.statusCode(200);
@@ -629,13 +623,13 @@ public class StaffControllerTest {
         UserOutputDTO userOutputDTO = response.getBody().as(UserOutputDTO.class);
         String etagContent = response.header("ETag");
 
-        // Login to staff (owner) account
-        accessToken = this.loginToAccount(new UserInputDTO(staffUserNo1.getUserLogin(), passwordNotHashed), TestConstants.staffLoginURL);
+        // Login to client account (owner)
+        accessToken = this.loginToAccount(new UserInputDTO(clientUserNo1.getUserLogin(), passwordNotHashed), TestConstants.clientLoginURL);
 
-        String staffPasswordBefore = staffUserNo1.getUserPassword();
-        String newStaffPassword = "SomeNewStaffPasswordNo1";
+        String clientPasswordBefore = clientUserNo1.getUserPassword();
+        String newClientPassword = "SomeNewClientPasswordNo1";
 
-        UserUpdateDTO userUpdateDTO = new UserUpdateDTO(userOutputDTO.getUserID(), userOutputDTO.getUserLogin(), newStaffPassword, userOutputDTO.isUserStatusActive());
+        UserUpdateDTO userUpdateDTO = new UserUpdateDTO(userOutputDTO.getUserID(), userOutputDTO.getUserLogin(), newClientPassword, userOutputDTO.isUserStatusActive());
 
         requestSpecification = RestAssured.given();
         requestSpecification.contentType(ContentType.JSON);
@@ -643,32 +637,32 @@ public class StaffControllerTest {
         requestSpecification.header("If-Match", etagContent);
         requestSpecification.body(userUpdateDTO);
 
-        response = requestSpecification.put(TestConstants.staffsURL + "/update");
-        logger.debug("Response: " + response.getBody().asString());
+        response = requestSpecification.put(TestConstants.clientsURL + "/update");
+        logger.debug("Response: " + response.asString());
         validatableResponse = response.then();
         validatableResponse.statusCode(204);
 
-        Staff foundStaff = readStaff.findByUUID(staffUserNo1.getUserID());
+        Client foundClient = readClient.findByUUID(clientUserNo1.getUserID());
 
-        String staffPasswordAfter = foundStaff.getUserPassword();
+        String clientPasswordAfter = foundClient.getUserPassword();
 
-        assertNotEquals(staffPasswordBefore, staffPasswordAfter);
+        assertNotEquals(clientPasswordBefore, clientPasswordAfter);
     }
 
     @Test
-    public void staffControllerUpdateStaffAsAnAuthenticatedStaffThatIsNotTheOwnerOfTheAccountTestPositive() {
-        // Login to staff (owner) account
-        String accessToken = this.loginToAccount(new UserInputDTO(staffUserNo1.getUserLogin(), passwordNotHashed), TestConstants.staffLoginURL);
+    public void clientControllerUpdateClientTestAsAnAuthenticatedStaffTestNegative() {
+        // Login to client owner account
+        String accessToken = this.loginToAccount(new UserInputDTO(clientUserNo1.getUserLogin(), passwordNotHashed), TestConstants.clientLoginURL);
 
         // Get current user account by login
-        String path = TestConstants.staffsURL + "/login/self";
+        String path = TestConstants.clientsURL + "/login/self";
 
         RequestSpecification requestSpecification = RestAssured.given();
         requestSpecification.header("Authorization", "Bearer " + accessToken);
         requestSpecification.accept(ContentType.JSON);
 
         Response response = requestSpecification.get(path);
-        logger.debug("Response: " + response.getBody().asString());
+        logger.debug("Response: " + response.asString());
         ValidatableResponse validatableResponse = response.then();
 
         validatableResponse.statusCode(200);
@@ -676,12 +670,12 @@ public class StaffControllerTest {
         UserOutputDTO userOutputDTO = response.getBody().as(UserOutputDTO.class);
         String etagContent = response.header("ETag");
 
-        // Login to staff (not owner) account
-        accessToken = this.loginToAccount(new UserInputDTO(staffUserNo2.getUserLogin(), passwordNotHashed), TestConstants.staffLoginURL);
+        // Login to staff account (not owner)
+        accessToken = this.loginToAccount(new UserInputDTO(staffUser.getUserLogin(), passwordNotHashed), TestConstants.staffLoginURL);
 
-        String newStaffPassword = "SomeNewStaffPasswordNo1";
+        String newClientPassword = "SomeNewClientPasswordNo1";
 
-        UserUpdateDTO userUpdateDTO = new UserUpdateDTO(userOutputDTO.getUserID(), userOutputDTO.getUserLogin(), newStaffPassword, userOutputDTO.isUserStatusActive());
+        UserUpdateDTO userUpdateDTO = new UserUpdateDTO(userOutputDTO.getUserID(), userOutputDTO.getUserLogin(), newClientPassword, userOutputDTO.isUserStatusActive());
 
         requestSpecification = RestAssured.given();
         requestSpecification.contentType(ContentType.JSON);
@@ -689,26 +683,26 @@ public class StaffControllerTest {
         requestSpecification.header("If-Match", etagContent);
         requestSpecification.body(userUpdateDTO);
 
-        response = requestSpecification.put(TestConstants.staffsURL + "/update");
-        logger.debug("Response: " + response.getBody().asString());
+        response = requestSpecification.put(TestConstants.clientsURL + "/update");
+        logger.debug("Response: " + response.asString());
         validatableResponse = response.then();
         validatableResponse.statusCode(403);
     }
 
     @Test
-    public void staffControllerUpdateStaffAsAnAuthenticatedAdminTestNegative() {
-        // Login to staff (owner) account
-        String accessToken = this.loginToAccount(new UserInputDTO(staffUserNo1.getUserLogin(), passwordNotHashed), TestConstants.staffLoginURL);
+    public void clientControllerUpdateClientTestAsAnAuthenticatedAdminTestNegative() {
+        // Login to client owner account
+        String accessToken = this.loginToAccount(new UserInputDTO(clientUserNo1.getUserLogin(), passwordNotHashed), TestConstants.clientLoginURL);
 
         // Get current user account by login
-        String path = TestConstants.staffsURL + "/login/self";
+        String path = TestConstants.clientsURL + "/login/self";
 
         RequestSpecification requestSpecification = RestAssured.given();
         requestSpecification.header("Authorization", "Bearer " + accessToken);
         requestSpecification.accept(ContentType.JSON);
 
         Response response = requestSpecification.get(path);
-        logger.debug("Response: " + response.getBody().asString());
+        logger.debug("Response: " + response.asString());
         ValidatableResponse validatableResponse = response.then();
 
         validatableResponse.statusCode(200);
@@ -716,12 +710,12 @@ public class StaffControllerTest {
         UserOutputDTO userOutputDTO = response.getBody().as(UserOutputDTO.class);
         String etagContent = response.header("ETag");
 
-        // Login to admin (not owner) account
+        // Login to admin account (not owner)
         accessToken = this.loginToAccount(new UserInputDTO(adminUser.getUserLogin(), passwordNotHashed), TestConstants.adminLoginURL);
 
-        String newStaffPassword = "SomeNewStaffPasswordNo1";
+        String newClientPassword = "SomeNewClientPasswordNo1";
 
-        UserUpdateDTO userUpdateDTO = new UserUpdateDTO(userOutputDTO.getUserID(), userOutputDTO.getUserLogin(), newStaffPassword, userOutputDTO.isUserStatusActive());
+        UserUpdateDTO userUpdateDTO = new UserUpdateDTO(userOutputDTO.getUserID(), userOutputDTO.getUserLogin(), newClientPassword, userOutputDTO.isUserStatusActive());
 
         requestSpecification = RestAssured.given();
         requestSpecification.contentType(ContentType.JSON);
@@ -729,64 +723,64 @@ public class StaffControllerTest {
         requestSpecification.header("If-Match", etagContent);
         requestSpecification.body(userUpdateDTO);
 
-        response = requestSpecification.put(TestConstants.staffsURL + "/update");
-        logger.debug("Response: " + response.getBody().asString());
+        response = requestSpecification.put(TestConstants.clientsURL + "/update");
+        logger.debug("Response: " + response.asString());
         validatableResponse = response.then();
         validatableResponse.statusCode(403);
     }
 
     @Test
-    public void staffControllerUpdateStaffWithoutIfMatchHeaderAsAnAuthenticatedStaffTestPositive() {
-        // Login to staff (owner) account
-        String accessToken = this.loginToAccount(new UserInputDTO(staffUserNo1.getUserLogin(), passwordNotHashed), TestConstants.staffLoginURL);
+    public void clientControllerUpdateClientWithoutIfMatchHeaderAsAnAuthenticatedClientTestNegative() {
+        // Login to client owner account
+        String accessToken = this.loginToAccount(new UserInputDTO(clientUserNo1.getUserLogin(), passwordNotHashed), TestConstants.clientLoginURL);
 
         // Get current user account by login
-        String path = TestConstants.staffsURL + "/login/self";
+        String path = TestConstants.clientsURL + "/login/self";
 
         RequestSpecification requestSpecification = RestAssured.given();
         requestSpecification.header("Authorization", "Bearer " + accessToken);
         requestSpecification.accept(ContentType.JSON);
 
         Response response = requestSpecification.get(path);
-        logger.debug("Response: " + response.getBody().asString());
+        logger.debug("Response: " + response.asString());
         ValidatableResponse validatableResponse = response.then();
 
         validatableResponse.statusCode(200);
 
         UserOutputDTO userOutputDTO = response.getBody().as(UserOutputDTO.class);
 
-        // Login to staff (owner) account
-        accessToken = this.loginToAccount(new UserInputDTO(staffUserNo1.getUserLogin(), passwordNotHashed), TestConstants.staffLoginURL);
+        // Login to client account (owner)
+        accessToken = this.loginToAccount(new UserInputDTO(clientUserNo1.getUserLogin(), passwordNotHashed), TestConstants.clientLoginURL);
 
-        String newStaffPassword = "SomeNewStaffPasswordNo1";
+        String newClientPassword = "SomeNewClientPasswordNo1";
 
-        UserUpdateDTO userUpdateDTO = new UserUpdateDTO(userOutputDTO.getUserID(), userOutputDTO.getUserLogin(), newStaffPassword, userOutputDTO.isUserStatusActive());
+        UserUpdateDTO userUpdateDTO = new UserUpdateDTO(userOutputDTO.getUserID(), userOutputDTO.getUserLogin(), newClientPassword, userOutputDTO.isUserStatusActive());
 
         requestSpecification = RestAssured.given();
         requestSpecification.contentType(ContentType.JSON);
         requestSpecification.header("Authorization", "Bearer " + accessToken);
         requestSpecification.body(userUpdateDTO);
 
-        response = requestSpecification.put(TestConstants.staffsURL + "/update");
-        logger.debug("Response: " + response.getBody().asString());
+        response = requestSpecification.put(TestConstants.clientsURL + "/update");
+        logger.debug("Response: " + response.asString());
         validatableResponse = response.then();
         validatableResponse.statusCode(412);
     }
 
     @Test
-    public void staffControllerUpdateStaffWithChangedIDAsAnAuthenticatedStaffTestPositive() {
-        // Login to staff (owner) account
-        String accessToken = this.loginToAccount(new UserInputDTO(staffUserNo1.getUserLogin(), passwordNotHashed), TestConstants.staffLoginURL);
+    public void clientControllerUpdateClientWithChangedIDAsAnAuthenticatedClientTestNegative() {
+        // Login to client owner account
+        String accessToken = this.loginToAccount(new UserInputDTO(clientUserNo1.getUserLogin(), passwordNotHashed), TestConstants.clientLoginURL);
 
         // Get current user account by login
-        String path = TestConstants.staffsURL + "/login/self";
+        String path = TestConstants.clientsURL + "/login/self";
 
         RequestSpecification requestSpecification = RestAssured.given();
         requestSpecification.header("Authorization", "Bearer " + accessToken);
         requestSpecification.accept(ContentType.JSON);
 
         Response response = requestSpecification.get(path);
-        logger.debug("Response: " + response.getBody().asString());
+        logger.debug("Response: " + response.asString());
         ValidatableResponse validatableResponse = response.then();
 
         validatableResponse.statusCode(200);
@@ -794,12 +788,12 @@ public class StaffControllerTest {
         UserOutputDTO userOutputDTO = response.getBody().as(UserOutputDTO.class);
         String etagContent = response.header("ETag");
 
-        // Login to staff (owner) account
-        accessToken = this.loginToAccount(new UserInputDTO(staffUserNo1.getUserLogin(), passwordNotHashed), TestConstants.staffLoginURL);
+        // Login to client account (owner)
+        accessToken = this.loginToAccount(new UserInputDTO(clientUserNo1.getUserLogin(), passwordNotHashed), TestConstants.clientLoginURL);
 
-        UUID newStaffID = UUID.randomUUID();
+        UUID newClientID = UUID.randomUUID();
 
-        UserUpdateDTO userUpdateDTO = new UserUpdateDTO(newStaffID, userOutputDTO.getUserLogin(), passwordNotHashed, userOutputDTO.isUserStatusActive());
+        UserUpdateDTO userUpdateDTO = new UserUpdateDTO(newClientID, userOutputDTO.getUserLogin(), passwordNotHashed, userOutputDTO.isUserStatusActive());
 
         requestSpecification = RestAssured.given();
         requestSpecification.contentType(ContentType.JSON);
@@ -807,26 +801,26 @@ public class StaffControllerTest {
         requestSpecification.header("If-Match", etagContent);
         requestSpecification.body(userUpdateDTO);
 
-        response = requestSpecification.put(TestConstants.staffsURL + "/update");
-        logger.debug("Response: " + response.getBody().asString());
+        response = requestSpecification.put(TestConstants.clientsURL + "/update");
+        logger.debug("Response: " + response.asString());
         validatableResponse = response.then();
         validatableResponse.statusCode(400);
     }
 
     @Test
-    public void staffControllerUpdateStaffWithChangedLoginAsAnAuthenticatedStaffTestPositive() {
-        // Login to staff (owner) account
-        String accessToken = this.loginToAccount(new UserInputDTO(staffUserNo1.getUserLogin(), passwordNotHashed), TestConstants.staffLoginURL);
+    public void clientControllerUpdateClientWithChangedLoginAsAnAuthenticatedClientTestNegative() {
+        // Login to client owner account
+        String accessToken = this.loginToAccount(new UserInputDTO(clientUserNo1.getUserLogin(), passwordNotHashed), TestConstants.clientLoginURL);
 
         // Get current user account by login
-        String path = TestConstants.staffsURL + "/login/self";
+        String path = TestConstants.clientsURL + "/login/self";
 
         RequestSpecification requestSpecification = RestAssured.given();
         requestSpecification.header("Authorization", "Bearer " + accessToken);
         requestSpecification.accept(ContentType.JSON);
 
         Response response = requestSpecification.get(path);
-        logger.debug("Response: " + response.getBody().asString());
+        logger.debug("Response: " + response.asString());
         ValidatableResponse validatableResponse = response.then();
 
         validatableResponse.statusCode(200);
@@ -834,12 +828,12 @@ public class StaffControllerTest {
         UserOutputDTO userOutputDTO = response.getBody().as(UserOutputDTO.class);
         String etagContent = response.header("ETag");
 
-        // Login to staff (owner) account
-        accessToken = this.loginToAccount(new UserInputDTO(staffUserNo1.getUserLogin(), passwordNotHashed), TestConstants.staffLoginURL);
+        // Login to client account (owner)
+        accessToken = this.loginToAccount(new UserInputDTO(clientUserNo1.getUserLogin(), passwordNotHashed), TestConstants.clientLoginURL);
 
-        String newStaffLogin = "SomeNewStaffLogin";
+        String newClientLogin = "SomeNewClientLogin";
 
-        UserUpdateDTO userUpdateDTO = new UserUpdateDTO(userOutputDTO.getUserID(), newStaffLogin, newStaffLogin, userOutputDTO.isUserStatusActive());
+        UserUpdateDTO userUpdateDTO = new UserUpdateDTO(userOutputDTO.getUserID(), newClientLogin, passwordNotHashed, userOutputDTO.isUserStatusActive());
 
         requestSpecification = RestAssured.given();
         requestSpecification.contentType(ContentType.JSON);
@@ -847,26 +841,26 @@ public class StaffControllerTest {
         requestSpecification.header("If-Match", etagContent);
         requestSpecification.body(userUpdateDTO);
 
-        response = requestSpecification.put(TestConstants.staffsURL + "/update");
-        logger.debug("Response: " + response.getBody().asString());
+        response = requestSpecification.put(TestConstants.clientsURL + "/update");
+        logger.debug("Response: " + response.asString());
         validatableResponse = response.then();
         validatableResponse.statusCode(400);
     }
 
     @Test
-    public void staffControllerUpdateStaffWithChangedStatusAsAnAuthenticatedStaffTestPositive() {
-        // Login to staff (owner) account
-        String accessToken = this.loginToAccount(new UserInputDTO(staffUserNo1.getUserLogin(), passwordNotHashed), TestConstants.staffLoginURL);
+    public void clientControllerUpdateClientWithChangedStatusAsAnAuthenticatedClientTestNegative() {
+        // Login to client owner account
+        String accessToken = this.loginToAccount(new UserInputDTO(clientUserNo1.getUserLogin(), passwordNotHashed), TestConstants.clientLoginURL);
 
         // Get current user account by login
-        String path = TestConstants.staffsURL + "/login/self";
+        String path = TestConstants.clientsURL + "/login/self";
 
         RequestSpecification requestSpecification = RestAssured.given();
         requestSpecification.header("Authorization", "Bearer " + accessToken);
         requestSpecification.accept(ContentType.JSON);
 
         Response response = requestSpecification.get(path);
-        logger.debug("Response: " + response.getBody().asString());
+        logger.debug("Response: " + response.asString());
         ValidatableResponse validatableResponse = response.then();
 
         validatableResponse.statusCode(200);
@@ -874,12 +868,12 @@ public class StaffControllerTest {
         UserOutputDTO userOutputDTO = response.getBody().as(UserOutputDTO.class);
         String etagContent = response.header("ETag");
 
-        // Login to staff (owner) account
-        accessToken = this.loginToAccount(new UserInputDTO(staffUserNo1.getUserLogin(), passwordNotHashed), TestConstants.staffLoginURL);
+        // Login to client account (owner)
+        accessToken = this.loginToAccount(new UserInputDTO(clientUserNo1.getUserLogin(), passwordNotHashed), TestConstants.clientLoginURL);
 
-        boolean newStaffStatus = false;
+        boolean newClientStatus = false;
 
-        UserUpdateDTO userUpdateDTO = new UserUpdateDTO(userOutputDTO.getUserID(), userOutputDTO.getUserLogin(), passwordNotHashed, newStaffStatus);
+        UserUpdateDTO userUpdateDTO = new UserUpdateDTO(userOutputDTO.getUserID(), userOutputDTO.getUserLogin(), passwordNotHashed, newClientStatus);
 
         requestSpecification = RestAssured.given();
         requestSpecification.contentType(ContentType.JSON);
@@ -887,8 +881,8 @@ public class StaffControllerTest {
         requestSpecification.header("If-Match", etagContent);
         requestSpecification.body(userUpdateDTO);
 
-        response = requestSpecification.put(TestConstants.staffsURL + "/update");
-        logger.debug("Response: " + response.getBody().asString());
+        response = requestSpecification.put(TestConstants.clientsURL + "/update");
+        logger.debug("Response: " + response.asString());
         validatableResponse = response.then();
         validatableResponse.statusCode(400);
     }
@@ -896,9 +890,9 @@ public class StaffControllerTest {
     // Activate tests
 
     @Test
-    public void staffControllerActivateStaffAsAnUnauthenticatedUserTestNegative() {
-        UUID activatedStaffID = staffUserNo1.getUserID();
-        String path = TestConstants.staffsURL + "/" + activatedStaffID + "/activate";
+    public void clientControllerActivateClientAsAnUnauthenticatedUserTestNegative() {
+        UUID activatedClientID = clientUserNo1.getUserID();
+        String path = TestConstants.clientsURL + "/" + activatedClientID + "/activate";
 
         RequestSpecification requestSpecification = RestAssured.given();
         Response response = requestSpecification.post(path);
@@ -909,27 +903,11 @@ public class StaffControllerTest {
     }
 
     @Test
-    public void staffControllerActivateStaffAsAnAuthenticatedClientTestNegative() {
-        String accessToken = this.loginToAccount(new UserInputDTO(clientUser.getUserLogin(), passwordNotHashed), TestConstants.clientLoginURL);
+    public void clientControllerActivateClientAsAnAuthenticatedClientTestNegative() {
+        String accessToken = this.loginToAccount(new UserInputDTO(clientUserNo1.getUserLogin(), passwordNotHashed), TestConstants.clientLoginURL);
 
-        UUID activatedStaffID = staffUserNo1.getUserID();
-        String path = TestConstants.staffsURL + "/" + activatedStaffID + "/activate";
-
-        RequestSpecification requestSpecification = RestAssured.given();
-        requestSpecification.header("Authorization", "Bearer " + accessToken);
-        Response response = requestSpecification.post(path);
-        logger.debug("Response: " + response.getBody().asString());
-        ValidatableResponse validatableResponse = response.then();
-
-        validatableResponse.statusCode(403);
-    }
-
-    @Test
-    public void staffControllerActivateStaffAsAnAuthenticatedStaffTestNegative() {
-        String accessToken = this.loginToAccount(new UserInputDTO(staffUserNo1.getUserLogin(), passwordNotHashed), TestConstants.staffLoginURL);
-
-        UUID activatedStaffID = staffUserNo1.getUserID();
-        String path = TestConstants.staffsURL + "/" + activatedStaffID + "/activate";
+        UUID activatedClientID = clientUserNo1.getUserID();
+        String path = TestConstants.clientsURL + "/" + activatedClientID + "/activate";
 
         RequestSpecification requestSpecification = RestAssured.given();
         requestSpecification.header("Authorization", "Bearer " + accessToken);
@@ -941,11 +919,27 @@ public class StaffControllerTest {
     }
 
     @Test
-    public void staffControllerActivateStaffAsAnAuthenticatedAdminTestPositive() {
+    public void clientControllerActivateClientAsAnAuthenticatedStaffTestNegative() {
+        String accessToken = this.loginToAccount(new UserInputDTO(staffUser.getUserLogin(), passwordNotHashed), TestConstants.staffLoginURL);
+
+        UUID activatedClientID = clientUserNo1.getUserID();
+        String path = TestConstants.clientsURL + "/" + activatedClientID + "/activate";
+
+        RequestSpecification requestSpecification = RestAssured.given();
+        requestSpecification.header("Authorization", "Bearer " + accessToken);
+        Response response = requestSpecification.post(path);
+        logger.debug("Response: " + response.getBody().asString());
+        ValidatableResponse validatableResponse = response.then();
+
+        validatableResponse.statusCode(403);
+    }
+
+    @Test
+    public void clientControllerActivateClientAsAnAuthenticatedAdminTestPositive() {
         String accessToken = this.loginToAccount(new UserInputDTO(adminUser.getUserLogin(), passwordNotHashed), TestConstants.adminLoginURL);
 
-        UUID activatedStaffID = staffUserNo1.getUserID();
-        String path = TestConstants.staffsURL + "/" + activatedStaffID + "/activate";
+        UUID activatedClientID = clientUserNo1.getUserID();
+        String path = TestConstants.clientsURL + "/" + activatedClientID + "/activate";
 
         RequestSpecification requestSpecification = RestAssured.given();
         requestSpecification.header("Authorization", "Bearer " + accessToken);
@@ -955,22 +949,23 @@ public class StaffControllerTest {
 
         validatableResponse.statusCode(204);
 
-        Staff foundStaff = readStaff.findByUUID(activatedStaffID);
-        boolean staffStatusActiveAfter = foundStaff.isUserStatusActive();
+        Client foundClient = readClient.findByUUID(activatedClientID);
+        boolean clientStatusActiveAfter = foundClient.isUserStatusActive();
 
-        assertTrue(staffStatusActiveAfter);
+        assertTrue(clientStatusActiveAfter);
     }
 
     @Test
-    public void staffControllerActivateStaffThatIsNotInTheDatabaseAsAnAuthenticatedAdminTestNegative() {
+    public void clientControllerActivateClientThatIsNotInTheDatabaseAsAnAuthenticatedAdminTestNegative() {
         String accessToken = this.loginToAccount(new UserInputDTO(adminUser.getUserLogin(), passwordNotHashed), TestConstants.adminLoginURL);
 
-        UUID activatedStaffID = UUID.randomUUID();
-        String path = TestConstants.staffsURL + "/" + activatedStaffID + "/activate";
+        UUID activatedClientID = UUID.randomUUID();
+        String path = TestConstants.clientsURL + "/" + activatedClientID + "/activate";
 
         RequestSpecification requestSpecification = RestAssured.given();
         requestSpecification.header("Authorization", "Bearer " + accessToken);
         Response response = requestSpecification.post(path);
+        logger.debug("Response: " + response.getBody().asString());
         ValidatableResponse validatableResponse = response.then();
 
         validatableResponse.statusCode(400);
@@ -979,9 +974,9 @@ public class StaffControllerTest {
     // Deactivate tests
 
     @Test
-    public void staffControllerDeactivateStaffAsAnUnauthenticatedUserTestNegative() {
-        UUID deactivatedStaffID = staffUserNo1.getUserID();
-        String path = TestConstants.staffsURL + "/" + deactivatedStaffID + "/deactivate";
+    public void clientControllerDeactivateClientAsAnUnauthenticatedClientTestNegative() {
+        UUID deactivatedClientID = clientUserNo1.getUserID();
+        String path = TestConstants.clientsURL + "/" + deactivatedClientID + "/deactivate";
 
         RequestSpecification requestSpecification = RestAssured.given();
         Response response = requestSpecification.post(path);
@@ -992,27 +987,11 @@ public class StaffControllerTest {
     }
 
     @Test
-    public void staffControllerDeactivateStaffAsAnAuthenticatedClientTestNegative() {
-        String accessToken = this.loginToAccount(new UserInputDTO(clientUser.getUserLogin(), passwordNotHashed), TestConstants.clientLoginURL);
+    public void clientControllerDeactivateClientAsAnAuthenticatedClientTestNegative() {
+        String accessToken = this.loginToAccount(new UserInputDTO(clientUserNo1.getUserLogin(), passwordNotHashed), TestConstants.clientLoginURL);
 
-        UUID deactivatedStaffID = staffUserNo1.getUserID();
-        String path = TestConstants.staffsURL + "/" + deactivatedStaffID + "/deactivate";
-
-        RequestSpecification requestSpecification = RestAssured.given();
-        requestSpecification.header("Authorization", "Bearer " + accessToken);
-        Response response = requestSpecification.post(path);
-        logger.debug("Response: " + response.getBody().asString());
-        ValidatableResponse validatableResponse = response.then();
-
-        validatableResponse.statusCode(403);
-    }
-
-    @Test
-    public void staffControllerDeactivateStaffAsAnAuthenticatedStaffTestNegative() {
-        String accessToken = this.loginToAccount(new UserInputDTO(staffUserNo1.getUserLogin(), passwordNotHashed), TestConstants.staffLoginURL);
-
-        UUID deactivatedStaffID = staffUserNo1.getUserID();
-        String path = TestConstants.staffsURL + "/" + deactivatedStaffID + "/deactivate";
+        UUID deactivatedClientID = clientUserNo1.getUserID();
+        String path = TestConstants.clientsURL + "/" + deactivatedClientID + "/deactivate";
 
         RequestSpecification requestSpecification = RestAssured.given();
         requestSpecification.header("Authorization", "Bearer " + accessToken);
@@ -1024,11 +1003,27 @@ public class StaffControllerTest {
     }
 
     @Test
-    public void staffControllerDeactivateStaffAsAnAuthenticatedAdminTestPositive() {
+    public void clientControllerDeactivateClientAsAnAuthenticatedStaffTestNegative() {
+        String accessToken = this.loginToAccount(new UserInputDTO(staffUser.getUserLogin(), passwordNotHashed), TestConstants.staffLoginURL);
+
+        UUID deactivatedClientID = clientUserNo1.getUserID();
+        String path = TestConstants.clientsURL + "/" + deactivatedClientID + "/deactivate";
+
+        RequestSpecification requestSpecification = RestAssured.given();
+        requestSpecification.header("Authorization", "Bearer " + accessToken);
+        Response response = requestSpecification.post(path);
+        logger.debug("Response: " + response.getBody().asString());
+        ValidatableResponse validatableResponse = response.then();
+
+        validatableResponse.statusCode(403);
+    }
+
+    @Test
+    public void clientControllerDeactivateClientAsAnAuthenticatedAdminTestPositive() {
         String accessToken = this.loginToAccount(new UserInputDTO(adminUser.getUserLogin(), passwordNotHashed), TestConstants.adminLoginURL);
 
-        UUID deactivatedStaffID = staffUserNo1.getUserID();
-        String path = TestConstants.staffsURL + "/" + deactivatedStaffID + "/deactivate";
+        UUID deactivatedClientID = clientUserNo1.getUserID();
+        String path = TestConstants.clientsURL + "/" + deactivatedClientID + "/deactivate";
 
         RequestSpecification requestSpecification = RestAssured.given();
         requestSpecification.header("Authorization", "Bearer " + accessToken);
@@ -1038,18 +1033,18 @@ public class StaffControllerTest {
 
         validatableResponse.statusCode(204);
 
-        Staff foundStaff = readStaff.findByUUID(deactivatedStaffID);
-        boolean staffStatusActiveAfter = foundStaff.isUserStatusActive();
+        Client foundClient = readClient.findByUUID(deactivatedClientID);
+        boolean clientStatusActiveAfter = foundClient.isUserStatusActive();
 
-        assertFalse(staffStatusActiveAfter);
+        assertFalse(clientStatusActiveAfter);
     }
 
     @Test
-    public void staffControllerDeactivateStaffThatIsNotInTheDatabaseTestNegative() {
+    public void clientControllerDeactivateClientThatIsNotInTheDatabaseAsAnAuthenticatedAdminTestNegative() {
         String accessToken = this.loginToAccount(new UserInputDTO(adminUser.getUserLogin(), passwordNotHashed), TestConstants.adminLoginURL);
 
-        UUID deactivatedStaffID = UUID.randomUUID();
-        String path = TestConstants.staffsURL + "/" + deactivatedStaffID + "/deactivate";
+        UUID deactivatedClientID = UUID.randomUUID();
+        String path = TestConstants.clientsURL + "/" + deactivatedClientID + "/deactivate";
 
         RequestSpecification requestSpecification = RestAssured.given();
         requestSpecification.header("Authorization", "Bearer " + accessToken);

@@ -9,7 +9,10 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Repository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.PropertySource;
+import org.springframework.stereotype.Component;
+import pl.tks.gr3.cinema.adapters.connection.DatabaseConfig;
 import pl.tks.gr3.cinema.adapters.consts.model.TicketEntConstants;
 import pl.tks.gr3.cinema.adapters.consts.model.UserEntConstants;
 import pl.tks.gr3.cinema.adapters.exceptions.UserRepositoryException;
@@ -32,7 +35,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-@Repository
+@Component
+@PropertySource("classpath:mongo.properties")
 public class UserRepository extends MongoRepository implements UserRepositoryInterface {
 
     private String databaseName;
@@ -72,26 +76,40 @@ public class UserRepository extends MongoRepository implements UserRepositoryInt
                             }
                             """));
 
-    public UserRepository() {
-        this.databaseName = "default";
+    @Autowired
+    public UserRepository(DatabaseConfig dbConfig) {
+        String connectionString = "mongodb://%s:%s".formatted(dbConfig.getHostName(), dbConfig.getPortNumber());
+        super.initDBConnection(connectionString, dbConfig.getUserName(), dbConfig.getPassword(), dbConfig.getDbName(), dbConfig.getAuthDatabase());
+
+        mongoDatabase.getCollection(userCollectionName).drop();
+
+        CreateCollectionOptions createCollectionOptions = new CreateCollectionOptions().validationOptions(validationOptions);
+        mongoDatabase.createCollection(userCollectionName, createCollectionOptions);
+        IndexOptions indexOptions = new IndexOptions().unique(true);
+        mongoDatabase.getCollection(userCollectionName).createIndex(Indexes.ascending(UserEntConstants.USER_LOGIN), indexOptions);
+    }
+
+    public UserRepository(String databaseName) {
+        this.databaseName = databaseName;
         super.initDBConnection(this.databaseName);
 
         mongoDatabase.getCollection(userCollectionName).drop();
 
-        boolean collectionExists = false;
-        for (String collectionName : mongoDatabase.listCollectionNames()) {
-            if (collectionName.equals(userCollectionName)) {
-                collectionExists = true;
-                break;
-            }
-        }
+        CreateCollectionOptions createCollectionOptions = new CreateCollectionOptions().validationOptions(validationOptions);
+        mongoDatabase.createCollection(userCollectionName, createCollectionOptions);
+        IndexOptions indexOptions = new IndexOptions().unique(true);
+        mongoDatabase.getCollection(userCollectionName).createIndex(Indexes.ascending(UserEntConstants.USER_LOGIN), indexOptions);
+    }
 
-        if (!collectionExists) {
-            CreateCollectionOptions createCollectionOptions = new CreateCollectionOptions().validationOptions(validationOptions);
-            mongoDatabase.createCollection(userCollectionName, createCollectionOptions);
-            IndexOptions indexOptions = new IndexOptions().unique(true);
-            mongoDatabase.getCollection(userCollectionName).createIndex(Indexes.ascending(UserEntConstants.USER_LOGIN), indexOptions);
-        }
+    public UserRepository(String connectionString, String login, String password, String database) {
+        super.initDBConnection(connectionString, login, password, database);
+
+        mongoDatabase.getCollection(userCollectionName).drop();
+
+        CreateCollectionOptions createCollectionOptions = new CreateCollectionOptions().validationOptions(validationOptions);
+        mongoDatabase.createCollection(userCollectionName, createCollectionOptions);
+        IndexOptions indexOptions = new IndexOptions().unique(true);
+        mongoDatabase.getCollection(userCollectionName).createIndex(Indexes.ascending(UserEntConstants.USER_LOGIN), indexOptions);
     }
 
     @PostConstruct
@@ -131,50 +149,6 @@ public class UserRepository extends MongoRepository implements UserRepositoryInt
                 this.getClientCollection().insertOne(user);
             }
         }
-    }
-
-    @PreDestroy
-    public void restoreDatabaseState() {
-        try {
-            List<ClientEnt> listOfClients = this.findAllClients();
-            for (ClientEnt client : listOfClients) {
-                this.delete(client.getUserID(), UserEntConstants.CLIENT_DISCRIMINATOR);
-            }
-            List<AdminEnt> listOfAdmins = this.findAllAdmins();
-            for (AdminEnt admin : listOfAdmins) {
-                this.delete(admin.getUserID(), UserEntConstants.ADMIN_DISCRIMINATOR);
-            }
-            List<StaffEnt> listOfStaffs = this.findAllStaffs();
-            for (StaffEnt staff : listOfStaffs) {
-                this.delete(staff.getUserID(), UserEntConstants.STAFF_DISCRIMINATOR);
-            }
-        } catch (UserRepositoryException exception) {
-            logger.debug(exception.getMessage());
-        }
-        this.close();
-    }
-
-    public UserRepository(String databaseName) {
-        this.databaseName = databaseName;
-        super.initDBConnection(this.databaseName);
-
-        mongoDatabase.getCollection(userCollectionName).drop();
-
-        CreateCollectionOptions createCollectionOptions = new CreateCollectionOptions().validationOptions(validationOptions);
-        mongoDatabase.createCollection(userCollectionName, createCollectionOptions);
-        IndexOptions indexOptions = new IndexOptions().unique(true);
-        mongoDatabase.getCollection(userCollectionName).createIndex(Indexes.ascending(UserEntConstants.USER_LOGIN), indexOptions);
-    }
-
-    public UserRepository(String connectionString, String login, String password, String database) {
-        super.initDBConnection(connectionString, login, password, database);
-
-        mongoDatabase.getCollection(userCollectionName).drop();
-
-        CreateCollectionOptions createCollectionOptions = new CreateCollectionOptions().validationOptions(validationOptions);
-        mongoDatabase.createCollection(userCollectionName, createCollectionOptions);
-        IndexOptions indexOptions = new IndexOptions().unique(true);
-        mongoDatabase.getCollection(userCollectionName).createIndex(Indexes.ascending(UserEntConstants.USER_LOGIN), indexOptions);
     }
 
     // Create methods

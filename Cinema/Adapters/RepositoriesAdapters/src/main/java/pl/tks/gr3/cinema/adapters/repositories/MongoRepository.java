@@ -33,9 +33,6 @@ import java.util.UUID;
 
 public abstract class MongoRepository implements AutoCloseable {
 
-//    private final static ConnectionString connectionString = new ConnectionString("mongodb://mongodbnode1:27020, mongodbnode2:27021, mongodbnode3:27022");
-//    private final static MongoCredential mongoCredentials = MongoCredential.createCredential("admin", "admin", "adminpassword".toCharArray());
-
     protected final static String userCollectionName = MongoRepositoryConstants.USERS_COLLECTION_NAME;
     protected final static String movieCollectionName = MongoRepositoryConstants.MOVIES_COLLECTION_NAME;
     protected final static String ticketCollectionName = MongoRepositoryConstants.TICKETS_COLLECTION_NAME;
@@ -100,7 +97,31 @@ public abstract class MongoRepository implements AutoCloseable {
 
         MongoCredential mongoCredentials = MongoCredential.createCredential(
                 login,
-                MongoDBConnector.getMongoDatabase(),
+                "admin",
+                password.toCharArray()
+        );
+
+        MongoClientSettings mongoClientSettings = MongoClientSettings.builder()
+                .credential(mongoCredentials)
+                .readConcern(ReadConcern.MAJORITY)
+                .readPreference(ReadPreference.primary())
+                .writeConcern(WriteConcern.MAJORITY)
+                .applyConnectionString(new ConnectionString(connectionString))
+                .uuidRepresentation(UuidRepresentation.STANDARD)
+                .codecRegistry(CodecRegistries.fromRegistries(
+                        MongoClientSettings.getDefaultCodecRegistry(),
+                        pojoCodecRegistry
+                ))
+                .build();
+
+        mongoClient = MongoClients.create(mongoClientSettings);
+        mongoDatabase = mongoClient.getDatabase(databaseName);
+    }
+
+    protected void initDBConnection(String connectionString, String login, String password, String databaseName, String authDatabaseName) {
+        MongoCredential mongoCredentials = MongoCredential.createCredential(
+                login,
+                authDatabaseName,
                 password.toCharArray()
         );
 

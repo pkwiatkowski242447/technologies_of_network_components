@@ -10,7 +10,12 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
+import pl.tks.gr3.cinema.adapters.connection.DatabaseConfig;
 import pl.tks.gr3.cinema.adapters.consts.model.MovieEntConstants;
 import pl.tks.gr3.cinema.adapters.consts.model.TicketEntConstants;
 import pl.tks.gr3.cinema.adapters.consts.model.UserEntConstants;
@@ -39,7 +44,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-@Repository
+@Component
+@PropertySource("classpath:mongo.properties")
 public class TicketRepository extends MongoRepository implements TicketRepositoryInterface {
 
     private String databaseName;
@@ -79,24 +85,34 @@ public class TicketRepository extends MongoRepository implements TicketRepositor
                             }
                             """));
 
-    public TicketRepository() {
-        this.databaseName = "default";
-        super.initDBConnection(databaseName);
+    @Autowired
+    public TicketRepository(DatabaseConfig dbConfig) {
+        String connectionString = "mongodb://%s:%s".formatted(dbConfig.getHostName(), dbConfig.getPortNumber());
+        super.initDBConnection(connectionString, dbConfig.getUserName(), dbConfig.getPassword(), dbConfig.getDbName(), dbConfig.getAuthDatabase());
 
         mongoDatabase.getCollection(ticketCollectionName).drop();
 
-        boolean collectionExists = false;
-        for (String collectionName : mongoDatabase.listCollectionNames()) {
-            if (collectionName.equals(ticketCollectionName)) {
-                collectionExists = true;
-                break;
-            }
-        }
+        CreateCollectionOptions createCollectionOptions = new CreateCollectionOptions().validationOptions(validationOptions);
+        mongoDatabase.createCollection(ticketCollectionName, createCollectionOptions);
+    }
 
-        if (!collectionExists) {
-            CreateCollectionOptions createCollectionOptions = new CreateCollectionOptions().validationOptions(validationOptions);
-            mongoDatabase.createCollection(ticketCollectionName, createCollectionOptions);
-        }
+    public TicketRepository(String databaseName) {
+        this.databaseName = databaseName;
+        super.initDBConnection(this.databaseName);
+
+        mongoDatabase.getCollection(ticketCollectionName).drop();
+
+        CreateCollectionOptions createCollectionOptions = new CreateCollectionOptions().validationOptions(validationOptions);
+        mongoDatabase.createCollection(ticketCollectionName, createCollectionOptions);
+    }
+
+    public TicketRepository(String connectionString, String login, String password, String databaseName) {
+        super.initDBConnection(connectionString, login, password, databaseName);
+
+        mongoDatabase.getCollection(ticketCollectionName).drop();
+
+        CreateCollectionOptions createCollectionOptions = new CreateCollectionOptions().validationOptions(validationOptions);
+        mongoDatabase.createCollection(ticketCollectionName, createCollectionOptions);
     }
 
     @PostConstruct
@@ -169,38 +185,6 @@ public class TicketRepository extends MongoRepository implements TicketRepositor
 
         this.getTicketCollection().insertOne(ticketNo1);
         this.getTicketCollection().insertOne(ticketNo2);
-    }
-
-    @PreDestroy
-    private void restoreDatabaseState() {
-        try {
-            List<TicketEnt> listOfTickets = this.findAll();
-            for (TicketEnt ticket : listOfTickets) {
-                this.delete(ticket.getTicketID());
-            }
-        } catch (TicketRepositoryException exception) {
-            logger.debug(exception.getMessage());
-        }
-        this.close();
-    }
-
-    public TicketRepository(String databaseName) {
-        this.databaseName = databaseName;
-        super.initDBConnection(this.databaseName);
-
-        mongoDatabase.getCollection(ticketCollectionName).drop();
-
-        CreateCollectionOptions createCollectionOptions = new CreateCollectionOptions().validationOptions(validationOptions);
-        mongoDatabase.createCollection(ticketCollectionName, createCollectionOptions);
-    }
-
-    public TicketRepository(String connectionString, String login, String password, String databaseName) {
-        super.initDBConnection(connectionString, login, password, databaseName);
-
-        mongoDatabase.getCollection(ticketCollectionName).drop();
-
-        CreateCollectionOptions createCollectionOptions = new CreateCollectionOptions().validationOptions(validationOptions);
-        mongoDatabase.createCollection(ticketCollectionName, createCollectionOptions);
     }
 
     @Override

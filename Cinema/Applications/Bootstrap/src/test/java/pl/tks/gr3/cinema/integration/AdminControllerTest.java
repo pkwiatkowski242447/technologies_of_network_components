@@ -1,4 +1,4 @@
-package pl.tks.gr3.cinema.api;
+package pl.tks.gr3.cinema.integration;
 
 import io.restassured.RestAssured;
 import io.restassured.common.mapper.TypeRef;
@@ -9,17 +9,18 @@ import io.restassured.response.Response;
 import io.restassured.response.ValidatableResponse;
 import io.restassured.specification.RequestSpecification;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import pl.tks.gr3.cinema.CinemaApplication;
-import pl.tks.gr3.cinema.adapters.aggregates.UserRepositoryAdapter;
+import pl.tks.gr3.cinema.TestContainerSetup;
 import pl.tks.gr3.cinema.adapters.consts.model.UserEntConstants;
 import pl.tks.gr3.cinema.adapters.exceptions.UserRepositoryException;
-import pl.tks.gr3.cinema.adapters.repositories.UserRepository;
-import pl.tks.gr3.cinema.application_services.services.AdminService;
 import pl.tks.gr3.cinema.domain_model.users.Admin;
 import pl.tks.gr3.cinema.domain_model.users.Client;
 import pl.tks.gr3.cinema.domain_model.users.Staff;
@@ -36,23 +37,40 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@ExtendWith(SpringExtension.class)
 @SpringBootTest(classes = {CinemaApplication.class}, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
-public class AdminControllerTest {
+@TestPropertySource(locations = "classpath:mongo-test.properties")
+public class AdminControllerTest extends TestContainerSetup {
 
     private static final Logger logger = LoggerFactory.getLogger(AdminControllerTest.class);
 
-    private static UserRepository userRepository;
-    private static PasswordEncoder passwordEncoder;
 
-    private static CreateUserPort createUserPort;
-    private static ReadUserPort readUserPort;
-    private static UpdateUserPort updateUserPort;
-    private static ActivateUserPort activateUserPort;
-    private static DeactivateUserPort deactivateUserPort;
-    private static DeleteUserPort deleteUserPort;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
-    private static ReadUserUseCase<Admin> readAdmin;
-    private static WriteUserUseCase<Admin> writeAdmin;
+    @Autowired
+    private CreateUserPort createUserPort;
+
+    @Autowired
+    private ReadUserPort readUserPort;
+
+    @Autowired
+    private UpdateUserPort updateUserPort;
+
+    @Autowired
+    private ActivateUserPort activateUserPort;
+
+    @Autowired
+    private DeactivateUserPort deactivateUserPort;
+
+    @Autowired
+    private DeleteUserPort deleteUserPort;
+
+    @Autowired
+    private ReadUserUseCase<Admin> readAdmin;
+
+    @Autowired
+    private WriteUserUseCase<Admin> writeAdmin;
 
     private Client clientUser;
     private Staff staffUser;
@@ -60,24 +78,11 @@ public class AdminControllerTest {
     private Admin adminUserNo2;
     private static String passwordNotHashed;
 
-    @BeforeAll
-    public static void init() {
-        userRepository = new UserRepository(TestConstants.databaseName);
-        UserRepositoryAdapter userRepositoryAdapter = new UserRepositoryAdapter(userRepository);
+    @BeforeEach
+    public void initializeSampleData() {
+        passwordNotHashed = "password";
 
-        createUserPort = userRepositoryAdapter;
-        readUserPort = userRepositoryAdapter;
-        updateUserPort = userRepositoryAdapter;
-        activateUserPort = userRepositoryAdapter;
-        deactivateUserPort = userRepositoryAdapter;
-        deleteUserPort = userRepositoryAdapter;
-
-        AdminService adminService = new AdminService(createUserPort, readUserPort, updateUserPort, activateUserPort, deactivateUserPort, deleteUserPort);
-
-        readAdmin = adminService;
-        writeAdmin = adminService;
-
-        passwordEncoder = new BCryptPasswordEncoder();
+        // Configure RestAssured so that it can perform HTTPS requests
 
         ClassLoader classLoader = AuthenticationControllerTest.class.getClassLoader();
         URL resourceURL = classLoader.getResource("pas-truststore.jks");
@@ -90,11 +95,7 @@ public class AdminControllerTest {
                         .allowAllHostnames()
         );
 
-        passwordNotHashed = "password";
-    }
-
-    @BeforeEach
-    public void initializeSampleData() {
+        // Initialize sample data
         this.clearCollection();
         try {
             clientUser = createUserPort.createClient("ClientLoginX", passwordEncoder.encode(passwordNotHashed));
@@ -115,26 +116,21 @@ public class AdminControllerTest {
         try {
             List<Client> listOfClients = readUserPort.findAllClients();
             for (Client client : listOfClients) {
-                userRepository.delete(client.getUserID(), UserEntConstants.CLIENT_DISCRIMINATOR);
+                deleteUserPort.delete(client.getUserID(), UserEntConstants.CLIENT_DISCRIMINATOR);
             }
 
             List<Admin> listOfAdmins = readUserPort.findAllAdmins();
             for (Admin admin : listOfAdmins) {
-                userRepository.delete(admin.getUserID(), UserEntConstants.ADMIN_DISCRIMINATOR);
+                deleteUserPort.delete(admin.getUserID(), UserEntConstants.ADMIN_DISCRIMINATOR);
             }
 
             List<Staff> listOfStaffs = readUserPort.findAllStaffs();
             for (Staff staff : listOfStaffs) {
-                userRepository.delete(staff.getUserID(), UserEntConstants.STAFF_DISCRIMINATOR);
+                deleteUserPort.delete(staff.getUserID(), UserEntConstants.STAFF_DISCRIMINATOR);
             }
         } catch (UserRepositoryException exception) {
             throw new RuntimeException("Could not delete sample users with userRepository object.", exception);
         }
-    }
-
-    @AfterAll
-    public static void destroy() {
-        userRepository.close();
     }
 
     // Read tests
