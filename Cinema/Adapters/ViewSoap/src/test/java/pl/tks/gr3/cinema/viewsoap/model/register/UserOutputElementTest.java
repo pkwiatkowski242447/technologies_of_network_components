@@ -63,7 +63,7 @@ public class UserOutputElementTest {
     @Test
     public void userOutputElementEqualsTestWithObjectOfTheSameClassButDifferentTestNegative() {
         boolean result = userOutputElementNo1.equals(userOutputElementNo3);
-        assertTrue(result);
+        assertFalse(result);
     }
 
     @Test
