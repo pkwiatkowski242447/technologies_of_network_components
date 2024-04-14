@@ -2,8 +2,6 @@ package pl.tks.gr3.cinema.rest;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -21,9 +19,7 @@ import pl.tks.gr3.cinema.ports.userinterface.tickets.ReadTicketUseCase;
 import pl.tks.gr3.cinema.ports.userinterface.tickets.WriteTicketUseCase;
 import pl.tks.gr3.cinema.ports.userinterface.users.ReadUserUseCase;
 import pl.tks.gr3.cinema.viewrest.controllers.TicketController;
-import pl.tks.gr3.cinema.viewrest.model.tickets.TicketDTO;
 import pl.tks.gr3.cinema.viewrest.model.tickets.TicketInputDTO;
-import pl.tks.gr3.cinema.viewrest.model.tickets.TicketSelfInputDTO;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;

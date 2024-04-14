@@ -12,6 +12,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class AdminRegisterResponseTest {
 
     @Test
+    public void adminRegisterResponseNoArgsConstructorTestPositive() {
+        AdminRegisterResponse adminRegisterResponse = new AdminRegisterResponse();
+        assertNotNull(adminRegisterResponse);
+    }
+
+    @Test
     public void adminRegisterResponseAllArgsConstructorAndGettersTestPositive() {
         UserOutputElement admin = new UserOutputElement(UUID.randomUUID().toString(), "exampleLogin", true);
         String accessToken = "ExampleAccessToken";

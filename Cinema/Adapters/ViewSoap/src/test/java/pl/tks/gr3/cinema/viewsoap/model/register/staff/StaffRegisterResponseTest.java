@@ -12,7 +12,13 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class StaffRegisterResponseTest {
 
     @Test
-    public void adminRegisterResponseAllArgsConstructorAndGettersTestPositive() {
+    public void staffRegisterResponseNoArgsConstructorTestPositive() {
+        StaffRegisterResponse staffRegisterResponse = new StaffRegisterResponse();
+        assertNotNull(staffRegisterResponse);
+    }
+
+    @Test
+    public void staffRegisterResponseAllArgsConstructorAndGettersTestPositive() {
         UserOutputElement staff = new UserOutputElement(UUID.randomUUID().toString(), "exampleLogin", true);
         String accessToken = "ExampleAccessToken";
 

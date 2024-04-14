@@ -9,6 +9,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class AdminRegisterRequestTest {
 
     @Test
+    public void adminRegisterRequestNoArgsConstructorTestPositive() {
+        AdminRegisterRequest adminRegisterRequest = new AdminRegisterRequest();
+        assertNotNull(adminRegisterRequest);
+    }
+
+    @Test
     public void adminRegisterRequestAllArgsConstructorAndGettersTestPositive() {
         String login = "ExampleLogin";
         String password = "ExamplePassword";
