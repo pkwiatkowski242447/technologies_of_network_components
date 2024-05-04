@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>pl.tks.gr3.adapters</groupId>
+        <artifactId>Adapters</artifactId>
+        <version>1.0.0</version>
+    </parent>
+
+    <groupId>pl.tks.gr3.repositories_adapters</groupId>
+    <artifactId>RepositoriesAdapters</artifactId>
+    <name>RepositoriesAdapters</name>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.mongodb</groupId>
+            <artifactId>mongodb-crypt</artifactId>
+            <version>${mongo-crypt.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.mongodb</groupId>
+            <artifactId>mongodb-driver-sync</artifactId>
+            <version>${mongo-driver-sync.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.mongodb</groupId>
+            <artifactId>bson</artifactId>
+            <version>${mongo-driver-sync.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>pl.tks.gr3.application_ports</groupId>
+            <artifactId>ApplicationPorts</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+    </dependencies>
+</project>
