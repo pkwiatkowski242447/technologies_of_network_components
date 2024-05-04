@@ -64,6 +64,8 @@
 
         <spring-ws.version>4.0.10</spring-ws.version>
         <wsdl4j.version>1.6.3</wsdl4j.version>
+
+        <swagger.version>2.5.0</swagger.version>
     </properties>
 
     <dependencyManagement>
@@ -96,6 +98,14 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- Swagger -->
+
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>${swagger.version}</version>
         </dependency>
 
         <!-- Application bootstrap -->
