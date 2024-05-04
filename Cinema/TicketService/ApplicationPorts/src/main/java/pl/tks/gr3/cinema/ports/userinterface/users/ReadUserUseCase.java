@@ -9,7 +9,5 @@ public interface ReadUserUseCase<Type> {
 
     Type findByUUID(UUID userID);
     Type findByLogin(String login);
-    List<Type> findAllMatchingLogin(String loginToBeMatched);
-    List<Type> findAll();
     List<Ticket> getTicketsForUser(UUID userID);
 }

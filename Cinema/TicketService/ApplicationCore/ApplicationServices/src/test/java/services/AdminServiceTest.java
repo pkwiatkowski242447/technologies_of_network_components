@@ -14,8 +14,6 @@ import pl.tks.gr3.cinema.application_services.services.AdminService;
 import pl.tks.gr3.cinema.domain_model.users.Admin;
 import pl.tks.gr3.cinema.ports.infrastructure.users.*;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -168,54 +166,6 @@ public class AdminServiceTest {
         assertThrows(AdminServiceReadException.class, () -> adminService.findByLogin(searchedLogin));
 
         verify(readUserPort, times(1)).findAdminByLogin(searchedLogin);
-    }
-
-    @Test
-    public void adminServiceFindAllAdminsMatchingLoginTestPositive() throws AdminServiceCreateException, AdminServiceReadException {
-        String exampleLogin = "New";
-
-        when(readUserPort.findAllAdminsMatchingLogin(Mockito.eq(exampleLogin))).thenReturn(Arrays.asList(adminNo1, adminNo2));
-
-        List<Admin> listOfAdmins = adminService.findAllMatchingLogin(exampleLogin);
-
-        assertNotNull(listOfAdmins);
-        assertFalse(listOfAdmins.isEmpty());
-        assertEquals(2, listOfAdmins.size());
-
-        verify(readUserPort, times(1)).findAllAdminsMatchingLogin(exampleLogin);
-    }
-
-    @Test
-    public void adminServiceFindAllAdminsWhenUserRepositoryExceptionIsThrownTestNegative() {
-        String exampleLogin = "Example";
-
-        when(readUserPort.findAllAdminsMatchingLogin(Mockito.eq(exampleLogin))).thenThrow(UserRepositoryException.class);
-
-        assertThrows(AdminServiceReadException.class, () -> adminService.findAllMatchingLogin(exampleLogin));
-
-        verify(readUserPort, times(1)).findAllAdminsMatchingLogin(exampleLogin);
-    }
-
-    @Test
-    public void adminServiceFindAllAdminTestPositive() throws AdminServiceReadException {
-        when(readUserPort.findAllAdmins()).thenReturn(Arrays.asList(adminNo1, adminNo2, adminNo3));
-
-        List<Admin> listOfAdmins = adminService.findAll();
-
-        assertNotNull(listOfAdmins);
-        assertFalse(listOfAdmins.isEmpty());
-        assertEquals(3, listOfAdmins.size());
-
-        verify(readUserPort, times(1)).findAllAdmins();
-    }
-
-    @Test
-    public void adminServiceFindAllAdminWhenUserRepositoryExceptionIsThrownTestNegative() {
-        when(readUserPort.findAllAdmins()).thenThrow(UserRepositoryException.class);
-
-        assertThrows(AdminServiceReadException.class, () -> adminService.findAll());
-
-        verify(readUserPort, times(1)).findAllAdmins();
     }
 
     // Update tests

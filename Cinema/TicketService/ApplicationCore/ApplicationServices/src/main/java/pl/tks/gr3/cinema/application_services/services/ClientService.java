@@ -75,24 +75,6 @@ public class ClientService implements ReadUserUseCase<Client>, WriteUserUseCase<
     }
 
     @Override
-    public List<Client> findAllMatchingLogin(String loginToBeMatched) throws ClientServiceReadException {
-        try {
-            return this.readUserPort.findAllClientsMatchingLogin(loginToBeMatched);
-        } catch (UserRepositoryException exception) {
-            throw new ClientServiceReadException(exception.getMessage(), exception);
-        }
-    }
-
-    @Override
-    public List<Client> findAll() throws ClientServiceReadException {
-        try {
-            return this.readUserPort.findAllClients();
-        } catch (UserRepositoryException exception) {
-            throw new ClientServiceReadException(exception.getMessage(), exception);
-        }
-    }
-
-    @Override
     public void update(Client client) throws ClientServiceUpdateException {
         try {
             this.updateUserPort.updateClient(client);

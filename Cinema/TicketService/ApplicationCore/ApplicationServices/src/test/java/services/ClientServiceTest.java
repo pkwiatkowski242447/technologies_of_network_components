@@ -167,54 +167,6 @@ public class ClientServiceTest {
     }
 
     @Test
-    public void clientServiceFindAllClientsMatchingLoginTestPositive() throws ClientServiceCreateException, ClientServiceReadException {
-        String exampleLogin = "New";
-
-        when(readUserPort.findAllClientsMatchingLogin(Mockito.eq(exampleLogin))).thenReturn(Arrays.asList(clientNo1, clientNo2));
-
-        List<Client> listOfClients = clientService.findAllMatchingLogin(exampleLogin);
-
-        assertNotNull(listOfClients);
-        assertFalse(listOfClients.isEmpty());
-        assertEquals(2, listOfClients.size());
-
-        verify(readUserPort, times(1)).findAllClientsMatchingLogin(exampleLogin);
-    }
-
-    @Test
-    public void clientServiceFindAllClientsMatchingLoginWhenUserRepositoryExceptionIsThrownTestNegative() {
-        String exampleLogin = "Example";
-
-        when(readUserPort.findAllClientsMatchingLogin(Mockito.eq(exampleLogin))).thenThrow(UserRepositoryException.class);
-
-        assertThrows(ClientServiceReadException.class, () -> clientService.findAllMatchingLogin(exampleLogin));
-
-        verify(readUserPort, times(1)).findAllClientsMatchingLogin(exampleLogin);
-    }
-
-    @Test
-    public void clientServiceFindAllClientsTestPositive() throws ClientServiceReadException {
-        when(readUserPort.findAllClients()).thenReturn(Arrays.asList(clientNo1, clientNo2, clientNo3));
-
-        List<Client> listOfClients = clientService.findAll();
-
-        assertNotNull(listOfClients);
-        assertFalse(listOfClients.isEmpty());
-        assertEquals(3, listOfClients.size());
-
-        verify(readUserPort, times(1)).findAllClients();
-    }
-
-    @Test
-    public void clientServiceFindAllClientsWhenUserRepositoryExceptionIsThrownTestNegative() throws ClientServiceReadException {
-        when(readUserPort.findAllClients()).thenThrow(UserRepositoryException.class);
-
-        assertThrows(ClientServiceReadException.class, () -> clientService.findAll());
-
-        verify(readUserPort, times(1)).findAllClients();
-    }
-
-    @Test
     public void clientServiceUpdateClientTestPositive() throws ClientServiceUpdateException, ClientServiceReadException {
         String clientLoginBefore = clientNo1.getUserLogin();
         String clientPasswordBefore = clientNo1.getUserPassword();

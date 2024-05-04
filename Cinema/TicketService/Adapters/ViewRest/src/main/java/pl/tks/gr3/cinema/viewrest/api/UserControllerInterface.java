@@ -1,16 +1,21 @@
 package pl.tks.gr3.cinema.viewrest.api;
 
 import org.springframework.http.ResponseEntity;
+import pl.tks.gr3.cinema.domain_model.users.User;
+import pl.tks.gr3.cinema.viewrest.model.users.UserInputDTO;
+import pl.tks.gr3.cinema.viewrest.model.users.UserUpdateDTO;
 
 import java.util.UUID;
 
-public interface UserControllerInterface<Type> extends ControllerInterface<Type> {
+public interface UserControllerInterface {
 
-    // Read methods
+    // Create methods
 
-    ResponseEntity<?> findByLogin(String login);
+    ResponseEntity<?> create(UserInputDTO userInputDTO);
 
-    ResponseEntity<?> findAllWithMatchingLogin(String loginToMatch);
+    // Update methods
+
+    ResponseEntity<?> update(String ifMatch, UserUpdateDTO userUpdateDto);
 
     // Activate
 

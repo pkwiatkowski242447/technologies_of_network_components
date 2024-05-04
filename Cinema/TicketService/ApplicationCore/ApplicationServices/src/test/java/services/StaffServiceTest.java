@@ -169,54 +169,6 @@ public class StaffServiceTest {
         verify(readUserPort, times(1)).findStaffByLogin(searchedLogin);
     }
 
-    @Test
-    public void staffServiceFindAllStaffsMatchingLoginTestPositive() throws StaffServiceCreateException, StaffServiceReadException {
-        String exampleLogin = "New";
-
-        when(readUserPort.findAllStaffsMatchingLogin(Mockito.eq(exampleLogin))).thenReturn(Arrays.asList(staffNo1, staffNo2));
-
-        List<Staff> listOfStaffs = staffService.findAllMatchingLogin(exampleLogin);
-
-        assertNotNull(listOfStaffs);
-        assertFalse(listOfStaffs.isEmpty());
-        assertEquals(2, listOfStaffs.size());
-
-        verify(readUserPort, times(1)).findAllStaffsMatchingLogin(exampleLogin);
-    }
-
-    @Test
-    public void staffServiceFindAllStaffsWhenUserRepositoryExceptionIsThrownTestNegative() {
-        String exampleLogin = "Example";
-
-        when(readUserPort.findAllStaffsMatchingLogin(Mockito.eq(exampleLogin))).thenThrow(UserRepositoryException.class);
-
-        assertThrows(StaffServiceReadException.class, () -> staffService.findAllMatchingLogin(exampleLogin));
-
-        verify(readUserPort, times(1)).findAllStaffsMatchingLogin(exampleLogin);
-    }
-
-    @Test
-    public void staffServiceFindAllStaffTestPositive() throws StaffServiceReadException {
-        when(readUserPort.findAllStaffs()).thenReturn(Arrays.asList(staffNo1, staffNo2, staffNo3));
-
-        List<Staff> listOfStaffs = staffService.findAll();
-
-        assertNotNull(listOfStaffs);
-        assertFalse(listOfStaffs.isEmpty());
-        assertEquals(3, listOfStaffs.size());
-
-        verify(readUserPort, times(1)).findAllStaffs();
-    }
-
-    @Test
-    public void staffServiceFindAllStaffWhenUserRepositoryExceptionIsThrownTestNegative() {
-        when(readUserPort.findAllStaffs()).thenThrow(UserRepositoryException.class);
-
-        assertThrows(StaffServiceReadException.class, () -> staffService.findAll());
-
-        verify(readUserPort, times(1)).findAllStaffs();
-    }
-
     // Update tests
 
     @Test

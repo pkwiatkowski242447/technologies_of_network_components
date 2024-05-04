@@ -75,24 +75,6 @@ public class AdminService implements ReadUserUseCase<Admin>, WriteUserUseCase<Ad
     }
 
     @Override
-    public List<Admin> findAllMatchingLogin(String loginToBeMatched) throws AdminServiceReadException {
-        try {
-            return this.readUserPort.findAllAdminsMatchingLogin(loginToBeMatched);
-        } catch (UserRepositoryException exception) {
-            throw new AdminServiceReadException(exception.getMessage(), exception);
-        }
-    }
-
-    @Override
-    public List<Admin> findAll() throws AdminServiceReadException {
-        try {
-            return this.readUserPort.findAllAdmins();
-        } catch (UserRepositoryException exception) {
-            throw new AdminServiceReadException(exception.getMessage(), exception);
-        }
-    }
-
-    @Override
     public void update(Admin admin) throws AdminServiceUpdateException {
         try {
             this.updateUserPort.updateAdmin(admin);

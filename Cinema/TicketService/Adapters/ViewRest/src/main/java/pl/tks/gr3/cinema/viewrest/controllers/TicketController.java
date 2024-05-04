@@ -59,6 +59,9 @@ public class TicketController implements TicketControllerInterface {
     public ResponseEntity<?> create(@RequestBody TicketInputDTO ticketInputDTO) {
         try {
             Client client = this.readClient.findByUUID(ticketInputDTO.getClientID());
+            if (!client.isUserStatusActive()) {
+                return ResponseEntity.badRequest().body("Client with given ID is not active.");
+            }
             Ticket ticket = this.writeTicket.create(ticketInputDTO.getMovieTime(), client.getUserID(), ticketInputDTO.getMovieID());
 
             Set<ConstraintViolation<Ticket>> violationSet = validator.validate(ticket);

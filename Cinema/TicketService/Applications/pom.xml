@@ -38,11 +38,5 @@
             <artifactId>ViewRest</artifactId>
             <version>1.0.0</version>
         </dependency>
-
-        <dependency>
-            <groupId>pl.tks.gr3.viewsoap</groupId>
-            <artifactId>ViewSoap</artifactId>
-            <version>1.0.0</version>
-        </dependency>
     </dependencies>
 </project>

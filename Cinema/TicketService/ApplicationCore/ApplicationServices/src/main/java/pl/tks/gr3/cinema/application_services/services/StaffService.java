@@ -76,24 +76,6 @@ public class StaffService implements ReadUserUseCase<Staff>, WriteUserUseCase<St
     }
 
     @Override
-    public List<Staff> findAllMatchingLogin(String loginToBeMatched) throws StaffServiceReadException {
-        try {
-            return this.readUserPort.findAllStaffsMatchingLogin(loginToBeMatched);
-        } catch (UserRepositoryException exception) {
-            throw new StaffServiceReadException(exception.getMessage(), exception);
-        }
-    }
-
-    @Override
-    public List<Staff> findAll() throws StaffServiceReadException {
-        try {
-            return this.readUserPort.findAllStaffs();
-        } catch (UserRepositoryException exception) {
-            throw new StaffServiceReadException(exception.getMessage(), exception);
-        }
-    }
-
-    @Override
     public void update(Staff staff) throws StaffServiceUpdateException {
         try {
             this.updateUserPort.updateStaff(staff);
