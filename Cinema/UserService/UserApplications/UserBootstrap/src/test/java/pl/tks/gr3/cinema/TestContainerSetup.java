@@ -26,8 +26,8 @@ public class TestContainerSetup {
             .withEnv("MONGO_INITDB_ROOT_PASSWORD", "adminpassword")
             .withEnv("MONGO_INITDB_DATABASE", "test-db")
             .withCreateContainerCmdModifier(modifier -> {
-                modifier.withName("localhost");
-                modifier.withHostName("localhost");
+                modifier.withName("mongouser");
+                modifier.withHostName("mongouser");
                 modifier.withPortBindings(new PortBinding(Ports.Binding.bindPort(27020), new ExposedPort(27017)));
             })
             .withExposedPorts(27017);

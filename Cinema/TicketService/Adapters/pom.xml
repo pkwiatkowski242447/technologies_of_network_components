@@ -17,7 +17,6 @@
     <modules>
         <module>RepositoriesAdapters</module>
         <module>ViewRest</module>
-        <module>ViewSoap</module>
     </modules>
 
     <packaging>pom</packaging>

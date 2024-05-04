@@ -13,7 +13,7 @@ public class TestContainerSetup {
 
     public static final String MONGODB_USERNAME = "admin";
     public static final String MONGODB_PASSWORD = "adminpassword";
-    public static final String DATABASE_NAME = "test-db";
+    public static final String DATABASE_NAME = "test-db-user";
 
     public static UserRepository userRepository;
 
@@ -25,8 +25,8 @@ public class TestContainerSetup {
             .withEnv("MONGO_INITDB_ROOT_PASSWORD", "adminpassword")
             .withEnv("MONGO_INITDB_DATABASE", "test-db")
             .withCreateContainerCmdModifier(modifier -> {
-                modifier.withName("localhost");
-                modifier.withHostName("localhost");
+                modifier.withName("mongouser");
+                modifier.withHostName("mongouser");
             })
             .withExposedPorts(27017);
 

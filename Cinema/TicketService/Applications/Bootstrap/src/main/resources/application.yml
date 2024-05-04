@@ -11,7 +11,7 @@ server:
 mongo:
   port: 27017
   hostname: "localhost"
-  database: "default"
+  database: "ticketService"
   auth-db: "admin"
   username: "admin"
   password: "adminpassword"

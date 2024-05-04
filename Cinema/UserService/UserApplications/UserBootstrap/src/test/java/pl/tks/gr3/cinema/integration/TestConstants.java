@@ -2,9 +2,6 @@ package pl.tks.gr3.cinema.integration;
 
 public class TestConstants {
 
-    // Database name
-
-    public final static String databaseName = "default";
 
     // Base URL
 
@@ -33,12 +30,4 @@ public class TestConstants {
     public static final String clientsURL = baseURL + "/clients";
     public static final String staffsURL = baseURL + "/staffs";
     public static final String adminsURL = baseURL + "/admins";
-
-    // Movies
-
-    public static final String moviesURL = baseURL + "/movies";
-
-    // Tickets
-
-    public static final String ticketsURL = baseURL + "/tickets";
 }

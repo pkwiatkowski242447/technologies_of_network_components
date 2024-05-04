@@ -25,10 +25,10 @@ public class TestContainerSetup {
     private static final GenericContainer<?> mongoDBContainer = new GenericContainer<>(DockerImageName.parse("mongo:6.0.2"))
             .withEnv("MONGO_INITDB_ROOT_USERNAME", "admin")
             .withEnv("MONGO_INITDB_ROOT_PASSWORD", "adminpassword")
-            .withEnv("MONGO_INITDB_DATABASE", "test-db")
+            .withEnv("MONGO_INITDB_DATABASE", "test-db-ticket")
             .withCreateContainerCmdModifier(modifier -> {
-                modifier.withName("localhost");
-                modifier.withHostName("localhost");
+                modifier.withName("mongoticket");
+                modifier.withHostName("mongoticket");
             })
             .withExposedPorts(27017);
 
