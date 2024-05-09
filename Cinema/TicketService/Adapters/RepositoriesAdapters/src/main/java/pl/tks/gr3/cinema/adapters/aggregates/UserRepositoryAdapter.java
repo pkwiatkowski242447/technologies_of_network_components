@@ -101,36 +101,6 @@ public class UserRepositoryAdapter implements CreateUserPort, ReadUserPort, Upda
     }
 
     @Override
-    public List<Client> findAllClientsMatchingLogin(String loginValue) throws UserRepositoryException {
-        return userRepository.findAllClientsMatchingLogin(loginValue).stream().map(UserConverter::convertToClient).toList();
-    }
-
-    @Override
-    public List<Admin> findAllAdminsMatchingLogin(String loginValue) throws UserRepositoryException {
-        return userRepository.findAllAdminsMatchingLogin(loginValue).stream().map(UserConverter::convertToAdmin).toList();
-    }
-
-    @Override
-    public List<Staff> findAllStaffsMatchingLogin(String loginValue) throws UserRepositoryException {
-        return userRepository.findAllStaffsMatchingLogin(loginValue).stream().map(UserConverter::convertToStaff).toList();
-    }
-
-    @Override
-    public List<Client> findAllClients() throws UserRepositoryException {
-        return userRepository.findAllClients().stream().map(UserConverter::convertToClient).toList();
-    }
-
-    @Override
-    public List<Admin> findAllAdmins() throws UserRepositoryException {
-        return userRepository.findAllAdmins().stream().map(UserConverter::convertToAdmin).toList();
-    }
-
-    @Override
-    public List<Staff> findAllStaffs() throws UserRepositoryException {
-        return userRepository.findAllStaffs().stream().map(UserConverter::convertToStaff).toList();
-    }
-
-    @Override
     public List<Ticket> getListOfTickets(UUID userID, String discriminator) throws UserRepositoryException {
         return this.userRepository.getListOfTicketsForClient(userID, discriminator).stream().map(TicketConverter::convertToTicket).toList();
     }

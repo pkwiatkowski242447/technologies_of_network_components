@@ -21,13 +21,5 @@ public interface ReadUserPort {
     Admin findAdminByLogin(String loginValue);
     Staff findStaffByLogin(String loginValue);
 
-    List<Client> findAllClientsMatchingLogin(String loginValue);
-    List<Admin> findAllAdminsMatchingLogin(String loginValue);
-    List<Staff> findAllStaffsMatchingLogin(String loginValue);
-
-    List<Client> findAllClients();
-    List<Admin> findAllAdmins();
-    List<Staff> findAllStaffs();
-
     List<Ticket> getListOfTickets(UUID userID, String discriminator);
 }

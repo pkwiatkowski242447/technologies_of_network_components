@@ -11,7 +11,6 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import pl.tks.gr3.cinema.application_services.exceptions.GeneralServiceException;
-import pl.tks.gr3.cinema.application_services.exceptions.crud.staff.StaffServiceStaffNotFoundException;
 import pl.tks.gr3.cinema.domain_model.users.Staff;
 import pl.tks.gr3.cinema.ports.userinterface.other.JWSUseCase;
 import pl.tks.gr3.cinema.ports.userinterface.users.ReadUserUseCase;
@@ -22,7 +21,6 @@ import java.util.UUID;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
