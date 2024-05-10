@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 
+import static org.hibernate.validator.internal.util.Contracts.assertNotEmpty;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class RegisterOutputDTOTest {
@@ -60,5 +61,16 @@ public class RegisterOutputDTOTest {
         assertEquals(VALID_LOGIN, registerOutputDTONo1.getUser().getUserLogin());
         assertEquals(VALID_STATUS, registerOutputDTONo1.getUser().isUserStatusActive());
         assertEquals(VALID_ACCESS_TOKEN, registerOutputDTONo1.getAccessToken());
+    }
+
+    @Test
+    public void registerOutputDTOBuilderToStringTestPositive() {
+        String registerOutputDTONo1 = RegisterOutputDTO.builder()
+                .user(new UserOutputDTO(VALID_USER_ID, VALID_LOGIN, VALID_STATUS))
+                .accessToken(VALID_ACCESS_TOKEN)
+                .build().toString();
+
+        assertNotNull(registerOutputDTONo1);
+        assertFalse(registerOutputDTONo1.isEmpty());
     }
 }

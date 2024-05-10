@@ -9,10 +9,13 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import pl.tks.gr3.cinema.application_services.exceptions.GeneralServiceException;
 import pl.tks.gr3.cinema.application_services.exceptions.crud.staff.StaffServiceCreateStaffDuplicateLoginException;
+import pl.tks.gr3.cinema.application_services.exceptions.crud.staff.StaffServiceStaffNotFoundException;
+import pl.tks.gr3.cinema.ports.userinterface.users.ReadUserUseCase;
 import pl.tks.gr3.cinema.viewrest.api.UserControllerInterface;
 import pl.tks.gr3.cinema.domain_model.users.Staff;
 import pl.tks.gr3.cinema.domain_model.users.User;
@@ -34,19 +37,22 @@ public class StaffController implements UserControllerInterface {
     private final static Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
 
     private final WriteUserUseCase<Staff> writeStaff;
+    private final ReadUserUseCase<Staff> readStaff;
     private final JWSUseCase jwsService;
     private final PasswordEncoder passwordEncoder;
 
     @Autowired
     public StaffController(WriteUserUseCase<Staff> writeStaff,
+                           ReadUserUseCase<Staff> readStaff,
                            JWSUseCase jwsService,
                            PasswordEncoder passwordEncoder) {
         this.writeStaff = writeStaff;
+        this.readStaff = readStaff;
         this.jwsService = jwsService;
         this.passwordEncoder = passwordEncoder;
     }
 
-    @PostMapping("/register/staff")
+    @PostMapping("/register")
     @Override
     public ResponseEntity<?> create(@RequestBody UserInputDTO userInputDTO) {
         try {
@@ -63,6 +69,20 @@ public class StaffController implements UserControllerInterface {
             return ResponseEntity.created(URI.create("http://localhost:8000/api/v1/clients/" + userOutputDTO.getUserID().toString())).contentType(MediaType.APPLICATION_JSON).body(userOutputDTO);
         } catch (StaffServiceCreateStaffDuplicateLoginException exception) {
             return ResponseEntity.status(HttpStatus.CONFLICT).contentType(MediaType.APPLICATION_JSON).body(exception.getMessage());
+        } catch (GeneralServiceException exception) {
+            return ResponseEntity.badRequest().contentType(MediaType.APPLICATION_JSON).body(exception.getMessage());
+        }
+    }
+
+    @GetMapping(value = "/login/self", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> findByLogin() {
+        try {
+            Staff staff = this.readStaff.findByLogin(SecurityContextHolder.getContext().getAuthentication().getName());
+            UserOutputDTO userOutputDTO = new UserOutputDTO(staff.getUserID(), staff.getUserLogin(), staff.isUserStatusActive());
+            String etagContent = jwsService.generateSignatureForUser(staff);
+            return ResponseEntity.ok().header(HttpHeaders.ETAG, etagContent).contentType(MediaType.APPLICATION_JSON).body(userOutputDTO);
+        } catch (StaffServiceStaffNotFoundException exception) {
+            return ResponseEntity.notFound().build();
         } catch (GeneralServiceException exception) {
             return ResponseEntity.badRequest().contentType(MediaType.APPLICATION_JSON).body(exception.getMessage());
         }

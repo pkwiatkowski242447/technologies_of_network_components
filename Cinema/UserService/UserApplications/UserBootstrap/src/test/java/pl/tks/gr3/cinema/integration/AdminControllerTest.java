@@ -13,6 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.TestPropertySource;
@@ -44,6 +45,8 @@ public class AdminControllerTest extends TestContainerSetup {
 
     private static final Logger logger = LoggerFactory.getLogger(AdminControllerTest.class);
 
+    @Autowired
+    private ServerProperties serverProperties;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -90,7 +93,7 @@ public class AdminControllerTest extends TestContainerSetup {
         RestAssured.config = RestAssuredConfig.newConfig().sslConfig(
                 new SSLConfig().trustStore(resourceURL.getPath(), "password")
                         .and()
-                        .port(8000)
+                        .port(serverProperties.getPort())
                         .and()
                         .allowAllHostnames()
         );

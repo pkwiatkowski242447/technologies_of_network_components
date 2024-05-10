@@ -35,6 +35,8 @@ public class UserTest {
     private static String loginNo2;
     private static String passwordNo1;
     private static String passwordNo2;
+    private static boolean statusActiveNo1;
+    private static boolean statusActiveNo2;
 
     @BeforeAll
     public static void initializeVariables() {
@@ -44,6 +46,8 @@ public class UserTest {
         loginNo2 = "loginNo2";
         passwordNo1 = "passwordNo1";
         passwordNo2 = "passwordNo2";
+        statusActiveNo1 = false;
+        statusActiveNo2 = true;
     }
 
     @BeforeEach
@@ -101,6 +105,36 @@ public class UserTest {
         assertEquals(uuidNo1, testAdmin.getUserID());
         assertEquals(loginNo1, testAdmin.getUserLogin());
         assertEquals(passwordNo1, testAdmin.getUserPassword());
+    }
+
+    @Test
+    public void clientAllArgsConstructorAndGettersTest() {
+        Client testClient = new Client(uuidNo1, loginNo1, passwordNo1, statusActiveNo1);
+        assertNotNull(testClient);
+        assertEquals(uuidNo1, testClient.getUserID());
+        assertEquals(loginNo1, testClient.getUserLogin());
+        assertEquals(passwordNo1, testClient.getUserPassword());
+        assertEquals(statusActiveNo1, testClient.isUserStatusActive());
+    }
+
+    @Test
+    public void staffAllArgsConstructorAndGettersTest() {
+        Staff testStaff = new Staff(uuidNo1, loginNo1, passwordNo1, statusActiveNo1);
+        assertNotNull(testStaff);
+        assertEquals(uuidNo1, testStaff.getUserID());
+        assertEquals(loginNo1, testStaff.getUserLogin());
+        assertEquals(passwordNo1, testStaff.getUserPassword());
+        assertEquals(statusActiveNo1, testStaff.isUserStatusActive());
+    }
+
+    @Test
+    public void adminAllArgsConstructorAndGettersTest() {
+        Admin testAdmin = new Admin(uuidNo1, loginNo1, passwordNo1, statusActiveNo1);
+        assertNotNull(testAdmin);
+        assertEquals(uuidNo1, testAdmin.getUserID());
+        assertEquals(loginNo1, testAdmin.getUserLogin());
+        assertEquals(passwordNo1, testAdmin.getUserPassword());
+        assertEquals(statusActiveNo1, testAdmin.isUserStatusActive());
     }
 
     @Test

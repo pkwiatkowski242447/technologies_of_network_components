@@ -14,6 +14,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import pl.tks.gr3.cinema.application_services.exceptions.GeneralServiceException;
+import pl.tks.gr3.cinema.application_services.exceptions.crud.client.ClientServiceClientNotFoundException;
 import pl.tks.gr3.cinema.application_services.exceptions.crud.client.ClientServiceCreateClientDuplicateLoginException;
 import pl.tks.gr3.cinema.viewrest.api.ClientControllerInterface;
 import pl.tks.gr3.cinema.domain_model.Ticket;
@@ -55,7 +56,7 @@ public class ClientController implements ClientControllerInterface {
         this.passwordEncoder = passwordEncoder;
     }
 
-    @PostMapping("/register/client")
+    @PostMapping("/register")
     @Override
     public ResponseEntity<?> create(@RequestBody UserInputDTO userInputDTO) {
         try {
@@ -72,6 +73,20 @@ public class ClientController implements ClientControllerInterface {
             return ResponseEntity.created(URI.create("http://localhost:8000/api/v1/clients/" + userOutputDTO.getUserID().toString())).contentType(MediaType.APPLICATION_JSON).body(userOutputDTO);
         } catch (ClientServiceCreateClientDuplicateLoginException exception) {
             return ResponseEntity.status(HttpStatus.CONFLICT).contentType(MediaType.APPLICATION_JSON).body(exception.getMessage());
+        } catch (GeneralServiceException exception) {
+            return ResponseEntity.badRequest().contentType(MediaType.APPLICATION_JSON).body(exception.getMessage());
+        }
+    }
+
+    @GetMapping(value = "/login/self", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> findByLogin() {
+        try {
+            Client client = this.readClient.findByLogin(SecurityContextHolder.getContext().getAuthentication().getName());
+            UserOutputDTO userOutputDTO = new UserOutputDTO(client.getUserID(), client.getUserLogin(), client.isUserStatusActive());
+            String etagContent = jwsService.generateSignatureForUser(client);
+            return ResponseEntity.ok().header(HttpHeaders.ETAG, etagContent).contentType(MediaType.APPLICATION_JSON).body(userOutputDTO);
+        } catch (ClientServiceClientNotFoundException exception) {
+            return ResponseEntity.notFound().build();
         } catch (GeneralServiceException exception) {
             return ResponseEntity.badRequest().contentType(MediaType.APPLICATION_JSON).body(exception.getMessage());
         }

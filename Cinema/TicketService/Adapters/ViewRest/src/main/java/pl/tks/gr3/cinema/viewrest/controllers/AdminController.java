@@ -9,10 +9,13 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import pl.tks.gr3.cinema.application_services.exceptions.GeneralServiceException;
+import pl.tks.gr3.cinema.application_services.exceptions.crud.admin.AdminServiceAdminNotFoundException;
 import pl.tks.gr3.cinema.application_services.exceptions.crud.admin.AdminServiceCreateAdminDuplicateLoginException;
+import pl.tks.gr3.cinema.ports.userinterface.users.ReadUserUseCase;
 import pl.tks.gr3.cinema.viewrest.api.UserControllerInterface;
 import pl.tks.gr3.cinema.domain_model.users.Admin;
 import pl.tks.gr3.cinema.domain_model.users.User;
@@ -35,19 +38,22 @@ public class AdminController implements UserControllerInterface {
     private final Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
 
     private final WriteUserUseCase<Admin> writeAdmin;
+    private final ReadUserUseCase<Admin> readAdmin;
     private final JWSUseCase jwsService;
     private final PasswordEncoder passwordEncoder;
 
     @Autowired
     public AdminController(WriteUserUseCase<Admin> writeAdmin,
+                           ReadUserUseCase<Admin> readAdmin,
                            JWSUseCase jwsService,
                            PasswordEncoder passwordEncoder) {
         this.writeAdmin = writeAdmin;
+        this.readAdmin = readAdmin;
         this.jwsService = jwsService;
         this.passwordEncoder = passwordEncoder;
     }
 
-    @PostMapping(value = "/register/admin")
+    @PostMapping(value = "/register")
     @Override
     public ResponseEntity<?> create(@RequestBody UserInputDTO userInputDTO) {
         try {
@@ -64,6 +70,20 @@ public class AdminController implements UserControllerInterface {
             return ResponseEntity.created(URI.create("http://localhost:8000/api/v1/clients/" + userOutputDTO.getUserID().toString())).contentType(MediaType.APPLICATION_JSON).body(userOutputDTO);
         } catch (AdminServiceCreateAdminDuplicateLoginException exception) {
             return ResponseEntity.status(HttpStatus.CONFLICT).contentType(MediaType.APPLICATION_JSON).body(exception.getMessage());
+        } catch (GeneralServiceException exception) {
+            return ResponseEntity.badRequest().contentType(MediaType.APPLICATION_JSON).body(exception.getMessage());
+        }
+    }
+
+    @GetMapping(value = "/login/self", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> findByLogin() {
+        try {
+            Admin admin = this.readAdmin.findByLogin(SecurityContextHolder.getContext().getAuthentication().getName());
+            UserOutputDTO userOutputDTO = new UserOutputDTO(admin.getUserID(), admin.getUserLogin(), admin.isUserStatusActive());
+            String etagContent = jwsService.generateSignatureForUser(admin);
+            return ResponseEntity.ok().header(HttpHeaders.ETAG, etagContent).contentType(MediaType.APPLICATION_JSON).body(userOutputDTO);
+        } catch (AdminServiceAdminNotFoundException exception) {
+            return ResponseEntity.notFound().build();
         } catch (GeneralServiceException exception) {
             return ResponseEntity.badRequest().contentType(MediaType.APPLICATION_JSON).body(exception.getMessage());
         }

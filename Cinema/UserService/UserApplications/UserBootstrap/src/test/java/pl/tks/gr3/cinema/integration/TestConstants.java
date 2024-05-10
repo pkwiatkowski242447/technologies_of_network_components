@@ -5,7 +5,7 @@ public class TestConstants {
 
     // Base URL
 
-    public static final String baseURL = "https://localhost:8000/api/v1";
+    public static final String baseURL = "https://localhost:8080/api/v1";
 
     // Auth endpoints
 

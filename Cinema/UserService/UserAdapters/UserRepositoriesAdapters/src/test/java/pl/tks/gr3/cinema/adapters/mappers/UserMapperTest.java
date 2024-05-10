@@ -33,6 +33,14 @@ public class UserMapperTest {
         assertNotNull(userMapper);
     }
 
+    // Constructor test
+    @SuppressWarnings("InstantiationOfUtilityClass")
+    @Test
+    public void userMapperConstructorTestPositive() {
+        UserMapper userMapper = new UserMapper();
+        assertNotNull(userMapper);
+    }
+
     // ClientEnt
 
     @Test
