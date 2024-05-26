@@ -8,4 +8,5 @@ public interface JWTUseCase {
     String extractUsername(String jwtToken);
     String generateJWTToken(User user);
     boolean isTokenValid(String jwtToken, UserDetails userDetails);
+    boolean isTokenValid(String jwtToken);
 }

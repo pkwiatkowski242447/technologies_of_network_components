@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.lang.NonNull;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -23,16 +24,16 @@ public class UserUpdateFilter extends OncePerRequestFilter {
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
         final String ifMatchHeader = request.getHeader(HttpHeaders.IF_MATCH);
         if (ifMatchHeader == null || ifMatchHeader.isEmpty()) {
-            HttpServletResponse httpServletResponse = (HttpServletResponse) response;
-            httpServletResponse.setStatus(HttpStatus.PRECONDITION_FAILED.value());
-            httpServletResponse.getWriter().write("If-Match header content is missing.");
+            response.setStatus(HttpStatus.PRECONDITION_FAILED.value());
+            response.setContentType(MediaType.TEXT_PLAIN_VALUE);
+            response.getWriter().write("If-Match header content is missing.");
             return;
         }
         String currentUserName = SecurityContextHolder.getContext().getAuthentication().getName();
         if (!jwsService.extractUsernameFromSignature(ifMatchHeader.replace("\"", "")).equals(currentUserName)) {
-            HttpServletResponse httpServletResponse = (HttpServletResponse) response;
-            httpServletResponse.setStatus(HttpStatus.FORBIDDEN.value());
-            httpServletResponse.getWriter().write("Modifing other user data is forbidden.");
+            response.setStatus(HttpStatus.FORBIDDEN.value());
+            response.setContentType(MediaType.TEXT_PLAIN_VALUE);
+            response.getWriter().write("Modifying other user data is forbidden.");
             return;
         }
         filterChain.doFilter(request, response);

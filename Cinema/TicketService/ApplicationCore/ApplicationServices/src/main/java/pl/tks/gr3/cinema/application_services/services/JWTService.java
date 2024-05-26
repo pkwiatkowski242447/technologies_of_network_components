@@ -74,6 +74,18 @@ public class JWTService implements JWTUseCase {
         }
     }
 
+    @Override
+    public boolean isTokenValid(String jwtToken) {
+        try {
+            JWTVerifier jwtVerifier = JWT.require(Algorithm.HMAC256(getSignInKey()))
+                    .build();
+            jwtVerifier.verify(jwtToken);
+            return JWT.decode(jwtToken).getExpiresAt().after(new Date());
+        } catch (JWTVerificationException exception) {
+            return false;
+        }
+    }
+
     private String getSignInKey() {
         byte[] keyBytes = Base64.getDecoder().decode(SECRET_KEY);
         return new String(keyBytes);

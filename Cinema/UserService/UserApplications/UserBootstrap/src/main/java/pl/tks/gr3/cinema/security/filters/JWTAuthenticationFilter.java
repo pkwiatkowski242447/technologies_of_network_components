@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -39,15 +40,15 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
         if (userName != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(userName);
             if (!userDetails.isEnabled()) {
-                HttpServletResponse httpServletResponse = (HttpServletResponse) response;
-                httpServletResponse.setStatus(HttpStatus.BAD_REQUEST.value());
-                httpServletResponse.getWriter().write("Account that you want to use is disabled.");
+                response.setStatus(HttpStatus.BAD_REQUEST.value());
+                response.setContentType(MediaType.TEXT_PLAIN_VALUE);
+                response.getWriter().write("Account that you want to use is disabled.");
                 SecurityContextHolder.clearContext();
                 return;
             } else if (!jwtService.isTokenValid(jwtToken, userDetails)) {
-                HttpServletResponse httpServletResponse = (HttpServletResponse) response;
-                httpServletResponse.setStatus(HttpStatus.BAD_REQUEST.value());
-                httpServletResponse.getWriter().write("JWT Token signature is invalid.");
+                response.setStatus(HttpStatus.BAD_REQUEST.value());
+                response.setContentType(MediaType.TEXT_PLAIN_VALUE);
+                response.getWriter().write("JWT Token signature is invalid.");
                 SecurityContextHolder.clearContext();
                 return;
             } else {
