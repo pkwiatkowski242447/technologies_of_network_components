@@ -4,7 +4,7 @@
 //
 //    // Base URL
 //
-//    public static final String baseURL = "https://localhost:8000/api/v1";
+//    public static final String baseURL = "https://localhost:8000/ticket/api/v1";
 //
 //    // Auth endpoints
 //
