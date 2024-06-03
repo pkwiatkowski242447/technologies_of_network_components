@@ -3,15 +3,15 @@ package pl.tks.gr3.cinema.viewrest.model.users;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import pl.tks.gr3.cinema.utils.consts.UserConstants;
-import pl.tks.gr3.cinema.viewrest.model.users.UserInputDTO;
+
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class UserInputDTOTest {
 
+    private static final UUID VALID_ID = UUID.randomUUID();
     private static final String VALID_LOGIN = "FirmaKRK";
-    private static final String VALID_PASSWORD = "BandoKomando12345";
-    private static final String NOT_VALID_PASSWORD = "WilkNaMikrofonieWGlowieSieNieMiesciWilkNaMikrofonieWGlowieSieNieMiesciWilkNaMikrofonieWGlowieSieNieMiesciWilkNaMikrofonieWGlowieSieNieMiesciWilkNaMikrofonieWGlowieSieNieMiesciWilkNaMikrofonieWGlowieSieNieMiesciWilkNaMikrofonieWGlowieSieNieMiesciWilkNaMikrofonieWGlowieSieNieMiesciWilkNaMikrofonieWGlowieSieNieMiesciWilkNaMikrofonieWGlowieSieNieMiesci";
 
     private static final String NOT_VALID_LOGIN = "ThisLoginIsLongerThan20Characters!";
     private UserInputDTO userInputDTO;
@@ -28,10 +28,10 @@ public class UserInputDTOTest {
 
     @Test
     public void userInputDTOAllArgsConstructorTestPositive() {
-        userInputDTO = new UserInputDTO(VALID_LOGIN, VALID_PASSWORD);
+        userInputDTO = new UserInputDTO(VALID_ID, VALID_LOGIN);
         assertNotNull(userInputDTO);
+        assertEquals(VALID_ID, userInputDTO.getUuid());
         assertEquals(VALID_LOGIN, userInputDTO.getUserLogin());
-        assertEquals(VALID_PASSWORD, userInputDTO.getUserPassword());
     }
 
     @Test
@@ -49,26 +49,17 @@ public class UserInputDTOTest {
     }
 
     @Test
-    public void userPasswordValidationTest() {
-        userInputDTO.setUserPassword(VALID_PASSWORD);
-        assertEquals(VALID_PASSWORD, userInputDTO.getUserPassword());
+    public void userUUIDValidationTest() {
+        userInputDTO.setUuid(VALID_ID);
+        assertEquals(VALID_ID, userInputDTO.getUuid());
 
-        userInputDTO.setUserPassword("pass");
-        assertEquals("pass", userInputDTO.getUserPassword());
-        assertFalse(validateUserPassword(userInputDTO));
-
-        userInputDTO.setUserPassword(NOT_VALID_PASSWORD);
-        assertEquals(NOT_VALID_PASSWORD, userInputDTO.getUserPassword());
-        assertFalse(validateUserPassword(userInputDTO));
+        UUID newUuid = UUID.randomUUID();
+        userInputDTO.setUuid(newUuid);
+        assertEquals(newUuid, userInputDTO.getUuid());
     }
 
     private boolean validateUserLogin(UserInputDTO userInputDTO) {
         int loginLength = userInputDTO.getUserLogin().length();
         return loginLength >= UserConstants.LOGIN_MIN_LENGTH && loginLength <= UserConstants.LOGIN_MAX_LENGTH;
-    }
-
-    private boolean validateUserPassword(UserInputDTO userInputDTO) {
-        int passwordLength = userInputDTO.getUserPassword().length();
-        return passwordLength >= UserConstants.PASSWORD_MIN_LENGTH && passwordLength <= UserConstants.PASSWORD_MAX_LENGTH;
     }
 }

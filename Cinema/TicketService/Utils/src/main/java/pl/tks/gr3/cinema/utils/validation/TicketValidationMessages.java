@@ -8,6 +8,4 @@ public class TicketValidationMessages {
 
     public static final String NULL_CLIENT_REFERENCE = "Ticket object could not be created for null client.";
     public static final String NULL_MOVIE_REFERENCE = "Ticket object could not be created for null movie.";
-
-    public static final String TICKET_TYPE_NULL = "Given ticket type is a reference to null.";
 }

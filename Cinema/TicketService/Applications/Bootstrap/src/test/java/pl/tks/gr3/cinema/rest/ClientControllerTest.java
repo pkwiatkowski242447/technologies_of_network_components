@@ -58,10 +58,9 @@ public class ClientControllerTest {
     @Test
     public void adminControllerCreateAdminTestPositive() throws Exception {
         ObjectMapper objectMapper = new ObjectMapper();
-        UserInputDTO clientInputDTO = new UserInputDTO("ClientLoginM0X1", passwordNotHashed);
-        String passwordHash = "ExamplePasswordHash";
+        UserInputDTO clientInputDTO = new UserInputDTO(UUID.randomUUID(), "ClientLoginM0X1");
 
-        when(writeClient.create(clientInputDTO.getUserLogin(), clientInputDTO.getUserPassword())).thenReturn(new Client(UUID.randomUUID(), clientInputDTO.getUserLogin(), passwordHash));
+        when(writeClient.create(clientInputDTO.getUuid(), clientInputDTO.getUserLogin())).thenReturn(new Client(UUID.randomUUID(), clientInputDTO.getUserLogin()));
 
         this.mockMvc.perform(post("/api/v1/clients/register")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -75,9 +74,9 @@ public class ClientControllerTest {
     @Test
     public void adminControllerCreateAdminWhenAdminLoginIsAlreadyTakenTestNegative() throws Exception {
         ObjectMapper objectMapper = new ObjectMapper();
-        UserInputDTO clientInputDTO = new UserInputDTO("ClientLoginM0X2", passwordNotHashed);
+        UserInputDTO clientInputDTO = new UserInputDTO(UUID.randomUUID(), "ClientLoginM0X2");
 
-        when(writeClient.create(clientInputDTO.getUserLogin(), passwordNotHashed)).thenThrow(ClientServiceCreateClientDuplicateLoginException.class);
+        when(writeClient.create(clientInputDTO.getUuid(), clientInputDTO.getUserLogin())).thenThrow(ClientServiceCreateClientDuplicateLoginException.class);
 
         this.mockMvc.perform(post("/api/v1/clients/register")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -91,9 +90,9 @@ public class ClientControllerTest {
     @Test
     public void adminControllerCreateAdminWhenGeneralServiceExceptionIsThrownTestNegative() throws Exception {
         ObjectMapper objectMapper = new ObjectMapper();
-        UserInputDTO clientInputDTO = new UserInputDTO("ClientLoginM0X3", passwordNotHashed);
+        UserInputDTO clientInputDTO = new UserInputDTO(UUID.randomUUID(), "ClientLoginM0X3");
 
-        when(writeClient.create(clientInputDTO.getUserLogin(), passwordNotHashed)).thenThrow(ClientServiceCreateException.class);
+        when(writeClient.create(clientInputDTO.getUuid(), clientInputDTO.getUserLogin())).thenThrow(ClientServiceCreateException.class);
 
         this.mockMvc.perform(post("/api/v1/clients/register")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -106,7 +105,7 @@ public class ClientControllerTest {
     @WithMockUser(username = "ClientLoginNo1", roles = {"CLIENT"})
     @Test
     public void clientControllerFindClientLoginSelfAsAuthenticatedClientTestPositive() throws Exception {
-        Client clientUser = new Client(UUID.randomUUID(), "ClientLoginNo1", passwordEncoder.encode(passwordNotHashed));
+        Client clientUser = new Client(UUID.randomUUID(), "ClientLoginNo1");
 
         when(readClient.findByLogin(clientUser.getUserLogin())).thenReturn(clientUser);
         when(jwsUseCase.generateSignatureForUser(clientUser)).thenReturn("ExampleJwsSignature");
@@ -119,7 +118,7 @@ public class ClientControllerTest {
     @WithMockUser(username = "ClientLoginNo2", roles = {"CLIENT"})
     @Test
     public void clientControllerFindClientLoginSelfAsAuthenticatedClientWhenClientIsNotFoundTestNegative() throws Exception {
-        Client clientUser = new Client(UUID.randomUUID(), "ClientLoginNo2", passwordEncoder.encode(passwordNotHashed));
+        Client clientUser = new Client(UUID.randomUUID(), "ClientLoginNo2");
 
         when(readClient.findByLogin(clientUser.getUserLogin())).thenThrow(ClientServiceClientNotFoundException.class);
 
@@ -131,7 +130,7 @@ public class ClientControllerTest {
     @WithMockUser(username = "ClientLoginNo3", roles = {"CLIENT"})
     @Test
     public void clientControllerFindClientLoginSelfAsAuthenticatedClientWhenGeneralServiceExceptionIsThrownTestNegative() throws Exception {
-        Client clientUser = new Client(UUID.randomUUID(), "ClientLoginNo3", passwordEncoder.encode(passwordNotHashed));
+        Client clientUser = new Client(UUID.randomUUID(), "ClientLoginNo3");
 
         when(readClient.findByLogin(clientUser.getUserLogin())).thenThrow(GeneralServiceException.class);
 
@@ -143,7 +142,7 @@ public class ClientControllerTest {
     @WithMockUser(username = "AdminLoginNo1", roles = {"ADMIN"})
     @Test
     public void clientControllerActivateClientTestPositive() throws Exception {
-        Client clientUserNo1 = new Client(UUID.randomUUID(), "ClientLoginM6X1", passwordEncoder.encode(passwordNotHashed));
+        Client clientUserNo1 = new Client(UUID.randomUUID(), "ClientLoginM6X1");
 
         doNothing().when(writeClient).activate(clientUserNo1.getUserID());
 
@@ -155,7 +154,7 @@ public class ClientControllerTest {
     @WithMockUser(username = "AdminLoginNo1", roles = {"ADMIN"})
     @Test
     public void clientControllerActivateClientWhenGeneralServiceExceptionIsThrownTestNegative() throws Exception {
-        Client clientUserNo1 = new Client(UUID.randomUUID(), "ClientLoginM6X1", passwordEncoder.encode(passwordNotHashed));
+        Client clientUserNo1 = new Client(UUID.randomUUID(), "ClientLoginM6X1");
 
         doThrow(GeneralServiceException.class).when(writeClient).activate(clientUserNo1.getUserID());
 
@@ -167,7 +166,7 @@ public class ClientControllerTest {
     @WithMockUser(username = "AdminLoginNo1", roles = {"ADMIN"})
     @Test
     public void clientControllerDeactivateClientTestPositive() throws Exception {
-        Client clientUserNo1 = new Client(UUID.randomUUID(), "ClientLoginM6X1", passwordEncoder.encode(passwordNotHashed));
+        Client clientUserNo1 = new Client(UUID.randomUUID(), "ClientLoginM6X1");
 
         doNothing().when(writeClient).deactivate(clientUserNo1.getUserID());
 
@@ -179,7 +178,7 @@ public class ClientControllerTest {
     @WithMockUser(username = "AdminLoginNo1", roles = {"ADMIN"})
     @Test
     public void clientControllerDeactivateClientWhenGeneralServiceExceptionIsThrownTestNegative() throws Exception {
-        Client clientUserNo1 = new Client(UUID.randomUUID(), "ClientLoginM6X1", passwordEncoder.encode(passwordNotHashed));
+        Client clientUserNo1 = new Client(UUID.randomUUID(), "ClientLoginM6X1");
 
         doThrow(GeneralServiceException.class).when(writeClient).deactivate(clientUserNo1.getUserID());
 

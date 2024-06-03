@@ -19,24 +19,18 @@ public class ClientEnt extends UserEnt {
     // Constructors
 
     public ClientEnt(UUID clientID,
-                     String clientLogin,
-                     String clientPassword) {
+                     String clientLogin) {
         this.userID = clientID;
         this.userLogin = clientLogin;
-        this.userPassword = clientPassword;
         this.userStatusActive = true;
-        this.userRole = RoleEnt.CLIENT;
     }
 
     @BsonCreator
     public ClientEnt(@BsonProperty(UserEntConstants.GENERAL_IDENTIFIER) UUID clientID,
                      @BsonProperty(UserEntConstants.USER_LOGIN) String clientLogin,
-                     @BsonProperty(UserEntConstants.USER_PASSWORD) String clientPassword,
                      @BsonProperty(UserEntConstants.USER_STATUS_ACTIVE) boolean clientStatusActive) {
         this.userID = clientID;
         this.userLogin = clientLogin;
-        this.userPassword = clientPassword;
         this.userStatusActive = clientStatusActive;
-        this.userRole = RoleEnt.CLIENT;
     }
 }

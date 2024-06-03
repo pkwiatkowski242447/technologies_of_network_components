@@ -24,15 +24,7 @@ public abstract class User {
     @Size(max = UserConstants.LOGIN_MAX_LENGTH, message = UserValidationMessages.LOGIN_TOO_LONG)
     protected String userLogin;
 
-    @NotNull(message = UserValidationMessages.NULL_LOGIN)
-    @Size(min = UserConstants.PASSWORD_MIN_LENGTH, message = UserValidationMessages.PASSWORD_TOO_SHORT)
-    @Size(max = UserConstants.PASSWORD_MAX_LENGTH, message = UserValidationMessages.PASSWORD_TOO_LONG)
-    protected String userPassword;
-
     protected boolean userStatusActive;
-
-    @Setter(AccessLevel.NONE)
-    protected Role userRole = null;
 
     // Other methods
 
@@ -49,7 +41,6 @@ public abstract class User {
         return new EqualsBuilder()
                 .append(userID, user.userID)
                 .append(userLogin, user.userLogin)
-                .append(userPassword, user.userPassword)
                 .append(userStatusActive, user.userStatusActive)
                 .isEquals();
     }
@@ -59,7 +50,6 @@ public abstract class User {
         return new HashCodeBuilder(17, 37)
                 .append(userID)
                 .append(userLogin)
-                .append(userPassword)
                 .append(userStatusActive)
                 .toHashCode();
     }

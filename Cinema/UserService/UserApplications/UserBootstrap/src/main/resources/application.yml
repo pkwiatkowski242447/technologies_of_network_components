@@ -1,4 +1,6 @@
 server:
+  servlet:
+    context-path: /user
   port: 8080
   ssl:
     enabled: true

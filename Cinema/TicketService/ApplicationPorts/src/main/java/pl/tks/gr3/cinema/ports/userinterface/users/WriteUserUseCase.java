@@ -4,7 +4,7 @@ import java.util.UUID;
 
 public interface WriteUserUseCase<Type> {
 
-    Type create(String login, String password);
+    Type create(UUID uuid, String login);
     void update(Type element);
     void delete(UUID userID);
     void activate(UUID elementID);

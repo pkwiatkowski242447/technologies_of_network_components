@@ -14,8 +14,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FilterConfig {
 
-    // private final JWSService jwsService;
-
     @Bean
     public FilterRegistrationBean<UserUpdateFilter> userUpdateFilter() {
         FilterRegistrationBean<UserUpdateFilter> registrationBean = new FilterRegistrationBean<>();

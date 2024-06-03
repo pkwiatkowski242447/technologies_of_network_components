@@ -22,9 +22,7 @@ import pl.tks.gr3.cinema.adapters.exceptions.crud.other.UserNullReferenceExcepti
 import pl.tks.gr3.cinema.adapters.messages.MongoRepositoryMessages;
 import pl.tks.gr3.cinema.adapters.model.MovieEnt;
 import pl.tks.gr3.cinema.adapters.model.TicketEnt;
-import pl.tks.gr3.cinema.adapters.model.users.AdminEnt;
 import pl.tks.gr3.cinema.adapters.model.users.ClientEnt;
-import pl.tks.gr3.cinema.adapters.model.users.StaffEnt;
 import pl.tks.gr3.cinema.adapters.model.users.UserEnt;
 
 import java.util.ArrayList;
@@ -43,13 +41,11 @@ public abstract class MongoRepository implements AutoCloseable {
 
     private final ClassModel<UserEnt> userClassModel = ClassModel.builder(UserEnt.class).enableDiscriminator(true).build();
     private final ClassModel<ClientEnt> clientClassModel = ClassModel.builder(ClientEnt.class).enableDiscriminator(true).build();
-    private final ClassModel<AdminEnt> adminClassModel = ClassModel.builder(AdminEnt.class).enableDiscriminator(true).build();
-    private final ClassModel<StaffEnt> staffClassModel = ClassModel.builder(StaffEnt.class).enableDiscriminator(true).build();
     private final ClassModel<MovieEnt> movieClassModel = ClassModel.builder(MovieEnt.class).build();
     private final ClassModel<TicketEnt> ticketClassModel = ClassModel.builder(TicketEnt.class).build();
 
     private final PojoCodecProvider pojoCodecProvider = PojoCodecProvider.builder().register(
-            userClassModel, clientClassModel, adminClassModel, staffClassModel, movieClassModel, ticketClassModel
+            userClassModel, clientClassModel, movieClassModel, ticketClassModel
     ).build();
     private final CodecRegistry pojoCodecRegistry = CodecRegistries.fromProviders(
             pojoCodecProvider,

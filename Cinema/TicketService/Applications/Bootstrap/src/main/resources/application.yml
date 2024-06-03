@@ -1,4 +1,6 @@
 server:
+  servlet:
+    context-path: /ticket
   port: 8081
   ssl:
     enabled: true

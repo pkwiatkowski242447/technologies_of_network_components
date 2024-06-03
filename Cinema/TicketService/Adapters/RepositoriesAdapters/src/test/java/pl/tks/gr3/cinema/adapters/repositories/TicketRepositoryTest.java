@@ -9,7 +9,6 @@ import pl.tks.gr3.cinema.adapters.exceptions.crud.ticket.*;
 import pl.tks.gr3.cinema.adapters.exceptions.crud.user.UserRepositoryReadException;
 import pl.tks.gr3.cinema.adapters.model.MovieEnt;
 import pl.tks.gr3.cinema.adapters.model.TicketEnt;
-import pl.tks.gr3.cinema.adapters.model.users.AdminEnt;
 import pl.tks.gr3.cinema.adapters.model.users.ClientEnt;
 
 import java.time.LocalDateTime;
@@ -33,8 +32,8 @@ public class TicketRepositoryTest extends TestContainerSetup {
     public void addExampleTickets() {
         // Initialize sample data
         try {
-            clientNo1 = userRepository.createClient("ClientLoginNo1", "ClientPasswordNo1");
-            clientNo2 = userRepository.createClient("ClientLoginNo2", "ClientPasswordNo2");
+            clientNo1 = userRepository.createClient(UUID.randomUUID(), "ClientLoginNo1");
+            clientNo2 = userRepository.createClient(UUID.randomUUID(), "ClientLoginNo2");
         } catch (UserRepositoryException exception) {
             throw new RuntimeException("Could not initialize test database while adding example clients to it.", exception);
         }
@@ -72,7 +71,7 @@ public class TicketRepositoryTest extends TestContainerSetup {
         try {
             List<ClientEnt> listOfAllClients = userRepository.findAllClients();
             for (ClientEnt client : listOfAllClients) {
-                userRepository.delete(client.getUserID(), "client");
+                userRepository.delete(client.getUserID());
             }
         } catch (UserRepositoryException exception) {
             throw new RuntimeException("Could not remove all clients from the test database after ticket repository tests.", exception);
@@ -101,7 +100,7 @@ public class TicketRepositoryTest extends TestContainerSetup {
     @Test
     public void ticketRepositoryCreateTicketWithInactiveClientTestNegative() throws UserRepositoryException {
         LocalDateTime localDateTime = LocalDateTime.of(2023, 11, 4, 20, 10, 0);
-        userRepository.deactivate(clientNo1, "client");
+        userRepository.deactivate(clientNo1);
         assertThrows(TicketRepositoryCreateException.class, () -> ticketRepository.create(localDateTime, clientNo1.getUserID(), movieNo1.getMovieID()));
     }
 
@@ -215,16 +214,9 @@ public class TicketRepositoryTest extends TestContainerSetup {
 
     @Test
     public void clientRepositoryFindALlTicketsWithGivenClientThatIsNotInTheDatabaseTestNegative() {
-        ClientEnt client = new ClientEnt(UUID.randomUUID(), "SomeRandomLogin", "SomeRandomPassword");
+        ClientEnt client = new ClientEnt(UUID.randomUUID(), "SomeRandomLogin");
         assertNotNull(client);
         assertThrows(UserRepositoryReadException.class, () -> userRepository.getListOfTicketsForClient(client.getUserID(), "client"));
-    }
-
-    @Test
-    public void clientRepositoryFindALlTicketsWithGivenClientThatIsInTheDatabaseAndIncorrectNameTestNegative() throws UserRepositoryException {
-        AdminEnt admin = userRepository.createAdmin("SomeLogin", "SomePassword");
-        assertNotNull(admin);
-        assertThrows(UserRepositoryReadException.class, () -> userRepository.getListOfTicketsForClient(admin.getUserID(), "client"));
     }
 
     @Test

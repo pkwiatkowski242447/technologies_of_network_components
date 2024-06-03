@@ -6,14 +6,16 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -23,7 +25,9 @@ import pl.tks.gr3.cinema.security.consts.SecurityConstants;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class JWTAuthenticationFilter extends OncePerRequestFilter {
@@ -31,7 +35,9 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
     private final JWTService jwtService;
 
     @Override
-    protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(@NonNull HttpServletRequest request,
+                                    @NonNull HttpServletResponse response,
+                                    @NonNull FilterChain filterChain) throws ServletException, IOException {
         final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
         if (authHeader == null || !authHeader.startsWith(SecurityConstants.TOKEN_PREFIX)) {
             filterChain.doFilter(request, response);
@@ -47,8 +53,9 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
                 SecurityContextHolder.clearContext();
                 return;
             } else {
-                List<SimpleGrantedAuthority> userRoles = List.of(new SimpleGrantedAuthority(JWT.decode(jwtToken).getClaim(UserEntConstants.USER_ROLE).asString()));
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(JWT.decode(jwtToken).getSubject(), null, userRoles);
+                List<String> userRoles = JWT.decode(jwtToken).getClaim(UserEntConstants.USER_ROLE).asList(String.class);
+                List<SimpleGrantedAuthority> roles = userRoles.stream().map(role -> new SimpleGrantedAuthority("ROLE_" + role)).toList();
+                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(JWT.decode(jwtToken).getSubject(), null, roles);
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
@@ -57,7 +64,7 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+    protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
         return path.contains("swagger");
     }

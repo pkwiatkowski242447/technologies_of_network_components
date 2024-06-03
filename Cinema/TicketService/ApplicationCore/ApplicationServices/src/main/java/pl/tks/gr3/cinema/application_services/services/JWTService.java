@@ -5,16 +5,10 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
-import pl.tks.gr3.cinema.adapters.consts.model.UserEntConstants;
-import pl.tks.gr3.cinema.domain_model.users.User;
 import pl.tks.gr3.cinema.ports.userinterface.other.JWTUseCase;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 
@@ -29,36 +23,6 @@ public class JWTService implements JWTUseCase {
         JWTVerifier jwtVerifier = JWT.require(Algorithm.HMAC256(getSignInKey())).build();
         DecodedJWT decodedJWT = jwtVerifier.verify(jwtToken);
         return decodedJWT.getSubject();
-    }
-
-    private String generateJWTToken(UserDetails userDetails) {
-        Algorithm algorithm = Algorithm.HMAC256(getSignInKey());
-        List<String> listOfRoles = new ArrayList<>();
-        for (GrantedAuthority grantedAuthority : userDetails.getAuthorities()) {
-            listOfRoles.add(grantedAuthority.toString());
-        }
-        return JWT
-                .create()
-                .withSubject(userDetails.getUsername())
-                .withClaim(UserEntConstants.USER_ROLE, listOfRoles)
-                .withIssuedAt(new Date(Instant.now().toEpochMilli()))
-                .withExpiresAt(new Date(Instant.now().plus(15, ChronoUnit.MINUTES).toEpochMilli()))
-                .sign(algorithm);
-    }
-
-    @Override
-    public String generateJWTToken(User user) {
-        UserDetails userDetails = new org.springframework.security.core.userdetails.User(
-                user.getUserLogin(),
-                user.getUserPassword(),
-                user.isUserStatusActive(),
-                true,
-                true,
-                true,
-                List.of(new SimpleGrantedAuthority(user.getUserRole().name()))
-        );
-
-        return generateJWTToken(userDetails);
     }
 
     @Override

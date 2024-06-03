@@ -12,8 +12,6 @@ import pl.tks.gr3.cinema.application_services.services.ClientService;
 import pl.tks.gr3.cinema.domain_model.users.Client;
 import pl.tks.gr3.cinema.ports.infrastructure.users.*;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -52,11 +50,11 @@ public class ClientServiceTest {
 
     @BeforeEach
     public void initializeSampleData() {
-        clientNo1 = new Client(UUID.randomUUID(), "UniqueClientLoginNo1", "UniqueClientPasswordNo1");
-        clientNo2 = new Client(UUID.randomUUID(), "UniqueClientLoginNo2", "UniqueClientPasswordNo2");
-        clientNo3 = new Client(UUID.randomUUID(), "UniqueClientLoginNo3", "UniqueClientPasswordNo3");
-        clientNo4 = new Client(UUID.randomUUID(), "UniqueClientLoginNo4", "UniqueClientPasswordNo4");
-        clientNo5 = new Client(UUID.randomUUID(), "UniqueClientLoginNo5", "UniqueClientPasswordNo5");
+        clientNo1 = new Client(UUID.randomUUID(), "UniqueClientLoginNo1");
+        clientNo2 = new Client(UUID.randomUUID(), "UniqueClientLoginNo2");
+        clientNo3 = new Client(UUID.randomUUID(), "UniqueClientLoginNo3");
+        clientNo4 = new Client(UUID.randomUUID(), "UniqueClientLoginNo4");
+        clientNo5 = new Client(UUID.randomUUID(), "UniqueClientLoginNo5");
     }
 
     @Test
@@ -67,34 +65,35 @@ public class ClientServiceTest {
 
     @Test
     public void clientServiceCreateClientTestPositive() throws ClientServiceCreateException {
-        when(createUserPort.createClient(Mockito.eq(clientNo1.getUserLogin()), Mockito.eq(clientNo1.getUserPassword()))).thenReturn(clientNo1);
-        Client client = clientService.create(clientNo1.getUserLogin(), clientNo1.getUserPassword());
+        when(createUserPort.createClient(Mockito.eq(clientNo1.getUserID()), Mockito.eq(clientNo1.getUserLogin()))).thenReturn(clientNo1);
+        Client client = clientService.create(clientNo1.getUserID(), clientNo1.getUserLogin());
 
         assertNotNull(client);
+        assertEquals(clientNo1.getUserID(), client.getUserID());
         assertEquals(clientNo1.getUserLogin(), client.getUserLogin());
-        assertEquals(clientNo1.getUserPassword(), client.getUserPassword());
-        verify(createUserPort, times(1)).createClient(clientNo1.getUserLogin(), clientNo1.getUserPassword());
+        verify(createUserPort, times(1)).createClient(clientNo1.getUserID(), clientNo1.getUserLogin());
     }
 
     @Test
     public void clientServiceCreateClientThatAlreadyExistsTestNegative() {
-        when(createUserPort.createClient(Mockito.eq(clientNo1.getUserLogin()), Mockito.eq(clientNo1.getUserPassword()))).thenThrow(UserRepositoryCreateUserDuplicateLoginException.class);
+        when(createUserPort.createClient(Mockito.eq(clientNo1.getUserID()), Mockito.eq(clientNo1.getUserLogin()))).thenThrow(UserRepositoryCreateUserDuplicateLoginException.class);
 
-        assertThrows(ClientServiceCreateClientDuplicateLoginException.class, () -> clientService.create(clientNo1.getUserLogin(), clientNo1.getUserPassword()));
+        assertThrows(ClientServiceCreateClientDuplicateLoginException.class, () -> clientService.create(clientNo1.getUserID(), clientNo1.getUserLogin()));
 
-        verify(createUserPort, times(1)).createClient(clientNo1.getUserLogin(), clientNo1.getUserPassword());
+        verify(createUserPort, times(1)).createClient(clientNo1.getUserID(), clientNo1.getUserLogin());
     }
 
     @Test
     public void clientServiceCreateClientWhoseDataDoesNotFollowConstraintsTestNegative() {
+        UUID uuid = UUID.randomUUID();
         String clientLogin = null;
         String clientPassword = "SomeOtherPasswordNo1";
 
-        when(createUserPort.createClient(Mockito.isNull(), Mockito.eq(clientPassword))).thenThrow(UserRepositoryException.class);
+        when(createUserPort.createClient(Mockito.eq(uuid) , Mockito.isNull())).thenThrow(UserRepositoryException.class);
 
-        assertThrows(ClientServiceCreateException.class, () -> clientService.create(clientLogin, clientPassword));
+        assertThrows(ClientServiceCreateException.class, () -> clientService.create(uuid, clientLogin));
 
-        verify(createUserPort, times(1)).createClient(clientLogin, clientPassword);
+        verify(createUserPort, times(1)).createClient(uuid, clientLogin);
     }
 
 
@@ -169,13 +168,13 @@ public class ClientServiceTest {
     @Test
     public void clientServiceUpdateClientTestPositive() throws ClientServiceUpdateException, ClientServiceReadException {
         String clientLoginBefore = clientNo1.getUserLogin();
-        String clientPasswordBefore = clientNo1.getUserPassword();
+        boolean clientStatusActiveBefore = clientNo1.isUserStatusActive();
 
         String newClientLogin = "OtherNewLoginNo1";
-        String newClientPassword = "OtherNewPasswordNo1";
+        boolean newClientStatusActive = !clientStatusActiveBefore;
 
         clientNo1.setUserLogin(newClientLogin);
-        clientNo1.setUserPassword(newClientPassword);
+        clientNo1.setUserStatusActive(newClientStatusActive);
 
         clientService.update(clientNo1);
 
@@ -184,14 +183,13 @@ public class ClientServiceTest {
         Client capturedClient = clientArgumentCaptor.getValue();
 
         String clientLoginAfter = capturedClient.getUserLogin();
-        String clientPasswordAfter = capturedClient.getUserPassword();
+        boolean clientStatusActiveAfter = capturedClient.isUserStatusActive();
 
         assertNotNull(clientLoginAfter);
-        assertNotNull(clientPasswordAfter);
         assertEquals(newClientLogin, clientLoginAfter);
-        assertEquals(newClientPassword, clientPasswordAfter);
+        assertEquals(newClientStatusActive, clientStatusActiveAfter);
         assertNotEquals(clientLoginBefore, clientLoginAfter);
-        assertNotEquals(clientPasswordBefore, clientPasswordAfter);
+        assertNotEquals(clientStatusActiveBefore, clientStatusActiveAfter);
 
         verify(updateUserPort, times(1)).updateClient(clientNo1);
     }
@@ -199,10 +197,10 @@ public class ClientServiceTest {
     @Test
     public void clientServiceUpdateClientWithDataThatDoesNotFollowConstraintsTestNegative() {
         String clientLogin = null;
-        String clientPassword = "SomeOtherPasswordNo2";
+        boolean clientStatusActive = false;
 
         clientNo1.setUserLogin(clientLogin);
-        clientNo1.setUserPassword(clientPassword);
+        clientNo1.setUserStatusActive(clientStatusActive);
 
         doThrow(ClientServiceUpdateException.class).when(updateUserPort).updateClient(clientArgumentCaptor.capture());
 
@@ -218,7 +216,7 @@ public class ClientServiceTest {
         when(readUserPort.findClientByUUID(removedClientUUID)).thenThrow(UserRepositoryUserNotFoundException.class);
 
         clientService.delete(removedClientUUID);
-        verify(deleteUserPort).delete(uuidArgumentCaptor.capture(), Mockito.anyString());
+        verify(deleteUserPort).delete(uuidArgumentCaptor.capture());
 
         UUID capturedClientUID = uuidArgumentCaptor.getValue();
 
@@ -226,7 +224,7 @@ public class ClientServiceTest {
         assertEquals(removedClientUUID, capturedClientUID);
         assertThrows(ClientServiceReadException.class, () -> clientService.findByUUID(removedClientUUID));
 
-        verify(deleteUserPort, times(1)).delete(Mockito.eq(removedClientUUID), Mockito.anyString());
+        verify(deleteUserPort, times(1)).delete(Mockito.eq(removedClientUUID));
         verify(readUserPort, times(1)).findClientByUUID(removedClientUUID);
     }
 
@@ -234,14 +232,14 @@ public class ClientServiceTest {
     public void clientServiceDeleteClientThatIsNotInTheDatabaseTestNegative() {
         UUID exampleUUID = UUID.randomUUID();
 
-        doThrow(UserRepositoryException.class).when(deleteUserPort).delete(uuidArgumentCaptor.capture(), Mockito.anyString());
+        doThrow(UserRepositoryException.class).when(deleteUserPort).delete(uuidArgumentCaptor.capture());
 
         assertThrows(ClientServiceDeleteException.class, () -> clientService.delete(exampleUUID));
 
         UUID capturedClientUUID = uuidArgumentCaptor.getValue();
         assertEquals(exampleUUID, capturedClientUUID);
 
-        verify(deleteUserPort, times(1)).delete(Mockito.eq(exampleUUID), Mockito.anyString());
+        verify(deleteUserPort, times(1)).delete(Mockito.eq(exampleUUID));
     }
 
     // Activate tests
@@ -267,7 +265,7 @@ public class ClientServiceTest {
 
     @Test
     public void clientServiceDeactivateClientThatIsNotInTheDatabaseTestNegative() {
-        Client client = new Client(UUID.randomUUID(), "SomeOther", "SomeOtherC");
+        Client client = new Client(UUID.randomUUID(), "SomeOther");
         assertNotNull(client);
 
         when(readUserPort.findClientByUUID(client.getUserID())).thenReturn(client);
@@ -307,7 +305,7 @@ public class ClientServiceTest {
 
     @Test
     public void clientServiceActivateClientThatIsNotInTheDatabaseTestNegative() {
-        Client client = new Client(UUID.randomUUID(), "SomeOtherClientLoginNo3", "SomeOtherClientPasswordNo3");
+        Client client = new Client(UUID.randomUUID(), "SomeOtherClientLoginNo3");
         assertNotNull(client);
 
         when(readUserPort.findClientByUUID(client.getUserID())).thenReturn(client);

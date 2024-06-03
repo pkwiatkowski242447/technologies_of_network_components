@@ -55,7 +55,7 @@ public class TicketControllerTest {
     @Test
     public void createTicketValidInputReturnsCreated() throws Exception {
 
-        Client client = new Client(UUID.randomUUID(), "testUser", "test");
+        Client client = new Client(UUID.randomUUID(), "testUser");
         LocalDateTime time = LocalDateTime.now();
         TicketInputDTO ticketInputDTO = new TicketInputDTO(time.toString(), client.getUserID(), UUID.randomUUID());
         UUID ticketId = UUID.randomUUID();
@@ -75,7 +75,7 @@ public class TicketControllerTest {
     @WithMockUser(username = "StaffLoginNo1", roles = {"STAFF"})
     @Test
     public void createTicketInvalidInputReturnsBadRequest() throws Exception {
-        Client client = new Client(UUID.randomUUID(), "testUser", "test");
+        Client client = new Client(UUID.randomUUID(), "testUser");
         LocalDateTime time = LocalDateTime.now();
         TicketInputDTO ticketInputDTO = new TicketInputDTO(null, null, UUID.randomUUID());
         UUID ticketId = UUID.randomUUID();
@@ -95,7 +95,7 @@ public class TicketControllerTest {
     @Test
     public void createSelfTicketValidInputReturnsCreated() throws Exception {
 
-        Client client = new Client(UUID.randomUUID(), "ClientLoginNo1", "test123456");
+        Client client = new Client(UUID.randomUUID(), "ClientLoginNo1");
         LocalDateTime time = LocalDateTime.now();
         TicketInputDTO ticketInputDTO = new TicketInputDTO(time.toString(), client.getUserID(), UUID.randomUUID());
         UUID ticketId = UUID.randomUUID();
@@ -138,7 +138,7 @@ public class TicketControllerTest {
     @WithMockUser(username = "ClientLoginNo1", roles = {"CLIENT"})
     @Test
     public void findByUUIDValidUUIDReturnsTicket() throws Exception {
-        Client client = new Client(UUID.randomUUID(), "ClientLoginNo1", "test");
+        Client client = new Client(UUID.randomUUID(), "ClientLoginNo1");
 
         UUID ticketId = UUID.randomUUID();
         Ticket ticket = new Ticket(ticketId, LocalDateTime.now(), 10.0, client.getUserID(), UUID.randomUUID());
@@ -166,7 +166,7 @@ public class TicketControllerTest {
     @Test
     public void deleteTicketValidUUIDReturnsNoContent() throws Exception {
         UUID ticketId = UUID.randomUUID();
-        Client client = new Client(UUID.randomUUID(), "ClientLoginNo1", "test123456");
+        Client client = new Client(UUID.randomUUID(), "ClientLoginNo1");
         Ticket ticket = new Ticket(ticketId, LocalDateTime.now(), 10.0, client.getUserID(), UUID.randomUUID());
 
         when(readTicket.findByUUID(ticketId)).thenReturn(ticket);
@@ -183,7 +183,7 @@ public class TicketControllerTest {
     public void deleteTicketInvalidUUIDReturnsBadRequest() throws Exception {
         UUID invalidTicketId = UUID.randomUUID();
         UUID ticketId = UUID.randomUUID();
-        Client client = new Client(UUID.randomUUID(), "ClientLoginNo1", "test123456");
+        Client client = new Client(UUID.randomUUID(), "ClientLoginNo1");
 
         Ticket ticket = new Ticket(ticketId, LocalDateTime.now(), 10.0, client.getUserID(), UUID.randomUUID());
 
@@ -201,9 +201,9 @@ public class TicketControllerTest {
     public void deleteOtherUsersTicketReturnsForbidden() throws Exception {
         UUID invalidTicketId = UUID.randomUUID();
         UUID ticketId = UUID.randomUUID();
-        Client client = new Client(UUID.randomUUID(), "ClientLoginNo1", "test123456");
+        Client client = new Client(UUID.randomUUID(), "ClientLoginNo1");
 
-        Client client2 = new Client(UUID.randomUUID(), "ClientLoginNo2", "test123456");
+        Client client2 = new Client(UUID.randomUUID(), "ClientLoginNo2");
 
         Ticket ticket = new Ticket(ticketId, LocalDateTime.now(), 10.0, client.getUserID(), UUID.randomUUID());
 

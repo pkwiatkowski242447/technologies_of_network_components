@@ -47,8 +47,8 @@ public class TicketTest {
 
         ticketFinalPriceNo1 = 50.00;
 
-        clientNo1 = new Client(UUID.randomUUID(), "SomeExampleLogin", "SomeExamplePassword");
-        clientNo2 = new Client(UUID.randomUUID(), "SomeExampleLogin", "SomeExamplePassword");
+        clientNo1 = new Client(UUID.randomUUID(), "SomeExampleLogin");
+        clientNo2 = new Client(UUID.randomUUID(), "SomeExampleLogin");
 
         movieBasePriceNo1 = 45.00;
         movieBasePriceNo2 = 47.50;
