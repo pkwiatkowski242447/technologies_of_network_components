@@ -12,8 +12,12 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import pl.tks.gr3.cinema.adapters.rabbitmq.messages.ClientUUIDMessage;
+import pl.tks.gr3.cinema.adapters.rabbitmq.publishers.ClientActivatePublisher;
+import pl.tks.gr3.cinema.adapters.rabbitmq.publishers.ClientDeactivatePublisher;
 import pl.tks.gr3.cinema.application_services.exceptions.GeneralServiceException;
 import pl.tks.gr3.cinema.application_services.exceptions.crud.client.ClientServiceClientNotFoundException;
+import pl.tks.gr3.cinema.application_services.services.ClientService;
 import pl.tks.gr3.cinema.viewrest.api.UserControllerInterface;
 import pl.tks.gr3.cinema.domain_model.Client;
 import pl.tks.gr3.cinema.domain_model.User;
@@ -36,18 +40,24 @@ public class ClientController implements UserControllerInterface<Client> {
 
     private final ReadUserUseCase<Client> readClient;
     private final WriteUserUseCase<Client> writeClient;
+    private final ClientActivatePublisher clientActivatePublisher;
+    private final ClientDeactivatePublisher clientDeactivatePublisher;
     private final JWSUseCase jwsService;
     private final PasswordEncoder passwordEncoder;
 
     @Autowired
     public ClientController(ReadUserUseCase<Client> readClient,
                             WriteUserUseCase<Client> writeClient,
+                            ClientActivatePublisher clientActivatePublisher,
+                            ClientDeactivatePublisher clientDeactivatePublisher,
                             JWSUseCase jwsService,
                             PasswordEncoder passwordEncoder) {
         this.readClient = readClient;
         this.writeClient = writeClient;
         this.jwsService = jwsService;
         this.passwordEncoder = passwordEncoder;
+        this.clientActivatePublisher = clientActivatePublisher;
+        this.clientDeactivatePublisher = clientDeactivatePublisher;
     }
 
     @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.Role).STAFF) || hasRole(T(pl.tks.gr3.cinema.domain_model.Role).ADMIN)")
@@ -146,6 +156,7 @@ public class ClientController implements UserControllerInterface<Client> {
     public ResponseEntity<?> activate(@PathVariable("id") UUID clientID) {
         try {
             this.writeClient.activate(clientID);
+            this.clientActivatePublisher.publish(new ClientUUIDMessage(clientID));
             return ResponseEntity.noContent().build();
         } catch (GeneralServiceException exception) {
             return ResponseEntity.badRequest().contentType(MediaType.APPLICATION_JSON).body(exception.getMessage());
@@ -158,6 +169,7 @@ public class ClientController implements UserControllerInterface<Client> {
     public ResponseEntity<?> deactivate(@PathVariable("id") UUID clientID) {
         try {
             this.writeClient.deactivate(clientID);
+            this.clientDeactivatePublisher.publish(new ClientUUIDMessage(clientID));
             return ResponseEntity.noContent().build();
         } catch (GeneralServiceException exception) {
             return ResponseEntity.badRequest().contentType(MediaType.APPLICATION_JSON).body(exception.getMessage());

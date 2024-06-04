@@ -22,8 +22,9 @@ services:
   rabbitmq:
     image: 'bitnami/rabbitmq:latest'
     environment:
-      - RABBITMQ_DEFAULT_USER=admin
-      - RABBITMQ_DEFAULT_PASS=adminpassword
+      - RABBITMQ_USERNAME=admin
+      - RABBITMQ_PASSWORD=admin
+      - RABBITMQ_MANAGEMENT_ALLOW_WEB_ACCESS=true
     ports:
       # AMQP protocol port
       - '5672:5672'

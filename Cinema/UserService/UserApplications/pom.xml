@@ -44,5 +44,11 @@
             <artifactId>UserViewSoap</artifactId>
             <version>1.0.0</version>
         </dependency>
+
+        <dependency>
+            <groupId>pl.tks.gr3.adapters.rabbitmq</groupId>
+            <artifactId>UserRabbitMQAdapter</artifactId>
+            <version>1.0.0</version>
+        </dependency>
     </dependencies>
 </project>
