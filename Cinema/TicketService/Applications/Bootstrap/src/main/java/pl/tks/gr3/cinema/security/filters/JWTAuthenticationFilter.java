@@ -25,7 +25,6 @@ import pl.tks.gr3.cinema.security.consts.SecurityConstants;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Component
