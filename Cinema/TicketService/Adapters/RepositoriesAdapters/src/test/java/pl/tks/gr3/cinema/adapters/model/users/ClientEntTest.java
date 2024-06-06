@@ -14,40 +14,31 @@ public class ClientEntTest {
     private ClientEnt clientEntNo2;
     private ClientEnt clientEntNo3;
 
-    private UserEnt staffEnt;
-
-
     @BeforeEach
     public void setUpBeforeEachMethod() {
-        clientEntNo1 = new ClientEnt(UUID.randomUUID(), "UniqueClientEntNameNo1", "UniqueClientEntPasswordNo1");
-        clientEntNo2 = new ClientEnt(UUID.randomUUID(), "UniqueClientEntNameNo2", "UniqueClientEntPasswordNo2");
-        clientEntNo3 = new ClientEnt(clientEntNo1.getUserID(), clientEntNo1.getUserLogin(), clientEntNo1.getUserPassword());
-
-        staffEnt = new StaffEnt(clientEntNo1.getUserID(), clientEntNo1.getUserLogin(), clientEntNo1.getUserPassword());
+        clientEntNo1 = new ClientEnt(UUID.randomUUID(), "UniqueClientEntNameNo1");
+        clientEntNo2 = new ClientEnt(UUID.randomUUID(), "UniqueClientEntNameNo2");
+        clientEntNo3 = new ClientEnt(clientEntNo1.getUserID(), clientEntNo1.getUserLogin(), clientEntNo1.isUserStatusActive());
     }
 
     @Test
     public void clientEntRequiredArgsConstructorAndGettersTestPositive() {
-        ClientEnt createdClientEnt = new ClientEnt(clientEntNo1.getUserID(), clientEntNo1.getUserLogin(), clientEntNo1.getUserPassword());
+        ClientEnt createdClientEnt = new ClientEnt(clientEntNo1.getUserID(), clientEntNo1.getUserLogin(), clientEntNo1.isUserStatusActive());
 
         assertNotNull(createdClientEnt);
         assertEquals(clientEntNo1.getUserID(), createdClientEnt.getUserID());
         assertEquals(clientEntNo1.getUserLogin(), createdClientEnt.getUserLogin());
-        assertEquals(clientEntNo1.getUserPassword(), createdClientEnt.getUserPassword());
         assertTrue(createdClientEnt.isUserStatusActive());
-        assertEquals(clientEntNo1.getUserRole(), RoleEnt.CLIENT);
     }
 
     @Test
     public void clientEntAllArgsConstructorAndGettersTestPositive() {
-        ClientEnt createdClientEnt = new ClientEnt(clientEntNo1.getUserID(), clientEntNo1.getUserLogin(), clientEntNo1.getUserPassword());
+        ClientEnt createdClientEnt = new ClientEnt(clientEntNo1.getUserID(), clientEntNo1.getUserLogin(), clientEntNo1.isUserStatusActive());
 
         assertNotNull(createdClientEnt);
         assertEquals(clientEntNo1.getUserID(), createdClientEnt.getUserID());
         assertEquals(clientEntNo1.getUserLogin(), createdClientEnt.getUserLogin());
-        assertEquals(clientEntNo1.getUserPassword(), createdClientEnt.getUserPassword());
         assertEquals(clientEntNo1.isUserStatusActive(), createdClientEnt.isUserStatusActive());
-        assertEquals(clientEntNo1.getUserRole(), RoleEnt.CLIENT);
     }
 
     @Test
@@ -66,18 +57,16 @@ public class ClientEntTest {
     }
 
     @Test
-    public void clientEntSetPasswordTestPositive() {
-        String passwordBefore = clientEntNo1.getUserPassword();
-        String newPassword = "SomeNewPassword";
+    public void clientEntSetUUIDTestPositive() {
+        boolean userStatusActiveBefore = clientEntNo1.isUserStatusActive();
+        boolean newStatusActive = !userStatusActiveBefore;
 
-        clientEntNo1.setUserPassword(newPassword);
+        clientEntNo1.setUserStatusActive(newStatusActive);
 
-        String passwordAfter = clientEntNo1.getUserPassword();
+        boolean userStatusActiveAfter = clientEntNo1.isUserStatusActive();
 
-        assertNotNull(passwordAfter);
-        assertFalse(passwordAfter.isEmpty());
-        assertEquals(newPassword, passwordAfter);
-        assertNotEquals(passwordBefore, passwordAfter);
+        assertEquals(newStatusActive, userStatusActiveAfter);
+        assertNotEquals(userStatusActiveBefore, userStatusActiveAfter);
     }
 
     @Test
@@ -114,12 +103,6 @@ public class ClientEntTest {
     @Test
     public void clientEntEqualsWithObjectOfTheSameClassButDifferentTestNegative() {
         boolean result = clientEntNo1.equals(clientEntNo2);
-        assertFalse(result);
-    }
-
-    @Test
-    public void clientEntEqualsWithObjectOfTheSameSuperClassAndTheSameTestNegative() {
-        boolean result = clientEntNo1.equals(staffEnt);
         assertFalse(result);
     }
 

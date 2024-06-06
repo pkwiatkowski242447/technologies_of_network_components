@@ -51,8 +51,8 @@ public class TicketRepositoryAdapterTest {
         movieEntNo2 = new MovieEnt(UUID.randomUUID(), "ExampleTitleNo2", 23.75, 2, 45);
         movieEntNo3 = new MovieEnt(UUID.randomUUID(), "ExampleTitleNo3", 40.25, 3, 60);
 
-        clientEntNo1 = new ClientEnt(UUID.randomUUID(), "ClientLoginNo1", "ClientPasswordNo1");
-        clientEntNo2 = new ClientEnt(UUID.randomUUID(), "ClientLoginNo2", "ClientPasswordNo2");
+        clientEntNo1 = new ClientEnt(UUID.randomUUID(), "ClientLoginNo1");
+        clientEntNo2 = new ClientEnt(UUID.randomUUID(), "ClientLoginNo2");
 
         LocalDateTime localDateTimeNo1 = LocalDateTime.of(2023, 11, 2, 20, 15, 0);
         LocalDateTime localDateTimeNo2 = LocalDateTime.of(2023, 10, 28, 18, 45, 0);

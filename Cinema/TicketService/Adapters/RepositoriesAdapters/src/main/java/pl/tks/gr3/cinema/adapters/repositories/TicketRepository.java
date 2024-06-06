@@ -25,9 +25,7 @@ import pl.tks.gr3.cinema.adapters.exceptions.other.client.ClientNotActiveExcepti
 import pl.tks.gr3.cinema.adapters.messages.MongoRepositoryMessages;
 import pl.tks.gr3.cinema.adapters.model.MovieEnt;
 import pl.tks.gr3.cinema.adapters.model.TicketEnt;
-import pl.tks.gr3.cinema.adapters.model.users.AdminEnt;
 import pl.tks.gr3.cinema.adapters.model.users.ClientEnt;
-import pl.tks.gr3.cinema.adapters.model.users.StaffEnt;
 import pl.tks.gr3.cinema.adapters.model.users.UserEnt;
 import pl.tks.gr3.cinema.adapters.api.TicketRepositoryInterface;
 
@@ -117,34 +115,14 @@ public class TicketRepository extends MongoRepository implements TicketRepositor
         UUID clientIDNo2 = UUID.fromString("0b08f526-b018-4d23-8baa-93f0fb884edf");
         UUID clientIDNo3 = UUID.fromString("30392328-2cae-4e76-abb8-b1aa8f58a9e4");
 
-        UUID adminIDNo1 = UUID.fromString("17dad3c7-7605-4808-bec5-d6f46abd23b8");
-        UUID adminIDNo2 = UUID.fromString("ca857499-cdd5-4de3-a8d2-1ba7afcec2ef");
-        UUID adminIDNo3 = UUID.fromString("07f97385-a2a3-474e-af61-f53d14a64198");
+        ClientEnt clientNo1 = new ClientEnt(clientIDNo1, "NewClientLogin1");
+        ClientEnt clientNo2 = new ClientEnt(clientIDNo2, "NewClientLogin2");
+        ClientEnt clientNo3 = new ClientEnt(clientIDNo3, "NewClientLogin3");
 
-        UUID staffIDNo1 = UUID.fromString("67a85b0f-d063-4c9b-b223-fcc606c00f2f");
-        UUID staffIDNo2 = UUID.fromString("3d8ef63c-f99d-445c-85d0-4b14e68fc5a1");
-        UUID staffIDNo3 = UUID.fromString("86e394dd-e192-4390-b4e4-76029c879857");
-
-        ClientEnt clientNo1 = new ClientEnt(clientIDNo1, "NewClientLogin1", "$2a$10$DbYLnx7YVVEtyJUOd7dFP.qUPAswrfNu6RVU0vB/Ti8us8AqaoKzS");
-        ClientEnt clientNo2 = new ClientEnt(clientIDNo2, "NewClientLogin2", "$2a$10$DbYLnx7YVVEtyJUOd7dFP.qUPAswrfNu6RVU0vB/Ti8us8AqaoKzS");
-        ClientEnt clientNo3 = new ClientEnt(clientIDNo3, "NewClientLogin3", "$2a$10$DbYLnx7YVVEtyJUOd7dFP.qUPAswrfNu6RVU0vB/Ti8us8AqaoKzS");
-
-        AdminEnt adminNo1 = new AdminEnt(adminIDNo1, "NewAdminLogin1", "$2a$10$DbYLnx7YVVEtyJUOd7dFP.qUPAswrfNu6RVU0vB/Ti8us8AqaoKzS");
-        AdminEnt adminNo2 = new AdminEnt(adminIDNo2, "NewAdminLogin2", "$2a$10$DbYLnx7YVVEtyJUOd7dFP.qUPAswrfNu6RVU0vB/Ti8us8AqaoKzS");
-        AdminEnt adminNo3 = new AdminEnt(adminIDNo3, "NewAdminLogin3", "$2a$10$DbYLnx7YVVEtyJUOd7dFP.qUPAswrfNu6RVU0vB/Ti8us8AqaoKzS");
-
-        StaffEnt staffNo1 = new StaffEnt(staffIDNo1, "NewStaffLogin1", "$2a$10$DbYLnx7YVVEtyJUOd7dFP.qUPAswrfNu6RVU0vB/Ti8us8AqaoKzS");
-        StaffEnt staffNo2 = new StaffEnt(staffIDNo2, "NewStaffLogin2", "$2a$10$DbYLnx7YVVEtyJUOd7dFP.qUPAswrfNu6RVU0vB/Ti8us8AqaoKzS");
-        StaffEnt staffNo3 = new StaffEnt(staffIDNo3, "NewStaffLogin3", "$2a$10$DbYLnx7YVVEtyJUOd7dFP.qUPAswrfNu6RVU0vB/Ti8us8AqaoKzS");
-
-        List<UserEnt> listOfClients = List.of(clientNo1, clientNo2, clientNo3, adminNo1, adminNo2, adminNo3, staffNo1, staffNo2, staffNo3);
+        List<UserEnt> listOfClients = List.of(clientNo1, clientNo2, clientNo3);
         for (UserEnt user : listOfClients) {
             Bson filter = Filters.eq(UserEntConstants.GENERAL_IDENTIFIER, user.getUserID());
             if (this.getClientCollection().find(filter).first() == null && user.getClass().equals(ClientEnt.class)) {
-                this.getClientCollection().insertOne(user);
-            } else if (this.getClientCollection().find(filter).first() == null && user.getClass().equals(AdminEnt.class)) {
-                this.getClientCollection().insertOne(user);
-            } else if (this.getClientCollection().find(filter).first() == null && user.getClass().equals(StaffEnt.class)) {
                 this.getClientCollection().insertOne(user);
             }
         }

@@ -2,8 +2,6 @@ package pl.tks.gr3.cinema.viewrest.model.users;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import pl.tks.gr3.cinema.viewrest.model.users.RegisterOutputDTO;
-import pl.tks.gr3.cinema.viewrest.model.users.UserOutputDTO;
 
 import java.util.UUID;
 

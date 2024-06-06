@@ -22,7 +22,7 @@ public class JWSServiceTest {
 
     @BeforeEach
     public void initializeSampleData() {
-        clientNo1 = new Client(UUID.randomUUID(), "UniqueClientLoginNo1", "UniqueClientPasswordNo1");
+        clientNo1 = new Client(UUID.randomUUID(), "UniqueClientLoginNo1");
         movieNo1 = new Movie(UUID.randomUUID(), "UniqueMovieNameNo1", 10, 1, 10);
         ticketNo1 = new Ticket(UUID.randomUUID(), LocalDateTime.now(), movieNo1.getMovieBasePrice(), clientNo1.getUserID(), movieNo1.getMovieID());
     }

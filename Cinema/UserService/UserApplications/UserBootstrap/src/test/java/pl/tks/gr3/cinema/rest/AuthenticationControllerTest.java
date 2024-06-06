@@ -1,5 +1,6 @@
 package pl.tks.gr3.cinema.rest;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +13,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
+import pl.tks.gr3.cinema.adapters.rabbitmq.publishers.ClientCreatePublisher;
 import pl.tks.gr3.cinema.application_services.exceptions.GeneralServiceException;
 import pl.tks.gr3.cinema.application_services.exceptions.crud.authentication.login.GeneralAuthenticationLoginException;
 import pl.tks.gr3.cinema.application_services.exceptions.crud.authentication.register.AuthenticationServiceUserWithGivenLoginExistsException;
@@ -41,6 +43,9 @@ public class AuthenticationControllerTest {
 
     @MockBean
     private RegisterUserUseCase registerUser;
+
+    @MockBean
+    private ClientCreatePublisher clientCreatePublisher;
 
     @MockBean
     private LoginUserUseCase loginUser;

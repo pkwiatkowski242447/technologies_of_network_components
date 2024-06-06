@@ -19,6 +19,18 @@ services:
       timeout: 2s
       retries: 5
 
+  rabbitmq:
+    image: 'bitnami/rabbitmq:latest'
+    environment:
+      - RABBITMQ_USERNAME=admin
+      - RABBITMQ_PASSWORD=admin
+      - RABBITMQ_MANAGEMENT_ALLOW_WEB_ACCESS=true
+    ports:
+      # AMQP protocol port
+      - '5672:5672'
+      # HTTP management UI
+      - '15672:15672'
+
 volumes:
   mongo_data:
     driver: local

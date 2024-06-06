@@ -34,6 +34,12 @@
         </dependency>
 
         <dependency>
+            <groupId>pl.tks.gr3.adapters.rabbitmq</groupId>
+            <artifactId>RabbitMQAdapter</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+
+        <dependency>
             <groupId>pl.tks.gr3.viewrest</groupId>
             <artifactId>ViewRest</artifactId>
             <version>1.0.0</version>

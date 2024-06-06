@@ -35,6 +35,4 @@ public class UserUpdateFilter extends OncePerRequestFilter {
         }
         filterChain.doFilter(request, response);
     }
-
-
 }

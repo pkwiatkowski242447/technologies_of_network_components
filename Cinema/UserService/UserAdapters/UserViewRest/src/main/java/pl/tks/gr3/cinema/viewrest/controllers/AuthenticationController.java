@@ -1,5 +1,7 @@
 package pl.tks.gr3.cinema.viewrest.controllers;
 
+import io.micrometer.core.annotation.Counted;
+import io.micrometer.core.annotation.Timed;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
@@ -14,6 +16,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import pl.tks.gr3.cinema.adapters.rabbitmq.messages.ClientCreateMessage;
+import pl.tks.gr3.cinema.adapters.rabbitmq.publishers.ClientCreatePublisher;
 import pl.tks.gr3.cinema.application_services.exceptions.GeneralServiceException;
 import pl.tks.gr3.cinema.application_services.exceptions.crud.authentication.login.GeneralAuthenticationLoginException;
 import pl.tks.gr3.cinema.application_services.exceptions.crud.authentication.register.AuthenticationServiceUserWithGivenLoginExistsException;
@@ -40,18 +44,23 @@ public class AuthenticationController {
     private static final Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
 
     private RegisterUserUseCase registerUser;
+    private ClientCreatePublisher clientCreatePublisher;
     private LoginUserUseCase loginUser;
     private JWTUseCase jwtService;
 
     @Autowired
     public AuthenticationController(RegisterUserUseCase registerUser,
+                                    ClientCreatePublisher clientCreatePublisher,
                                     LoginUserUseCase loginUser,
                                     JWTUseCase jwtService) {
         this.registerUser = registerUser;
         this.loginUser = loginUser;
         this.jwtService = jwtService;
+        this.clientCreatePublisher = clientCreatePublisher;
     }
 
+    @Counted(value = "authentication.controller.register.client.count", description = "The number of calls to create a new client account")
+    @Timed(value = "authentication.controller.register.client.time", description = "Time taken to register user with client access level")
     @PostMapping("/register/client")
     public ResponseEntity<?> registerClient(@RequestBody UserInputDTO userInputDTO) {
         try {
@@ -64,6 +73,8 @@ public class AuthenticationController {
             }
 
             Client client = this.registerUser.registerClient(userInputDTO.getUserLogin(), userInputDTO.getUserPassword());
+            clientCreatePublisher.publish(new ClientCreateMessage(client.getUserID(), client.getUserLogin()));
+
             UserOutputDTO userOutputDTO = new UserOutputDTO(client.getUserID(), client.getUserLogin(), client.isUserStatusActive());
             return ResponseEntity.created(URI.create("http://localhost:8000/api/v1/clients/" + userOutputDTO.getUserID().toString())).contentType(MediaType.APPLICATION_JSON).body(userOutputDTO);
         } catch (AuthenticationServiceUserWithGivenLoginExistsException exception) {
@@ -73,6 +84,8 @@ public class AuthenticationController {
         }
     }
 
+    @Counted(value = "authentication.controller.login.client.count", description = "The number of calls to the method authenticating client accounts")
+    @Timed(value = "authentication.controller.login.client.time", description = "Time taken to authenticate as user with client access level")
     @PostMapping(value = "/login/client")
     public ResponseEntity<?> loginClient(@RequestBody UserInputDTO userInputDTO) {
         try {
@@ -87,6 +100,8 @@ public class AuthenticationController {
         }
     }
 
+    @Counted(value = "authentication.controller.register.admin.count", description = "The number of calls to create a new admin account")
+    @Timed(value = "authentication.controller.register.admin.time", description = "Time taken to register user with admin access level")
     @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.Role).ADMIN)")
     @PostMapping("/register/admin")
     public ResponseEntity<?> registerAdmin(@RequestBody UserInputDTO userInputDTO) {
@@ -109,6 +124,8 @@ public class AuthenticationController {
         }
     }
 
+    @Counted(value = "authentication.controller.login.admin.count", description = "The number of calls to the method authenticating admin accounts")
+    @Timed(value = "authentication.controller.login.admin.time", description = "Time taken to authenticate as user with admin access level")
     @PostMapping("/login/admin")
     public ResponseEntity<?> loginAdmin(@RequestBody UserInputDTO userInputDTO) {
         try {
@@ -123,6 +140,8 @@ public class AuthenticationController {
         }
     }
 
+    @Counted(value = "authentication.controller.register.staff.count", description = "The number of calls to create a new staff account")
+    @Timed(value = "authentication.controller.register.staff.time", description = "Time taken to register user with staff access level")
     @PreAuthorize(value = "hasRole(T(pl.tks.gr3.cinema.domain_model.Role).ADMIN)")
     @PostMapping("/register/staff")
     public ResponseEntity<?> registerStaff(@RequestBody UserInputDTO userInputDTO) {
@@ -145,6 +164,8 @@ public class AuthenticationController {
         }
     }
 
+    @Counted(value = "authentication.controller.login.staff.count", description = "The number of calls to the method authenticating staff accounts")
+    @Timed(value = "authentication.controller.login.staff.time", description = "Time taken to authenticate as user with staff access level")
     @PostMapping("/login/staff")
     public ResponseEntity<?> loginStaff(@RequestBody UserInputDTO userInputDTO) {
         try {

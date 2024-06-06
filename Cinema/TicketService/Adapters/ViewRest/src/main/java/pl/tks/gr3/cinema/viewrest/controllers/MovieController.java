@@ -1,5 +1,6 @@
 package pl.tks.gr3.cinema.viewrest.controllers;
 
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;

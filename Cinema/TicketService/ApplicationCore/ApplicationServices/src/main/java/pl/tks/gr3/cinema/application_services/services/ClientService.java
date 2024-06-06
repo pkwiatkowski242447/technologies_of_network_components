@@ -42,9 +42,9 @@ public class ClientService implements ReadUserUseCase<Client>, WriteUserUseCase<
     }
 
     @Override
-    public Client create(String login, String password) throws ClientServiceCreateException {
+    public Client create(UUID uuid, String login) throws ClientServiceCreateException {
         try {
-            return this.createUserPort.createClient(login, password);
+            return this.createUserPort.createClient(uuid, login);
         } catch (UserRepositoryCreateUserDuplicateLoginException exception) {
             throw new ClientServiceCreateClientDuplicateLoginException(exception.getMessage(), exception);
         } catch (UserRepositoryException exception) {
@@ -113,7 +113,7 @@ public class ClientService implements ReadUserUseCase<Client>, WriteUserUseCase<
     @Override
     public void delete(UUID userID) throws ClientServiceDeleteException {
         try {
-            this.deleteUserPort.delete(userID, UserEntConstants.CLIENT_DISCRIMINATOR);
+            this.deleteUserPort.delete(userID);
         } catch (UserRepositoryException exception) {
             throw new ClientServiceDeleteException(exception.getMessage(), exception);
         }

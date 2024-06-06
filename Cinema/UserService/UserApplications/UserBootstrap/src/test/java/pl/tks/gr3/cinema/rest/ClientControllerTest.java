@@ -11,6 +11,8 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import pl.tks.gr3.cinema.adapters.rabbitmq.publishers.ClientActivatePublisher;
+import pl.tks.gr3.cinema.adapters.rabbitmq.publishers.ClientDeactivatePublisher;
 import pl.tks.gr3.cinema.application_services.exceptions.GeneralServiceException;
 import pl.tks.gr3.cinema.application_services.exceptions.crud.client.ClientServiceClientNotFoundException;
 import pl.tks.gr3.cinema.domain_model.Client;
@@ -46,6 +48,12 @@ public class ClientControllerTest {
 
     @MockBean
     private JWSUseCase jwsUseCase;
+
+    @MockBean
+    private ClientActivatePublisher clientActivatePublisher;
+
+    @MockBean
+    private ClientDeactivatePublisher clientDeactivatePublisher;
 
     @MockBean
     private PasswordEncoder passwordEncoder;
